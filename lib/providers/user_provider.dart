@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/models/user.dart';
 
 enum UserStatus { initial, loading, loaded, failure }
@@ -6,8 +8,9 @@ enum UserStatus { initial, loading, loaded, failure }
 /// Provider that manages the current user's profile data.
 ///
 /// Handles loading from a remote source and profile updates.
-/// Replace the `// TODO` sections with real AWS backend logic.
 class UserProvider extends ChangeNotifier {
+  final ApiService _api = ApiService();
+
   UserStatus _status = UserStatus.initial;
   UserStatus get status => _status;
 
@@ -21,20 +24,24 @@ class UserProvider extends ChangeNotifier {
   // Provider methods
   // ---------------------------------------------------------------------------
 
-  /// Load a user profile by [uid].
   Future<void> loadUser(String uid) async {
     _status = UserStatus.loading;
     notifyListeners();
 
     try {
-      // TODO: Fetch user data from AWS backend.
-      // ... await apiService.fetchUser(uid);
-      // _user = user;
-      // _status = UserStatus.loaded;
+      // Use UserLocalStorage to get values if needed, but ApiService.ensureValidToken is preferred
+      final token = await _api.ensureValidToken();
+      final fetchedUser = await _api.getUserById(id: uid, token: token);
 
-      // Placeholder – emits failure until AWS API is wired.
-      _status = UserStatus.failure;
-      _errorMessage = 'AWS API not yet connected';
+      if (fetchedUser != null) {
+        _user = fetchedUser;
+        _status = UserStatus.loaded;
+        debugPrint('✅ User loaded: ${fetchedUser.username}');
+      } else {
+        _status = UserStatus.failure;
+        _errorMessage = 'User not found';
+        debugPrint('⚠️ User not found by id: $uid');
+      }
       notifyListeners();
     } catch (e) {
       debugPrint('Load User error: $e');
@@ -45,22 +52,49 @@ class UserProvider extends ChangeNotifier {
   }
 
   /// Update the user profile (locally and remotely).
-  Future<void> updateUser(UserModel updatedUser) async {
+  Future<bool> updateUser(UserModel updatedUser, {File? profileImage}) async {
     _status = UserStatus.loading;
     notifyListeners();
 
     try {
-      // TODO: Update data via AWS backend.
-      // ... await apiService.updateUser(updatedUser.toJson());
+      final token = await _api.ensureValidToken();
+      final result = await _api.updateUser(
+        id: updatedUser.uid,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        countryCode: updatedUser.countryCode,
+        phoneNumber: updatedUser.phoneNumber,
+        location: updatedUser.location,
+        lat: updatedUser.lat,
+        long: updatedUser.long,
+        specialId: updatedUser.specialId,
+        role: updatedUser.role,
+        profileImage: profileImage,
+        token: token,
+      );
 
-      _user = updatedUser;
-      _status = UserStatus.loaded;
-      notifyListeners();
+      if (result['success'] == true) {
+        final userData = result['user'] ?? result['data'];
+        if (userData is Map<String, dynamic>) {
+          _user = UserModel.fromJson(userData);
+        } else {
+          _user = updatedUser;
+        }
+        _status = UserStatus.loaded;
+        notifyListeners();
+        return true;
+      } else {
+        _status = UserStatus.failure;
+        _errorMessage = result['message'] as String? ?? 'Update failed';
+        notifyListeners();
+        return false;
+      }
     } catch (e) {
       debugPrint('Update User error: $e');
       _status = UserStatus.failure;
       _errorMessage = e.toString();
       notifyListeners();
+      return false;
     }
   }
 
