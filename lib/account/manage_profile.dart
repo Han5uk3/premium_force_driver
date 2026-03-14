@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
@@ -30,8 +31,6 @@ class _ManageProfilePageState extends State<ManageProfilePage>
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
 
-  bool _isInitialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -50,17 +49,19 @@ class _ManageProfilePageState extends State<ManageProfilePage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isInitialized) {
-      final user = Provider.of<AuthProvider>(context).driver;
-      if (user != null) {
-        _nameController.text = user.fullName;
-        _emailController.text = user.email;
-        _phoneController.text = '${user.countryCode} ${user.phoneNumber}';
-        _locationController.text = user.location ?? '';
-        _latitude = user.lat;
-        _longitude = user.long;
-        _isInitialized = true;
-      }
+    _populateFieldsFromUser();
+  }
+
+  void _populateFieldsFromUser() {
+    final user = Provider.of<AuthProvider>(context).driver;
+    if (user != null && _nameController.text.isEmpty) {
+      // Only populate once fields are empty
+      _nameController.text = user.fullName;
+      _emailController.text = user.email;
+      _phoneController.text = '${user.countryCode} ${user.phoneNumber}';
+      _locationController.text = user.location ?? '';
+      _latitude = user.lat;
+      _longitude = user.long;
     }
   }
 
@@ -226,18 +227,16 @@ class _ManageProfilePageState extends State<ManageProfilePage>
     final firstName = nameParts.first;
     final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-    final success = await Provider.of<AuthProvider>(
-      context,
-      listen: false,
-    ).updateDriverProfile(
-      firstName: firstName,
-      lastName: lastName,
-      email: _emailController.text.trim(),
-      location: _locationController.text.trim(),
-      lat: _latitude,
-      long: _longitude,
-      profileImage: _profileImage,
-    );
+    final success = await Provider.of<AuthProvider>(context, listen: false)
+        .updateDriverProfile(
+          firstName: firstName,
+          lastName: lastName,
+          email: _emailController.text.trim(),
+          location: _locationController.text.trim(),
+          lat: _latitude,
+          long: _longitude,
+          profileImage: _profileImage,
+        );
 
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -266,6 +265,13 @@ class _ManageProfilePageState extends State<ManageProfilePage>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context).driver;
+
+    // If user data is missing, try to fetch it
+    if (user == null && !_isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Provider.of<AuthProvider>(context, listen: false).fetchDriver();
+      });
+    }
 
     return Container(
       decoration: const BoxDecoration(
@@ -343,13 +349,25 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                                                     .profileImageUrl!
                                                     .isNotEmpty)
                                           ? ClipOval(
-                                              child: Image.network(
-                                                user.profileImageUrl!,
+                                              child: CachedNetworkImage(
+                                                imageUrl: user.profileImageUrl!,
                                                 width: 112,
                                                 height: 112,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (_, _, _) =>
-                                                    _buildPlaceholderIcon(),
+                                                placeholder: (context, url) =>
+                                                    Center(
+                                                      child: SizedBox(
+                                                        width: 24,
+                                                        height: 32,
+                                                        child: PremiumLoader(
+                                                          color: Colors.white
+                                                              .withAlpha(150),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                errorWidget:
+                                                    (context, url, error) =>
+                                                        _buildPlaceholderIcon(),
                                               ),
                                             )
                                           : _buildPlaceholderIcon(),
