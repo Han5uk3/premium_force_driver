@@ -35,6 +35,7 @@ class UserLocalStorage {
   static const String _tokenExpiryKey = 'token_expiry'; // Unix timestamp in ms
   static const String _fcmTokenKey = 'fcm_token';
   static const String _notificationStatusKey = 'notification_status';
+  static const String _driverProfileKey = 'driver_profile';
 
   static late Box<dynamic> _box;
 
@@ -79,6 +80,8 @@ class UserLocalStorage {
     await _box.delete(_phoneNumberKey);
     await _box.delete(_tokenKey);
     await _box.delete(_refreshTokenKey);
+    await _box.delete(_tokenExpiryKey);
+    await _box.delete(_driverProfileKey);
     debugPrint('💾 User data cleared');
   }
 
@@ -157,6 +160,18 @@ class UserLocalStorage {
 
   /// Whether a user is currently logged in (userId is stored).
   static bool get isLoggedIn => _box.containsKey(_userIdKey);
+
+  /// Persist the full driver profile data.
+  static Future<void> saveDriver(Map<String, dynamic> driverJson) async {
+    await _box.put(_driverProfileKey, driverJson);
+  }
+
+  /// Retrieve the cached driver profile data.
+  static Map<String, dynamic>? getDriver() {
+    final data = _box.get(_driverProfileKey);
+    if (data == null) return null;
+    return Map<String, dynamic>.from(data as Map);
+  }
 
   /// Alias for [getUserId] — for backward compatibility.
   static String? get userId => getUserId();

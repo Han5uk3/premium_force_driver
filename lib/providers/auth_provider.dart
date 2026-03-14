@@ -110,15 +110,17 @@ class AuthProvider extends ChangeNotifier {
     }
 
     final result = await _api.getDriverById(id: id, token: token);
-
+  
     if (result != null) {
       _driver = result;
+      // Persist the full profile locally
+      await UserLocalStorage.saveDriver(result.toJson());
       notifyListeners();
       debugPrint('✅ Fetched driver from backend: ${result.fullName}');
     } else {
       debugPrint('⚠️ Failed to fetch driver by id: $id');
     }
-
+  
     return result;
   }
 
@@ -141,24 +143,41 @@ class AuthProvider extends ChangeNotifier {
     try {
       final storedDriverId = UserLocalStorage.getUserId();
       final hasToken = UserLocalStorage.getToken() != null;
+      final cachedDriverJson = UserLocalStorage.getDriver();
 
-      debugPrint('🔍 Checking Auth: id=$storedDriverId, hasToken=$hasToken');
+      debugPrint(
+        '🔍 Checking Auth: id=$storedDriverId, hasToken=$hasToken, hasCachedDriver=${cachedDriverJson != null}',
+      );
 
       if (storedDriverId != null && storedDriverId.isNotEmpty) {
-        // We have a stored ID. Attempt to fetch full data.
+        // 1. Restore from cache first for immediate UI update
+        if (cachedDriverJson != null) {
+          try {
+            _driver = DriverModel.fromJson(cachedDriverJson);
+            _status = AuthStatus.authenticated;
+            notifyListeners();
+            debugPrint('📦 Restored driver from local cache: ${_driver!.fullName}');
+          } catch (e) {
+            debugPrint('⚠️ Failed to parse cached driver: $e');
+          }
+        }
+
+        // 2. Refresh from backend in the background (or foreground)
         final fetchedDriver = await fetchDriver(driverId: storedDriverId);
 
         if (fetchedDriver != null) {
           _driver = fetchedDriver;
           _status = AuthStatus.authenticated;
-          debugPrint('✅ Session restored for: ${fetchedDriver.fullName}');
+          debugPrint('✅ Session refreshed from backend: ${fetchedDriver.fullName}');
         } else {
-          // If fetch fails, we don't immediately clear everything unless
-          // it's certain the session is invalid.
-          // For now, if we have an ID but fetch failed (maybe offline),
-          // we stay unauthenticated but keep the data for next try.
-          _status = AuthStatus.unauthenticated;
-          debugPrint('⚠️ Could not restore session — fetchDriver returned null');
+          // If fetch fails but we have cached data and a token, stay authenticated
+          if (_driver != null && hasToken) {
+            _status = AuthStatus.authenticated;
+            debugPrint('⚠️ Backend fetch failed, staying authenticated with cached data');
+          } else {
+            _status = AuthStatus.unauthenticated;
+            debugPrint('⚠️ Could not restore session — fetchDriver returned null and no usable cache');
+          }
         }
       } else {
         _status = AuthStatus.unauthenticated;
@@ -302,6 +321,9 @@ class AuthProvider extends ChangeNotifier {
             phoneNumber: phone as String,
           );
 
+          // Save the driver model locally
+          await UserLocalStorage.saveDriver(_driver!.toJson());
+
           _status = AuthStatus.authenticated;
           _phoneNumber = phoneNumber;
           _resendCountdown = 0;
@@ -406,6 +428,9 @@ class AuthProvider extends ChangeNotifier {
             userId: _driver!.uid,
             phoneNumber: phoneNumber,
           );
+
+          // Save the driver model locally
+          await UserLocalStorage.saveDriver(_driver!.toJson());
         }
 
         _status = AuthStatus.authenticated;
@@ -465,6 +490,7 @@ class AuthProvider extends ChangeNotifier {
         final driverData = result['driver'] ?? result['data'];
         if (driverData is Map<String, dynamic>) {
           _driver = DriverModel.fromJson(driverData);
+          await UserLocalStorage.saveDriver(_driver!.toJson());
           notifyListeners();
           return true;
         }
