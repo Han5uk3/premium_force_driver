@@ -51,32 +51,62 @@ class BookingModel {
 
   /// Create a BookingModel from JSON.
   factory BookingModel.fromJson(Map<String, dynamic> json) {
+    // Helper to extract double from various formats
+    double toDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    // Helper to extract int from various formats
+    int toolToInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
+    // Status normalization
+    String normalizeStatus(dynamic status) {
+      if (status == null) return 'P';
+      final s = status.toString().toLowerCase().trim();
+      if (s == 'p' || s == 'pending') return 'P';
+      if (s == 'ac' || s == 'accepted') return 'AC';
+      if (s == 'og' || s == 'ongoing') return 'OG';
+      if (s == 'c' || s == 'completed') return 'C';
+      if (s == 'ca' || s == 'cancelled' || s == 'x') return 'CA';
+      return 'P'; // Default to pending
+    }
+
     return BookingModel(
-      id: json['_id'] ?? json['id'] ?? '',
-      customerId: json['customerId'] ?? '',
-      driverId: json['driverId'],
-      pickupLocation: json['pickupLocation'] ?? '',
-      dropoffLocation: json['dropoffLocation'] ?? '',
-      pickupLatitude: (json['pickupLatitude'] as num?)?.toDouble() ?? 0.0,
-      pickupLongitude: (json['pickupLongitude'] as num?)?.toDouble() ?? 0.0,
-      dropoffLatitude: (json['dropoffLatitude'] as num?)?.toDouble() ?? 0.0,
-      dropoffLongitude: (json['dropoffLongitude'] as num?)?.toDouble() ?? 0.0,
-      status: json['status'] ?? 'P',
-      fare: (json['fare'] as num?)?.toDouble() ?? 0.0,
-      distance: (json['distance'] as num?)?.toDouble() ?? 0.0,
-      estimatedDuration: json['estimatedDuration'] ?? 0,
-      actualDuration: json['actualDuration'],
-      rideType: json['rideType'] ?? 'Economy',
-      vehicleType: json['vehicleType'] ?? 'Standard',
-      passengerCount: json['passengerCount'] ?? 1,
-      rating: (json['rating'] as num?)?.toDouble(),
-      review: json['review'],
-      paymentMethod: json['paymentMethod'] ?? 'Card',
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'].toString())
-          : DateTime.now(),
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      customerId: json['customerID']?.toString() ?? json['customerId']?.toString() ?? '',
+      driverId: json['driverID']?.toString() ?? json['driverId']?.toString(),
+      pickupLocation: json['pickupAddress']?.toString() ?? json['pickupLocation']?.toString() ?? '',
+      dropoffLocation: json['dropOffAddress']?.toString() ?? json['dropoffLocation']?.toString() ?? '',
+      pickupLatitude: toDouble(json['pickupLat'] ?? json['pickupLatitude']),
+      pickupLongitude: toDouble(json['pickupLong'] ?? json['pickupLongitude']),
+      dropoffLatitude: toDouble(json['dropOffLat'] ?? json['dropoffLatitude']),
+      dropoffLongitude: toDouble(json['dropOffLong'] ?? json['dropoffLongitude']),
+      status: normalizeStatus(json['bookingStatus'] ?? json['status']),
+      fare: toDouble(json['charge'] ?? json['fare']),
+      distance: toDouble(json['distance']),
+      estimatedDuration: toolToInt(json['estimatedDuration']),
+      actualDuration: json['actualDuration'] != null ? toolToInt(json['actualDuration']) : null,
+      rideType: json['category']?.toString() ?? json['rideType']?.toString() ?? 'Economy',
+      vehicleType: json['carName']?.toString() ?? json['vehicleType']?.toString() ?? 'Standard',
+      passengerCount: toolToInt(json['passengerCount']),
+      rating: json['rating'] != null ? toDouble(json['rating']) : null,
+      review: json['review']?.toString(),
+      paymentMethod: json['paymentMethod']?.toString() ?? 'Card',
+      createdAt: (json['arrival'] != null)
+          ? DateTime.tryParse(json['arrival'].toString()) ?? DateTime.now()
+          : (json['createdAt'] != null)
+              ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+              : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'].toString())
+          ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }

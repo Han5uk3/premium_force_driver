@@ -186,6 +186,9 @@ class BookingsProvider extends ChangeNotifier {
 
   /// Filter bookings by status into separate lists.
   void _filterBookingsByStatus() {
+    // Sort all bookings by most recent (descending)
+    _allBookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
     _upcomingBookings = _allBookings.where((b) => b.status == 'P').toList();
     _ongoingBookings = _allBookings
         .where((b) => b.status == 'AC' || b.status == 'OG')

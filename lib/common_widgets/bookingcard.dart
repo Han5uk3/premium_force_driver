@@ -318,9 +318,16 @@ class Bookingcard extends StatelessWidget {
       case "p":
         return loc.pending;
       case "Cancelled":
+      case "CA":
       case "X":
       case "x":
         return loc.cancelled;
+      case "Accepted":
+      case "AC":
+        return "Accepted"; // Replace with loc.accepted if available
+      case "Ongoing":
+      case "OG":
+        return "Ongoing"; // Replace with loc.ongoing if available
       case "q":
       case "Q":
         return loc.pickup;
@@ -328,7 +335,7 @@ class Bookingcard extends StatelessWidget {
       case "W":
         return loc.dropoff;
       default:
-        return loc.unknown;
+        return status; // Return the raw status if unknown, better for debugging
     }
   }
 
@@ -342,7 +349,14 @@ class Bookingcard extends StatelessWidget {
       case "P":
       case "p":
         return Colors.orange;
+      case "Accepted":
+      case "AC":
+        return Colors.blue;
+      case "Ongoing":
+      case "OG":
+        return Colors.indigo;
       case "Cancelled":
+      case "CA":
       case "X":
       case "x":
         return Colors.red;
