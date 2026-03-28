@@ -110,6 +110,38 @@ class BookingsProvider extends ChangeNotifier {
     }
   }
 
+  /// Start tracking a booking (moves to starttracking status).
+  Future<bool> startTracking(String bookingId) async {
+    try {
+      final token = UserLocalStorage.getToken();
+
+      final response = await _apiService.updateBookingStatus(
+        bookingId: bookingId,
+        status: 'starttracking',
+        token: token,
+      );
+
+      if (response['success'] == true) {
+        _actionMessage = 'Tracking started!';
+
+        // Update the booking in the list
+        _updateBookingInList(bookingId, 'starttracking');
+
+        notifyListeners();
+        return true;
+      } else {
+        _actionMessage = response['message'] ?? 'Failed to start tracking';
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Start tracking error: $e');
+      _actionMessage = 'Error starting tracking: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Reject a booking by its ID.
   Future<bool> rejectBooking(String bookingId) async {
     try {
@@ -191,7 +223,7 @@ class BookingsProvider extends ChangeNotifier {
 
     _upcomingBookings = _allBookings.where((b) => b.status == 'P').toList();
     _ongoingBookings = _allBookings
-        .where((b) => b.status == 'AC' || b.status == 'OG')
+        .where((b) => b.status == 'AC' || b.status == 'OG' || b.status == 'starttracking')
         .toList();
     _completedBookings = _allBookings
         .where((b) => b.status == 'C' || b.status == 'CA')

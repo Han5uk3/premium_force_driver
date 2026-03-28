@@ -4,6 +4,8 @@ import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/common_widgets/bookingcard.dart';
 import 'package:premium_force_driver/providers/bookings_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:premium_force_driver/services/tracking_service.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -229,6 +231,7 @@ class _BookingsPageState extends State<BookingsPage>
                 onComplete: () async {
                   final success = await provider.completeBooking(booking.id);
                   if (success && context.mounted) {
+                    TrackingService().stopTracking(); // Stop tracking on completion
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -239,6 +242,23 @@ class _BookingsPageState extends State<BookingsPage>
                     );
                   }
                 },
+                onStartTracking: () async {
+                  final success = await provider.startTracking(booking.id);
+                  if (success && context.mounted) {
+                    TrackingService().startTracking(booking.id); // Start streaming
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          provider.actionMessage ?? 'Tracking started',
+                        ),
+                        backgroundColor: Colors.blue,
+                      ),
+                    );
+                  }
+                },
+                onGetDirections: () {
+                  _openMaps(booking);
+                },
               ),
               if (index < bookings.length - 1) const SizedBox(height: 16),
             ],
@@ -246,6 +266,35 @@ class _BookingsPageState extends State<BookingsPage>
         },
       ),
     );
+  }
+
+
+  void _openMaps(dynamic booking) async {
+    final pickupLat = booking.pickupLatitude;
+    final pickupLong = booking.pickupLongitude;
+    final dropoffLat = booking.dropoffLatitude;
+    final dropoffLong = booking.dropoffLongitude;
+
+    String url;
+    if (booking.rideType.toLowerCase().contains('chauffeur') || dropoffLat == 0) {
+      // Chauffeur booking has only pickup
+      url = "https://www.google.com/maps/dir/?api=1&destination=$pickupLat,$pickupLong";
+    } else {
+      // Regular booking: Current Location -> Pickup -> Dropoff
+      url =
+          "https://www.google.com/maps/dir/?api=1&destination=$dropoffLat,$dropoffLong&waypoints=$pickupLat,$pickupLong";
+    }
+
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch maps')),
+        );
+      }
+    }
   }
 
   /// Get appropriate empty message based on tab index

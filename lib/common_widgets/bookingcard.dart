@@ -16,6 +16,8 @@ class Bookingcard extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final VoidCallback? onComplete;
+  final VoidCallback? onStartTracking;
+  final VoidCallback? onGetDirections;
 
   const Bookingcard({
     super.key,
@@ -33,6 +35,8 @@ class Bookingcard extends StatelessWidget {
     this.onAccept,
     this.onReject,
     this.onComplete,
+    this.onStartTracking,
+    this.onGetDirections,
   });
 
   @override
@@ -272,8 +276,10 @@ class Bookingcard extends StatelessWidget {
                   children: [
                     if (status == 'P') // Pending - show Accept and Reject
                       ..._buildPendingActions(loc)
-                    else if (status == 'AC') // Accepted - show Complete
+                    else if (status == 'AC') // Accepted - show Start Tracking
                       ..._buildAcceptedActions(loc)
+                    else if (status == 'starttracking') // Tracking - show Directions and Complete
+                      ..._buildTrackingActions(loc)
                     else if (status == 'OG') // Ongoing - show Complete
                       ..._buildOngoingActions(loc),
                   ],
@@ -327,7 +333,9 @@ class Bookingcard extends StatelessWidget {
         return "Accepted"; // Replace with loc.accepted if available
       case "Ongoing":
       case "OG":
-        return "Ongoing"; // Replace with loc.ongoing if available
+        return "Ongoing";
+      case "starttracking":
+        return "Tracking";
       case "q":
       case "Q":
         return loc.pickup;
@@ -355,6 +363,8 @@ class Bookingcard extends StatelessWidget {
       case "Ongoing":
       case "OG":
         return Colors.indigo;
+      case "starttracking":
+        return Colors.teal;
       case "Cancelled":
       case "CA":
       case "X":
@@ -367,7 +377,7 @@ class Bookingcard extends StatelessWidget {
 
   bool _shouldShowActions() {
     return bookingId != null &&
-        (status == 'P' || status == 'AC' || status == 'OG');
+        (status == 'P' || status == 'AC' || status == 'OG' || status == 'starttracking');
   }
 
   List<Widget> _buildPendingActions(AppLocalizations loc) {
@@ -404,11 +414,41 @@ class Bookingcard extends StatelessWidget {
     return [
       Expanded(
         child: ElevatedButton.icon(
+          onPressed: onStartTracking,
+          icon: const Icon(Icons.location_searching, size: 16),
+          label: const Text("Start Tracking"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue.shade700,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildTrackingActions(AppLocalizations loc) {
+    return [
+      Expanded(
+        child: ElevatedButton.icon(
+          onPressed: onGetDirections,
+          icon: const Icon(Icons.directions, size: 16),
+          label: const Text("Get Directions"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange.shade800,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: ElevatedButton.icon(
           onPressed: onComplete,
           icon: const Icon(Icons.check_circle, size: 16),
           label: Text(loc.complete),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade700,
+            backgroundColor: Colors.green.shade700,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
           ),

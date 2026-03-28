@@ -631,6 +631,26 @@ class ApiService {
     }
   }
 
+  /// Update booking status.
+  ///
+  /// Calls `PUT /api/bookings/{bookingId}` to update status.
+  Future<Map<String, dynamic>> updateBookingStatus({
+    required String bookingId,
+    required String status,
+    String? token,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/bookings/$bookingId',
+        data: {'bookingStatus': status, 'status': status}, // Send both to be safe
+        options: token != null ? _authOptions(token) : null,
+      );
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
   /// Reject a booking by [bookingId].
   ///
   /// Calls `PUT /api/bookings/{bookingId}` to update status to "CA" (Cancelled).
