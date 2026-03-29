@@ -22,8 +22,7 @@ class ApiService {
   // ---------------------------------------------------------------------------
 
   /// Base URL of the AWS backend.
-  static const String _baseUrl =
-      'http://ec2-54-252-191-113.ap-southeast-2.compute.amazonaws.com:5000/api/';
+  static const String _baseUrl = 'https://api.premiumforcegroup.com/api/';
 
   // ---------------------------------------------------------------------------
   // Singleton + Dio instance
@@ -642,7 +641,10 @@ class ApiService {
     try {
       final response = await _dio.put(
         '/bookings/$bookingId',
-        data: {'bookingStatus': status, 'status': status}, // Send both to be safe
+        data: {
+          'bookingStatus': status,
+          'status': status,
+        }, // Send both to be safe
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
