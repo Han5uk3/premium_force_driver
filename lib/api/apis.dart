@@ -588,6 +588,50 @@ class ApiService {
     }
   }
 
+  /// Fetch all hourly bookings assigned to the driver by [driverId].
+  ///
+  /// Calls `GET /api/hourly-bookings/driver/{driverId}`.
+  Future<List<BookingModel>> getHourlyBookingsByDriverId({
+    required String driverId,
+    String? token,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/hourly-bookings/driver/$driverId',
+        options: token != null ? _authOptions(token) : null,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        List<BookingModel> bookings = [];
+
+        if (data is Map<String, dynamic> &&
+            (data.containsKey('bookings') || data.containsKey('data'))) {
+          final bookingsList = (data['bookings'] ?? data['data']) as List?;
+          if (bookingsList != null) {
+            bookings =
+                bookingsList
+                    .map(
+                      (b) => BookingModel.fromJson(b as Map<String, dynamic>),
+                    )
+                    .toList();
+          }
+        } else if (data is List) {
+          bookings =
+              data
+                  .map((b) => BookingModel.fromJson(b as Map<String, dynamic>))
+                  .toList();
+        }
+
+        return bookings;
+      }
+      return [];
+    } catch (e) {
+      debugPrint('getHourlyBookingsByDriverId error: $e');
+      return [];
+    }
+  }
+
   /// Fetch a single booking by [bookingId].
   ///
   /// Calls `GET /api/bookings/{bookingId}`.
@@ -613,15 +657,20 @@ class ApiService {
 
   /// Accept a booking by [bookingId].
   ///
-  /// Calls `PUT /api/bookings/{bookingId}` to update status to "AC" (Accepted).
+  /// Calls `PUT /api/bookings/{bookingId}` or `/api/hourly-bookings/{bookingId}` to update status to "AC" (Accepted).
   Future<Map<String, dynamic>> acceptBooking({
     required String bookingId,
+    bool isHourly = false,
     String? token,
   }) async {
     try {
+      final path = isHourly ? '/hourly-bookings/$bookingId' : '/bookings/$bookingId';
       final response = await _dio.put(
-        '/bookings/$bookingId',
-        data: {'status': 'AC'}, // AC = Accepted
+        path,
+        data: {
+          'status': 'AC',
+          'bookingStatus': 'AC',
+        }, // AC = Accepted
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
@@ -632,15 +681,17 @@ class ApiService {
 
   /// Update booking status.
   ///
-  /// Calls `PUT /api/bookings/{bookingId}` to update status.
+  /// Calls `PUT /api/bookings/{bookingId}` or `/api/hourly-bookings/{bookingId}`.
   Future<Map<String, dynamic>> updateBookingStatus({
     required String bookingId,
     required String status,
+    bool isHourly = false,
     String? token,
   }) async {
     try {
+      final path = isHourly ? '/hourly-bookings/$bookingId' : '/bookings/$bookingId';
       final response = await _dio.put(
-        '/bookings/$bookingId',
+        path,
         data: {
           'bookingStatus': status,
           'status': status,
@@ -655,15 +706,20 @@ class ApiService {
 
   /// Reject a booking by [bookingId].
   ///
-  /// Calls `PUT /api/bookings/{bookingId}` to update status to "CA" (Cancelled).
+  /// Calls `PUT /api/bookings/{bookingId}` or `/api/hourly-bookings/{bookingId}` to update status to "CA" (Cancelled).
   Future<Map<String, dynamic>> rejectBooking({
     required String bookingId,
+    bool isHourly = false,
     String? token,
   }) async {
     try {
+      final path = isHourly ? '/hourly-bookings/$bookingId' : '/bookings/$bookingId';
       final response = await _dio.put(
-        '/bookings/$bookingId',
-        data: {'status': 'CA'}, // CA = Cancelled
+        path,
+        data: {
+          'status': 'CA',
+          'bookingStatus': 'CA',
+        }, // CA = Cancelled
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);

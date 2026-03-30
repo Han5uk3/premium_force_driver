@@ -198,8 +198,8 @@ class _BookingsPageState extends State<BookingsPage>
                 dropoff: booking.dropoffLocation,
                 date: dateFormat.format(booking.createdAt),
                 time: timeFormat.format(booking.createdAt),
-                ride: booking.vehicleType.split(' ')[0],
-                brand: booking.vehicleType,
+                ride: booking.displayName,
+                brand: booking.displayBrand,
                 passengers: booking.passengerCount,
                 bookingId: booking.id,
                 onAccept: () async {

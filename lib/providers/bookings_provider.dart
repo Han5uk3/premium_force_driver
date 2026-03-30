@@ -56,10 +56,21 @@ class BookingsProvider extends ChangeNotifier {
       final token = UserLocalStorage.getToken();
 
       // Fetch bookings from API
-      _allBookings = await _apiService.getBookingsByDriverId(
-        driverId: driverId,
-        token: token,
-      );
+      final results = await Future.wait([
+        _apiService.getBookingsByDriverId(
+          driverId: driverId,
+          token: token,
+        ),
+        _apiService.getHourlyBookingsByDriverId(
+          driverId: driverId,
+          token: token,
+        ),
+      ]);
+
+      final List<BookingModel> regularBookings = results[0];
+      final List<BookingModel> hourlyBookings = results[1];
+
+      _allBookings = [...regularBookings, ...hourlyBookings];
 
       // Filter bookings by status
       _filterBookingsByStatus();
@@ -84,8 +95,10 @@ class BookingsProvider extends ChangeNotifier {
     try {
       final token = UserLocalStorage.getToken();
 
+      final booking = _allBookings.firstWhere((b) => b.id == bookingId);
       final response = await _apiService.acceptBooking(
         bookingId: bookingId,
+        isHourly: booking.isHourly,
         token: token,
       );
 
@@ -115,9 +128,11 @@ class BookingsProvider extends ChangeNotifier {
     try {
       final token = UserLocalStorage.getToken();
 
+      final booking = _allBookings.firstWhere((b) => b.id == bookingId);
       final response = await _apiService.updateBookingStatus(
         bookingId: bookingId,
         status: 'starttracking',
+        isHourly: booking.isHourly,
         token: token,
       );
 
@@ -147,8 +162,10 @@ class BookingsProvider extends ChangeNotifier {
     try {
       final token = UserLocalStorage.getToken();
 
+      final booking = _allBookings.firstWhere((b) => b.id == bookingId);
       final response = await _apiService.rejectBooking(
         bookingId: bookingId,
+        isHourly: booking.isHourly,
         token: token,
       );
 
