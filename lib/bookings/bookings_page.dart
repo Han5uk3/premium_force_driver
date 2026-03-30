@@ -272,6 +272,7 @@ class _BookingsPageState extends State<BookingsPage>
                         backgroundColor: Colors.blue,
                       ),
                     );
+                    _openMaps(booking);
                   }
                 },
                 onStopTracking: () async {
