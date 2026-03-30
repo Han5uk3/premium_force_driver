@@ -189,6 +189,15 @@ class _BookingsPageState extends State<BookingsPage>
           final dateFormat = DateFormat('dd MMM, yyyy');
           final timeFormat = DateFormat('h:mm a');
 
+          // Prioritize pickupdatetime then arrival, then fallback to createdAt
+          final displayDateTime = (booking.pickupdatetime != null && booking.pickupdatetime!.isNotEmpty)
+              ? DateTime.tryParse(booking.pickupdatetime!)
+              : (booking.arrival != null && booking.arrival!.isNotEmpty)
+                  ? DateTime.tryParse(booking.arrival!)
+                  : booking.createdAt;
+          
+          final effectiveDateTime = displayDateTime ?? booking.createdAt;
+
           return Column(
             children: [
               Bookingcard(
@@ -196,12 +205,15 @@ class _BookingsPageState extends State<BookingsPage>
                 type: booking.rideType,
                 pickup: booking.pickupLocation,
                 dropoff: booking.dropoffLocation,
-                date: dateFormat.format(booking.createdAt),
-                time: timeFormat.format(booking.createdAt),
+                date: dateFormat.format(effectiveDateTime),
+                time: timeFormat.format(effectiveDateTime),
                 ride: booking.displayName,
                 brand: booking.displayBrand,
                 passengers: booking.passengerCount,
                 bookingId: booking.id,
+                rating: booking.rating,
+                reviewText: booking.review,
+                isChauffeur: booking.isHourly,
                 onAccept: () async {
                   final success = await provider.acceptBooking(booking.id);
                   if (success && context.mounted) {
@@ -245,13 +257,37 @@ class _BookingsPageState extends State<BookingsPage>
                 onStartTracking: () async {
                   final success = await provider.startTracking(booking.id);
                   if (success && context.mounted) {
-                    TrackingService().startTracking(booking.id); // Start streaming
+                    await TrackingService().startTracking(
+                      bookingId: booking.id,
+                      customerId: booking.customerId,
+                      driverId: booking.driverId ?? '',
+                      isChauffeur: booking.isHourly,
+                      bookedHours: booking.estimatedDuration, // hours from booking
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
                           provider.actionMessage ?? 'Tracking started',
                         ),
                         backgroundColor: Colors.blue,
+                      ),
+                    );
+                  }
+                },
+                onStopTracking: () async {
+                  // Stop the GPS stream and save chauffeur timing to backend
+                  await TrackingService().stopTracking(saveToBackend: true);
+                  // Mark booking as completed (chauffeur trips end with stop tracking)
+                  final success = await provider.completeBooking(booking.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success
+                              ? (provider.actionMessage ?? 'Trip ended')
+                              : 'Tracking stopped, sync pending',
+                        ),
+                        backgroundColor: success ? Colors.green : Colors.orange,
                       ),
                     );
                   }

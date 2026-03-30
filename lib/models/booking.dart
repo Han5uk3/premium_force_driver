@@ -27,6 +27,11 @@ class BookingModel {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isHourly;
+  final String? arrival;
+  final String? pickupdatetime;
+  final double? discountPercentage;
+  final String? orderID;
+  final String? transactionID;
 
   // Modern Nested Objects from rich backend response
   final CityDetails? city;
@@ -72,6 +77,11 @@ class BookingModel {
     this.trackingTimeline,
     this.paymentStatus,
     this.isHourly = false,
+    this.arrival,
+    this.pickupdatetime,
+    this.discountPercentage,
+    this.orderID,
+    this.transactionID,
   });
 
   /// Readable car name (e.g. "S-Class")
@@ -143,17 +153,21 @@ class BookingModel {
       rideType: json['category']?.toString() ?? json['rideType']?.toString() ?? 'Standard',
       vehicleType: carData?.displayName ?? json['carName']?.toString() ?? json['vehicleType']?.toString() ?? json['carClass']?.toString() ?? 'Standard',
       passengerCount: toolToInt(json['passengerCount'] ?? json['passsenrgersCount']),
-      rating: json['rating'] != null ? toDouble(json['rating']) : null,
-      review: json['review']?.toString(),
+      rating: (json['rating'] is Map)
+          ? toDouble(json['rating']['rate'] ?? json['rating']['rating'])
+          : (json['rating'] != null ? toDouble(json['rating']) : null),
+      review: (json['rating'] is Map)
+          ? json['rating']['reviewText']?.toString()
+          : json['review']?.toString(),
       paymentMethod: json['paymentMethod']?.toString() ?? 'Card',
-      createdAt: (json['arrival'] != null)
-          ? DateTime.tryParse(json['arrival'].toString()) ?? DateTime.now()
-          : (json['createdAt'] != null)
-              ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
-              : DateTime.now(),
+      createdAt: (json['createdAt'] != null)
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
+      arrival: json['arrival']?.toString(),
+      pickupdatetime: json['pickupdatetime']?.toString(),
       city: cityData,
       airport: airportData,
       terminal: terminalData,
@@ -166,7 +180,12 @@ class BookingModel {
           ? (json['paymentStatus'] ? "Paid" : "Unpaid")
           : json['paymentStatus']?.toString() ?? "Unpaid",
       isHourly: (json['category']?.toString().toLowerCase().contains('chauffeur') ?? false) || 
-                (json['estimatedHours'] != null || json['hours'] != null),
+                (json['estimatedHours'] != null || json['hours'] != null || json['pickupdatetime'] != null),
+      discountPercentage: json['discountPercentage'] != null
+          ? double.tryParse(json['discountPercentage'].toString())
+          : null,
+      orderID: json['orderID']?.toString(),
+      transactionID: json['transactionID']?.toString(),
     );
   }
 
@@ -196,6 +215,11 @@ class BookingModel {
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
     'paymentStatus': paymentStatus,
+    'arrival': arrival,
+    'pickupdatetime': pickupdatetime,
+    'discountPercentage': discountPercentage,
+    'orderID': orderID,
+    'transactionID': transactionID,
     if (originalIds != null) 'originalIds': {
       'cityID': originalIds!.cityID,
       'airportID': originalIds!.airportID,
@@ -274,6 +298,11 @@ class BookingModel {
     trackingTimeline: trackingTimeline ?? this.trackingTimeline,
     paymentStatus: paymentStatus ?? this.paymentStatus,
     isHourly: isHourly ?? this.isHourly,
+    arrival: arrival ?? this.arrival,
+    pickupdatetime: pickupdatetime ?? this.pickupdatetime,
+    discountPercentage: discountPercentage ?? this.discountPercentage,
+    orderID: orderID ?? this.orderID,
+    transactionID: transactionID ?? this.transactionID,
   );
 
   @override

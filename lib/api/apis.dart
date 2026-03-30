@@ -728,6 +728,39 @@ class ApiService {
     }
   }
 
+  /// Save chauffeur trip timing data (startTime, stopTime, duration) to backend.
+  ///
+  /// Calls `PUT /api/hourly-bookings/{bookingId}` with timing fields.
+  /// [extraHours] is > 0 when the driver ran over the booked hour allocation.
+  Future<Map<String, dynamic>> saveChauffeurTripTimes({
+    required String bookingId,
+    required String startTime,
+    required String stopTime,
+    required int tripDurationSeconds,
+    int extraHours = 0,
+    String? token,
+  }) async {
+    try {
+      final authToken = token ?? UserLocalStorage.getToken();
+      final data = <String, dynamic>{
+        'trackingStartTime': startTime,
+        'trackingStopTime': stopTime,
+        'tripDurationSeconds': tripDurationSeconds,
+      };
+      if (extraHours > 0) {
+        data['extraHours'] = extraHours;
+      }
+      final response = await _dio.put(
+        '/hourly-bookings/$bookingId',
+        data: data,
+        options: authToken != null ? _authOptions(authToken) : null,
+      );
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
   /// Mark a booking as completed (trip finished).
   ///
   /// Calls `POST /api/drivers/complete-booking/` endpoint.

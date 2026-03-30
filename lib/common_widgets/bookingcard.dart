@@ -12,17 +12,22 @@ class Bookingcard extends StatelessWidget {
   final String brand;
   final int passengers;
   final bool isFromReviewAndConfirm;
+  final bool isChauffeur;
   final String? bookingId;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final VoidCallback? onComplete;
   final VoidCallback? onStartTracking;
+  final VoidCallback? onStopTracking;
   final VoidCallback? onGetDirections;
+  final double? rating;
+  final String? reviewText;
 
   const Bookingcard({
     super.key,
     this.passengers = 1,
     this.isFromReviewAndConfirm = false,
+    this.isChauffeur = false,
     required this.status,
     required this.type,
     required this.pickup,
@@ -36,7 +41,10 @@ class Bookingcard extends StatelessWidget {
     this.onReject,
     this.onComplete,
     this.onStartTracking,
+    this.onStopTracking,
     this.onGetDirections,
+    this.rating,
+    this.reviewText,
   });
 
   @override
@@ -267,6 +275,59 @@ class Bookingcard extends StatelessWidget {
                 SizedBox(height: 8),
               ],
             ),
+            if (rating != null && (status.toLowerCase().trim() == 'completed' || status.toLowerCase().trim() == 'c')) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Customer Review",
+                            style: TextStyle(
+                              color: Colors.amber,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Row(
+                            children: List.generate(5, (index) {
+                              return Icon(
+                                index < rating!.round()
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: Colors.amber,
+                                size: 14,
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                      if (reviewText != null && reviewText!.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          reviewText!,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
             // Action buttons based on status
             if (!isFromReviewAndConfirm && _shouldShowActions())
               Padding(
@@ -278,8 +339,10 @@ class Bookingcard extends StatelessWidget {
                       ..._buildPendingActions(loc)
                     else if (status == 'AC') // Accepted - show Start Tracking
                       ..._buildAcceptedActions(loc)
-                    else if (status == 'starttracking') // Tracking - show Directions and Complete
-                      ..._buildTrackingActions(loc)
+                    else if (status == 'starttracking') // Tracking
+                      ...(isChauffeur
+                          ? _buildChauffeurTrackingActions(loc)
+                          : _buildTrackingActions(loc))
                     else if (status == 'OG') // Ongoing - show Complete
                       ..._buildOngoingActions(loc),
                   ],
@@ -445,10 +508,42 @@ class Bookingcard extends StatelessWidget {
       Expanded(
         child: ElevatedButton.icon(
           onPressed: onComplete,
-          icon: const Icon(Icons.check_circle, size: 16),
-          label: Text(loc.complete),
+          icon: const Icon(Icons.stop_circle, size: 16),
+          label: const Text("Stop Tracking"),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade700,
+            backgroundColor: Colors.red.shade700,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  /// Chauffeur in starttracking: driver navigates to pickup, timer is running.
+  /// Show "Get Directions" + "Stop Tracking" (which also saves timing data).
+  List<Widget> _buildChauffeurTrackingActions(AppLocalizations loc) {
+    return [
+      Expanded(
+        child: ElevatedButton.icon(
+          onPressed: onGetDirections,
+          icon: const Icon(Icons.directions, size: 16),
+          label: const Text("Get Directions"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange.shade800,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: ElevatedButton.icon(
+          onPressed: onStopTracking,
+          icon: const Icon(Icons.stop_circle, size: 16),
+          label: const Text("Stop Tracking"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red.shade700,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
           ),

@@ -235,8 +235,20 @@ class BookingsProvider extends ChangeNotifier {
 
   /// Filter bookings by status into separate lists.
   void _filterBookingsByStatus() {
-    // Sort all bookings by most recent (descending)
-    _allBookings.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    // Sort all bookings by booking time (descending)
+    _allBookings.sort((a, b) {
+      final dateA = (a.pickupdatetime != null && a.pickupdatetime!.isNotEmpty)
+          ? DateTime.tryParse(a.pickupdatetime!) ?? a.createdAt
+          : (a.arrival != null && a.arrival!.isNotEmpty)
+              ? DateTime.tryParse(a.arrival!) ?? a.createdAt
+              : a.createdAt;
+      final dateB = (b.pickupdatetime != null && b.pickupdatetime!.isNotEmpty)
+          ? DateTime.tryParse(b.pickupdatetime!) ?? b.createdAt
+          : (b.arrival != null && b.arrival!.isNotEmpty)
+              ? DateTime.tryParse(b.arrival!) ?? b.createdAt
+              : b.createdAt;
+      return dateB.compareTo(dateA);
+    });
 
     _upcomingBookings = _allBookings.where((b) => b.status == 'P').toList();
     _ongoingBookings = _allBookings
