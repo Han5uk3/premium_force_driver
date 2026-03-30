@@ -479,7 +479,7 @@ class Bookingcard extends StatelessWidget {
         child: ElevatedButton.icon(
           onPressed: onStartTracking,
           icon: const Icon(Icons.location_searching, size: 16),
-          label: const Text("Start Tracking"),
+          label: Text(loc.startTracking),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
@@ -496,7 +496,7 @@ class Bookingcard extends StatelessWidget {
         child: ElevatedButton.icon(
           onPressed: onGetDirections,
           icon: const Icon(Icons.directions, size: 16),
-          label: const Text("Get Directions"),
+          label: Text(loc.getDirections),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.orange.shade800,
             foregroundColor: Colors.white,
@@ -509,7 +509,7 @@ class Bookingcard extends StatelessWidget {
         child: ElevatedButton.icon(
           onPressed: onComplete,
           icon: const Icon(Icons.stop_circle, size: 16),
-          label: const Text("Stop Tracking"),
+          label: Text(loc.stopTracking),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red.shade700,
             foregroundColor: Colors.white,
@@ -528,7 +528,7 @@ class Bookingcard extends StatelessWidget {
         child: ElevatedButton.icon(
           onPressed: onGetDirections,
           icon: const Icon(Icons.directions, size: 16),
-          label: const Text("Get Directions"),
+          label: Text(loc.getDirections),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.orange.shade800,
             foregroundColor: Colors.white,
@@ -541,7 +541,7 @@ class Bookingcard extends StatelessWidget {
         child: ElevatedButton.icon(
           onPressed: onStopTracking,
           icon: const Icon(Icons.stop_circle, size: 16),
-          label: const Text("Stop Tracking"),
+          label: Text(loc.stopTracking),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red.shade700,
             foregroundColor: Colors.white,

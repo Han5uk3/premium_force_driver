@@ -148,8 +148,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       if (!serviceEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Location services are disabled.'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.locationServicesAreDisabled),
               backgroundColor: Colors.red,
             ),
           );
@@ -164,8 +164,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         if (permission == LocationPermission.denied) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Location permission denied.'),
+              SnackBar(
+                content: Text(AppLocalizations.of(context)!.locationPermissionDenied),
                 backgroundColor: Colors.red,
               ),
             );
@@ -211,7 +211,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error getting location: $e'),
+            content: Text('${AppLocalizations.of(context)!.errorGettingLocation}$e'),
             backgroundColor: Colors.red,
           ),
         );

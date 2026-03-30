@@ -162,7 +162,7 @@ class _BookingsPageState extends State<BookingsPage>
               onPressed: () {
                 provider.fetchBookings();
               },
-              child: const Text('Retry'),
+              child: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),
@@ -328,7 +328,7 @@ class _BookingsPageState extends State<BookingsPage>
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch maps')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotLaunchMaps)),
         );
       }
     }

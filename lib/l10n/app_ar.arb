@@ -187,5 +187,17 @@
   "termsSection7Content": "نحتفظ بالحق في تعديل هذه الشروط أو السياسات المتعلقة بالتطبيق أو الخدمات في أي وقت. يشكل استمرارك في استخدام التطبيق بعد أي تغييرات من هذا القبيل موافقتك على هذه التغييرات.",
   "accept": "قبول",
   "reject": "رفض",
-  "complete": "إكمال"
+  "complete": "إكمال",
+  "startTracking": "بدء التتبع",
+  "getDirections": "الحصول على الاتجاهات",
+  "stopTracking": "إيقاف التتبع",
+  "retry": "إعادة المحاولة",
+  "couldNotLaunchMaps": "تعذر فتح الخرائط",
+  "locationServicesAreDisabled": "خدمات الموقع معطلة.",
+  "locationPermissionDenied": "تم رفض إذن الموقع.",
+  "errorGettingLocation": "خطأ في الحصول على الموقع: ",
+  "profileUpdatedSuccessfully": "تم تحديث الملف الشخصي بنجاح!",
+  "driverNotRegistered": "السائق غير مسجل",
+  "noDriverRegistered": "لا يوجد سائق مسجل بهذا الرقم في التطبيق.\n\nيرجى الاتصال بالمسؤول لتسجيل رقمك.",
+  "ok": "حسناً"
 }

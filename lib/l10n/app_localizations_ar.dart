@@ -213,7 +213,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pleaseEnterYourEmail => 'يرجى إدخال بريدك الإلكتروني';
 
   @override
-  String get nameMustBeAtLeast2Characters => 'يجب أن يكون الاسم مكونًا من حرفين على الأقل';
+  String get nameMustBeAtLeast2Characters =>
+      'يجب أن يكون الاسم مكونًا من حرفين على الأقل';
 
   @override
   String get pleaseEnterAValidEmail => 'يرجى إدخال بريد إلكتروني صالح';
@@ -264,7 +265,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectLocation => 'اختر الموقع';
 
   @override
-  String get pleaseAgreeToTheTermsAndConditionsAndPrivacyPolicy => 'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية.';
+  String get pleaseAgreeToTheTermsAndConditionsAndPrivacyPolicy =>
+      'يرجى الموافقة على الشروط والأحكام وسياسة الخصوصية.';
 
   @override
   String get tripInfo => 'معلومات الرحلة';
@@ -363,7 +365,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dateAndTimeIsRequired => 'التاريخ والوقت مطلوبان';
 
   @override
-  String get previouslySelectedTimeClearedAsItIsInThePast => 'تم مسح الوقت المحدد مسبقًا لأنه في الماضي';
+  String get previouslySelectedTimeClearedAsItIsInThePast =>
+      'تم مسح الوقت المحدد مسبقًا لأنه في الماضي';
 
   @override
   String get selectDate => 'اختر التاريخ';
@@ -375,7 +378,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectTime => 'اختر الوقت';
 
   @override
-  String get cannotSelectPastTimeForToday => 'لا يمكن اختيار وقت في الماضي لليوم';
+  String get cannotSelectPastTimeForToday =>
+      'لا يمكن اختيار وقت في الماضي لليوم';
 
   @override
   String get chooseYouPreferredVehicle => 'اختر سيارتك المفضلة';
@@ -426,13 +430,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get numberOfPassengers => 'عدد الركاب';
 
   @override
-  String get passengerNameAtleastOne => 'اسم الراكب (على الأقل واحد مفصول بفواصل)';
+  String get passengerNameAtleastOne =>
+      'اسم الراكب (على الأقل واحد مفصول بفواصل)';
 
   @override
   String get passengerName => 'اسم الراكب';
 
   @override
-  String get pleaseEnterAtleastOnepassengerName => 'يرجى إدخال اسم راكب واحد على الأقل';
+  String get pleaseEnterAtleastOnepassengerName =>
+      'يرجى إدخال اسم راكب واحد على الأقل';
 
   @override
   String get pleaseEnterAMobileNumber => 'يرجى إدخال رقم الجوال';
@@ -489,19 +495,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cancel => 'إلغاء';
 
   @override
-  String get loginAgainMessage => 'سيتعين عليك تسجيل الدخول مرة أخرى في المرة القادمة التي تفتح فيها التطبيق.';
+  String get loginAgainMessage =>
+      'سيتعين عليك تسجيل الدخول مرة أخرى في المرة القادمة التي تفتح فيها التطبيق.';
 
   @override
   String get deleteAccountConfirm => 'هل أنت متأكد من حذف حسابك؟';
 
   @override
-  String get deleteAccountMessage => 'لا يمكن التراجع عن هذا الإجراء وسيتم مسح جميع بياناتك.';
+  String get deleteAccountMessage =>
+      'لا يمكن التراجع عن هذا الإجراء وسيتم مسح جميع بياناتك.';
 
   @override
-  String get pickupTimeCannotBeAfterDepartureTime => 'وقت الاستلام لا يمكن أن يكون بعد وقت المغادرة';
+  String get pickupTimeCannotBeAfterDepartureTime =>
+      'وقت الاستلام لا يمكن أن يكون بعد وقت المغادرة';
 
   @override
-  String get pickupTimeAtLeast4HoursBeforeDeparture => 'يجب أن يكون وقت الاستلام قبل 4 ساعات على الأقل من وقت المغادرة';
+  String get pickupTimeAtLeast4HoursBeforeDeparture =>
+      'يجب أن يكون وقت الاستلام قبل 4 ساعات على الأقل من وقت المغادرة';
 
   @override
   String get noRecentBookings => 'لا توجد حجوزات سابقة';
@@ -519,49 +529,57 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onceYouBookItWillAppearHere => 'بمجرد حجز خدمة، ستظهر هنا.';
 
   @override
-  String get termsIntro => 'تحدد هذه الشروط والأحكام قواعد ولوائح استخدام تطبيق بريميوم فورس، وهي خدمة حجز سائق خاص فاخرة تعمل في المملكة العربية السعودية.\n\nمن خلال الوصول إلى هذا التطبيق، نفترض أنك تقبل هذه الشروط والأحكام. لا تستمر في استخدام بريميوم فورس إذا كنت لا توافق على أخذ جميع الشروط والأحكام المذكورة في هذه الصفحة.\n';
+  String get termsIntro =>
+      'تحدد هذه الشروط والأحكام قواعد ولوائح استخدام تطبيق بريميوم فورس، وهي خدمة حجز سائق خاص فاخرة تعمل في المملكة العربية السعودية.\n\nمن خلال الوصول إلى هذا التطبيق، نفترض أنك تقبل هذه الشروط والأحكام. لا تستمر في استخدام بريميوم فورس إذا كنت لا توافق على أخذ جميع الشروط والأحكام المذكورة في هذه الصفحة.\n';
 
   @override
   String get termsSection1Title => '١. خدمات التطبيق والحجوزات';
 
   @override
-  String get termsSection1Content => 'يربط بريميوم فورس المستخدمين بخدمات سائق خاص فاخرة داخل المملكة العربية السعودية. تخضع جميع الحجوزات للتوافر، ونحتفظ بالحق في رفض أو إلغاء الحجوزات في ظل ظروف معينة موضحة في سياساتنا.';
+  String get termsSection1Content =>
+      'يربط بريميوم فورس المستخدمين بخدمات سائق خاص فاخرة داخل المملكة العربية السعودية. تخضع جميع الحجوزات للتوافر، ونحتفظ بالحق في رفض أو إلغاء الحجوزات في ظل ظروف معينة موضحة في سياساتنا.';
 
   @override
   String get termsSection2Title => '٢. مسؤوليات المستخدم';
 
   @override
-  String get termsSection2Content => 'أنت ممنوع على وجه التحديد من كل ما يلي:\n• استخدام هذا التطبيق بأي طريقة تؤثر على وصول المستخدم أو تعطل خدمات السائق؛\n• استخدام هذا التطبيق بشكل مخالف للقوانين واللوائح المعمول بها في المملكة العربية السعودية؛\n• التصرف بشكل غير لائق تجاه سائقينا أو الإضرار بالمركبات الفاخرة المقدمة.';
+  String get termsSection2Content =>
+      'أنت ممنوع على وجه التحديد من كل ما يلي:\n• استخدام هذا التطبيق بأي طريقة تؤثر على وصول المستخدم أو تعطل خدمات السائق؛\n• استخدام هذا التطبيق بشكل مخالف للقوانين واللوائح المعمول بها في المملكة العربية السعودية؛\n• التصرف بشكل غير لائق تجاه سائقينا أو الإضرار بالمركبات الفاخرة المقدمة.';
 
   @override
   String get termsSection3Title => '٣. المدفوعات والإلغاء';
 
   @override
-  String get termsSection3Content => 'يجب إجراء جميع المدفوعات لخدمات السائق الخاص من خلال الطرق المعتمدة داخل التطبيق. تسري سياسات الإلغاء على جميع الحجوزات. قد يترتب على الإلغاء المتأخر أو عدم الحضور رسوم كما هو مفصل أثناء عملية الحجز.';
+  String get termsSection3Content =>
+      'يجب إجراء جميع المدفوعات لخدمات السائق الخاص من خلال الطرق المعتمدة داخل التطبيق. تسري سياسات الإلغاء على جميع الحجوزات. قد يترتب على الإلغاء المتأخر أو عدم الحضور رسوم كما هو مفصل أثناء عملية الحجز.';
 
   @override
   String get termsSection4Title => '٤. الخصوصية';
 
   @override
-  String get termsSection4Content => 'يرجى قراءة سياسة الخصوصية الخاصة بنا. يعني استخدامك للتطبيق موافقتك المستمرة على سياسة الخصوصية الخاصة بنا فيما يتعلق بجمع واستخدام بياناتك الشخصية والمكانية اللازمة لخدمة السائق الخاص.';
+  String get termsSection4Content =>
+      'يرجى قراءة سياسة الخصوصية الخاصة بنا. يعني استخدامك للتطبيق موافقتك المستمرة على سياسة الخصوصية الخاصة بنا فيما يتعلق بجمع واستخدام بياناتك الشخصية والمكانية اللازمة لخدمة السائق الخاص.';
 
   @override
   String get termsSection5Title => '٥. إخلاء المسؤولية عن الضمانات';
 
   @override
-  String get termsSection5Content => 'يتم توفير هذا التطبيق \"كما هو\"، ولا تقدم بريميوم فورس أي إقرارات أو ضمانات تتعلق بالتوافر المستمر للتطبيق أو سائقين محددين.';
+  String get termsSection5Content =>
+      'يتم توفير هذا التطبيق \"كما هو\"، ولا تقدم بريميوم فورس أي إقرارات أو ضمانات تتعلق بالتوافر المستمر للتطبيق أو سائقين محددين.';
 
   @override
   String get termsSection6Title => '٦. القانون الحاكم والولاية القضائية';
 
   @override
-  String get termsSection6Content => 'ستخضع هذه الشروط وتفسر وفقًا لقوانين المملكة العربية السعودية، وتخضع للولاية القضائية الحصرية للمحاكم الموجودة في المملكة العربية السعودية لحل أي نزاعات.';
+  String get termsSection6Content =>
+      'ستخضع هذه الشروط وتفسر وفقًا لقوانين المملكة العربية السعودية، وتخضع للولاية القضائية الحصرية للمحاكم الموجودة في المملكة العربية السعودية لحل أي نزاعات.';
 
   @override
   String get termsSection7Title => '٧. التغييرات والتعديلات';
 
   @override
-  String get termsSection7Content => 'نحتفظ بالحق في تعديل هذه الشروط أو السياسات المتعلقة بالتطبيق أو الخدمات في أي وقت. يشكل استمرارك في استخدام التطبيق بعد أي تغييرات من هذا القبيل موافقتك على هذه التغييرات.';
+  String get termsSection7Content =>
+      'نحتفظ بالحق في تعديل هذه الشروط أو السياسات المتعلقة بالتطبيق أو الخدمات في أي وقت. يشكل استمرارك في استخدام التطبيق بعد أي تغييرات من هذا القبيل موافقتك على هذه التغييرات.';
 
   @override
   String get accept => 'قبول';
@@ -571,4 +589,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get complete => 'إكمال';
+
+  @override
+  String get startTracking => 'بدء التتبع';
+
+  @override
+  String get getDirections => 'الحصول على الاتجاهات';
+
+  @override
+  String get stopTracking => 'إيقاف التتبع';
+
+  @override
+  String get retry => 'إعادة المحاولة';
+
+  @override
+  String get couldNotLaunchMaps => 'تعذر فتح الخرائط';
+
+  @override
+  String get locationServicesAreDisabled => 'خدمات الموقع معطلة.';
+
+  @override
+  String get locationPermissionDenied => 'تم رفض إذن الموقع.';
+
+  @override
+  String get errorGettingLocation => 'خطأ في الحصول على الموقع: ';
+
+  @override
+  String get profileUpdatedSuccessfully => 'تم تحديث الملف الشخصي بنجاح!';
+
+  @override
+  String get driverNotRegistered => 'السائق غير مسجل';
+
+  @override
+  String get noDriverRegistered =>
+      'لا يوجد سائق مسجل بهذا الرقم في التطبيق.\n\nيرجى الاتصال بالمسؤول لتسجيل رقمك.';
+
+  @override
+  String get ok => 'حسناً';
 }

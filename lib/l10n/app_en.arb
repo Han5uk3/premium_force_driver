@@ -123,7 +123,7 @@
   "pleaseSelectADateFirst":"Please select a date first",
   "selectTime":"Select Time",
   "cannotSelectPastTimeForToday":"Cannot select past time for today",
-  "preferences":"Preferences",
+  "preferences": "Preferences",
   "chooseYouPreferredVehicle":"Choose you preferred vehicle",
   "chauffeurredClass":"Chauffeurred Class",
   "preferredModel":"Preferred Model",
@@ -188,5 +188,17 @@
   "termsSection7Content": "We reserve the right to modify these terms or policies relating to the app or services at any time. Continued use of the app after any such changes shall constitute your consent to such changes.",
   "accept": "Accept",
   "reject": "Reject",
-  "complete": "Complete"
+  "complete": "Complete",
+  "startTracking": "Start Tracking",
+  "getDirections": "Get Directions",
+  "stopTracking": "Stop Tracking",
+  "retry": "Retry",
+  "couldNotLaunchMaps": "Could not launch maps",
+  "locationServicesAreDisabled": "Location services are disabled.",
+  "locationPermissionDenied": "Location permission denied.",
+  "errorGettingLocation": "Error getting location: ",
+  "profileUpdatedSuccessfully": "Profile updated successfully!",
+  "driverNotRegistered": "Driver Not Registered",
+  "noDriverRegistered": "No driver registered with this phone number in the app.\n\nPlease contact the admin to register your number.",
+  "ok": "OK"
 }

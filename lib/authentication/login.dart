@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:premium_force_driver/main.dart';
 import 'package:provider/provider.dart';
 import 'package:premium_force_driver/authentication/otp.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
@@ -75,24 +77,24 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Driver Not Registered',
-            style: TextStyle(
+            AppLocalizations.of(context)!.driverNotRegistered,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
-            'No driver registered with this phone number in the app.\n\nPlease contact the admin to register your number.',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+            AppLocalizations.of(context)!.noDriverRegistered,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'OK',
-                style: TextStyle(
-                  color: const Color(0xFFC0C0C0),
+                AppLocalizations.of(context)!.ok,
+                style: const TextStyle(
+                  color: Color(0xFFC0C0C0),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -145,14 +147,52 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                       children: [
                         const SizedBox(height: 40),
                         // Sign In Title
-                        Text(
-                          AppLocalizations.of(context)!.signIn,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.2,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.signIn,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            CircleAvatar(
+                              radius: 16,
+                              child: Material(
+                                borderRadius: BorderRadius.circular(100),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(100),
+                                  child: InkWell(
+                                    splashColor: Colors.grey.withAlpha(200),
+                                    borderRadius: BorderRadius.circular(100),
+                                    onTap: () {
+                                      bool isCurrentlyEnglish =
+                                          Localizations.localeOf(context)
+                                                  .languageCode ==
+                                              'en';
+                                      MainApp.setLocale(
+                                        context,
+                                        Locale(
+                                          isCurrentlyEnglish ? 'ar' : 'en',
+                                        ),
+                                      );
+                                    },
+                                    child: SvgPicture.asset(
+                                      Localizations.localeOf(context)
+                                                  .languageCode ==
+                                              'en'
+                                          ? 'assets/flags/en.svg'
+                                          : 'assets/flags/ar.svg',
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 32),
 

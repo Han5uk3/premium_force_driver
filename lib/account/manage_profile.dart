@@ -244,7 +244,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Profile updated successfully!"),
+          content: Text(AppLocalizations.of(context)!.profileUpdatedSuccessfully),
           backgroundColor: Colors.green,
         ),
       );

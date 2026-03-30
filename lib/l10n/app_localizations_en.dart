@@ -192,7 +192,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseSelectYourLocation => 'Please select your location';
 
   @override
-  String get completeYourProfileToGetStarted => 'Complete Your Profile To Get Started';
+  String get completeYourProfileToGetStarted =>
+      'Complete Your Profile To Get Started';
 
   @override
   String get tapToAddPhoto => 'Tap to add photo';
@@ -213,7 +214,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseEnterYourEmail => 'Please enter your email';
 
   @override
-  String get nameMustBeAtLeast2Characters => 'Name must be at least 2 characters';
+  String get nameMustBeAtLeast2Characters =>
+      'Name must be at least 2 characters';
 
   @override
   String get pleaseEnterAValidEmail => 'Please enter a valid email';
@@ -264,7 +266,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectLocation => 'Select Location';
 
   @override
-  String get pleaseAgreeToTheTermsAndConditionsAndPrivacyPolicy => 'Please agree to the terms and conditions and privacy policy.';
+  String get pleaseAgreeToTheTermsAndConditionsAndPrivacyPolicy =>
+      'Please agree to the terms and conditions and privacy policy.';
 
   @override
   String get tripInfo => 'Trip Info';
@@ -348,13 +351,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dropLocationIsRequired => 'Drop location is required';
 
   @override
-  String get kingKhalidInternationalAirport => 'King Khalid International Airport';
+  String get kingKhalidInternationalAirport =>
+      'King Khalid International Airport';
 
   @override
-  String get kingFahadInternationalAirport => 'King Fahad International Airport';
+  String get kingFahadInternationalAirport =>
+      'King Fahad International Airport';
 
   @override
-  String get kingAbdulazizInternationalAirport => 'King Abdulaziz International Airport';
+  String get kingAbdulazizInternationalAirport =>
+      'King Abdulaziz International Airport';
 
   @override
   String get pickupDateAndTimeIsRequired => 'Pickup date and time are required';
@@ -363,7 +369,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dateAndTimeIsRequired => 'Date and time are required';
 
   @override
-  String get previouslySelectedTimeClearedAsItIsInThePast => 'Previously selected time cleared as it is in the past';
+  String get previouslySelectedTimeClearedAsItIsInThePast =>
+      'Previously selected time cleared as it is in the past';
 
   @override
   String get selectDate => 'Select Date';
@@ -375,7 +382,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectTime => 'Select Time';
 
   @override
-  String get cannotSelectPastTimeForToday => 'Cannot select past time for today';
+  String get cannotSelectPastTimeForToday =>
+      'Cannot select past time for today';
 
   @override
   String get chooseYouPreferredVehicle => 'Choose you preferred vehicle';
@@ -426,13 +434,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get numberOfPassengers => 'No. of Passengers';
 
   @override
-  String get passengerNameAtleastOne => 'Passenger Name (Atleast one separated by commas)';
+  String get passengerNameAtleastOne =>
+      'Passenger Name (Atleast one separated by commas)';
 
   @override
   String get passengerName => 'Passenger Name';
 
   @override
-  String get pleaseEnterAtleastOnepassengerName => 'Please enter atleast one passenger name';
+  String get pleaseEnterAtleastOnepassengerName =>
+      'Please enter atleast one passenger name';
 
   @override
   String get pleaseEnterAMobileNumber => 'Please enter a mobile number';
@@ -489,19 +499,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
-  String get loginAgainMessage => 'You will have to login again next time you open the app.';
+  String get loginAgainMessage =>
+      'You will have to login again next time you open the app.';
 
   @override
-  String get deleteAccountConfirm => 'Are you sure you want to delete your account?';
+  String get deleteAccountConfirm =>
+      'Are you sure you want to delete your account?';
 
   @override
-  String get deleteAccountMessage => 'This action cannot be undone and all your data will be cleared.';
+  String get deleteAccountMessage =>
+      'This action cannot be undone and all your data will be cleared.';
 
   @override
-  String get pickupTimeCannotBeAfterDepartureTime => 'Pickup time cannot be after departure time';
+  String get pickupTimeCannotBeAfterDepartureTime =>
+      'Pickup time cannot be after departure time';
 
   @override
-  String get pickupTimeAtLeast4HoursBeforeDeparture => 'Pickup time must be at least 4 hours before departure time';
+  String get pickupTimeAtLeast4HoursBeforeDeparture =>
+      'Pickup time must be at least 4 hours before departure time';
 
   @override
   String get noRecentBookings => 'No recent bookings';
@@ -516,52 +531,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCompletedBookings => 'No completed bookings';
 
   @override
-  String get onceYouBookItWillAppearHere => 'Once you book a service, it will appear here.';
+  String get onceYouBookItWillAppearHere =>
+      'Once you book a service, it will appear here.';
 
   @override
-  String get termsIntro => 'These terms and conditions outline the rules and regulations for the use of the Premium Force application, a luxury chauffeur booking service operating in the Kingdom of Saudi Arabia.\n\nBy accessing this app, we assume you accept these terms and conditions. Do not continue to use Premium Force if you do not agree to take all of the terms and conditions stated on this page.\n';
+  String get termsIntro =>
+      'These terms and conditions outline the rules and regulations for the use of the Premium Force application, a luxury chauffeur booking service operating in the Kingdom of Saudi Arabia.\n\nBy accessing this app, we assume you accept these terms and conditions. Do not continue to use Premium Force if you do not agree to take all of the terms and conditions stated on this page.\n';
 
   @override
   String get termsSection1Title => '1. App Services & Bookings';
 
   @override
-  String get termsSection1Content => 'Premium Force connects users with luxury chauffeur services within Saudi Arabia. All bookings are subject to availability, and we reserve the right to decline or cancel bookings under specific circumstances outlined in our policies.';
+  String get termsSection1Content =>
+      'Premium Force connects users with luxury chauffeur services within Saudi Arabia. All bookings are subject to availability, and we reserve the right to decline or cancel bookings under specific circumstances outlined in our policies.';
 
   @override
   String get termsSection2Title => '2. User Responsibilities';
 
   @override
-  String get termsSection2Content => 'You are specifically restricted from all of the following:\n• using this app in any way that impacts user access or disrupts the chauffeur services;\n• using this app contrary to the applicable laws and regulations of the Kingdom of Saudi Arabia;\n• behaving inappropriately towards our chauffeurs or damaging the provided luxury vehicles.';
+  String get termsSection2Content =>
+      'You are specifically restricted from all of the following:\n• using this app in any way that impacts user access or disrupts the chauffeur services;\n• using this app contrary to the applicable laws and regulations of the Kingdom of Saudi Arabia;\n• behaving inappropriately towards our chauffeurs or damaging the provided luxury vehicles.';
 
   @override
   String get termsSection3Title => '3. Payments & Cancellations';
 
   @override
-  String get termsSection3Content => 'All payments for chauffeur services must be made through the approved methods within the app. Cancellation policies apply to all bookings. Late cancellations or no-shows may incur charges as detailed during the booking process.';
+  String get termsSection3Content =>
+      'All payments for chauffeur services must be made through the approved methods within the app. Cancellation policies apply to all bookings. Late cancellations or no-shows may incur charges as detailed during the booking process.';
 
   @override
   String get termsSection4Title => '4. Privacy';
 
   @override
-  String get termsSection4Content => 'Please read our Privacy Policy. Your use of the Application signifies your continuing consent to our Privacy Policy regarding the collection and use of your personal and location data necessary for the chauffeur service.';
+  String get termsSection4Content =>
+      'Please read our Privacy Policy. Your use of the Application signifies your continuing consent to our Privacy Policy regarding the collection and use of your personal and location data necessary for the chauffeur service.';
 
   @override
   String get termsSection5Title => '5. Disclaimer of Warranties';
 
   @override
-  String get termsSection5Content => 'This app is provided \"as is,\" and Premium Force expresses no representations or warranties related to the continuous availability of the app or specific chauffeurs.';
+  String get termsSection5Content =>
+      'This app is provided \"as is,\" and Premium Force expresses no representations or warranties related to the continuous availability of the app or specific chauffeurs.';
 
   @override
   String get termsSection6Title => '6. Governing Law & Jurisdiction';
 
   @override
-  String get termsSection6Content => 'These Terms will be governed by and interpreted in accordance with the laws of the Kingdom of Saudi Arabia, and you submit to the exclusive jurisdiction of the courts located in Saudi Arabia for the resolution of any disputes.';
+  String get termsSection6Content =>
+      'These Terms will be governed by and interpreted in accordance with the laws of the Kingdom of Saudi Arabia, and you submit to the exclusive jurisdiction of the courts located in Saudi Arabia for the resolution of any disputes.';
 
   @override
   String get termsSection7Title => '7. Changes and Amendments';
 
   @override
-  String get termsSection7Content => 'We reserve the right to modify these terms or policies relating to the app or services at any time. Continued use of the app after any such changes shall constitute your consent to such changes.';
+  String get termsSection7Content =>
+      'We reserve the right to modify these terms or policies relating to the app or services at any time. Continued use of the app after any such changes shall constitute your consent to such changes.';
 
   @override
   String get accept => 'Accept';
@@ -571,4 +595,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get complete => 'Complete';
+
+  @override
+  String get startTracking => 'Start Tracking';
+
+  @override
+  String get getDirections => 'Get Directions';
+
+  @override
+  String get stopTracking => 'Stop Tracking';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get couldNotLaunchMaps => 'Could not launch maps';
+
+  @override
+  String get locationServicesAreDisabled => 'Location services are disabled.';
+
+  @override
+  String get locationPermissionDenied => 'Location permission denied.';
+
+  @override
+  String get errorGettingLocation => 'Error getting location: ';
+
+  @override
+  String get profileUpdatedSuccessfully => 'Profile updated successfully!';
+
+  @override
+  String get driverNotRegistered => 'Driver Not Registered';
+
+  @override
+  String get noDriverRegistered =>
+      'No driver registered with this phone number in the app.\n\nPlease contact the admin to register your number.';
+
+  @override
+  String get ok => 'OK';
 }
