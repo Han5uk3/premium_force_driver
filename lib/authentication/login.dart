@@ -25,45 +25,16 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   bool _isAgreed = false;
-  OverlayEntry? _overlayEntry;
   bool _isLoading = false;
   String _selectedCountryCode = '966';
 
   @override
   void dispose() {
-    _overlayEntry?.remove();
     _mobileController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
-  void _showCustomSnackBar(String message) {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        left: 20,
-        right: 20,
-        child: Material(
-          color: Colors.transparent,
-          child: AnimatedSnackBar(
-            message: message,
-            type: "E",
-            onDismissed: () {
-              if (mounted) {
-                _overlayEntry?.remove();
-                _overlayEntry = null;
-              }
-            },
-          ),
-        ),
-      ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
-  }
 
   /// Show dialog when driver is not registered
   void _showNotRegisteredDialog() {
@@ -347,7 +318,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                   children: [
                                     TextSpan(
                                       text:
-                                          'By Clicking continue button you agree to our ',
+                                          AppLocalizations.of(context)!.byClickingContinue,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -356,7 +327,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       ),
                                     ),
                                     TextSpan(
-                                      text: 'Terms and Conditions',
+                                      text: AppLocalizations.of(context)!.termsAndConditions,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -365,7 +336,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       ),
                                     ),
                                     TextSpan(
-                                      text: ' and ',
+                                      text: AppLocalizations.of(context)!.and,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -374,7 +345,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       ),
                                     ),
                                     TextSpan(
-                                      text: 'Privacy Policy',
+                                      text: AppLocalizations.of(context)!.privacyPolicy,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -424,16 +395,19 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                 final errorMsg =
                                     authProvider.errorMessage ?? '';
                                 if (errorMsg.contains(
-                                  'No driver registered with this phone number',
+                                  AppLocalizations.of(context)!.noDriverRegisteredError,
                                 )) {
                                   _showNotRegisteredDialog();
                                 } else {
-                                  _showCustomSnackBar(errorMsg);
+                                  AnimatedSnackBar.show(context, errorMsg, "E");
                                 }
                               }
                             } else if (_isAgreed == false) {
-                              _showCustomSnackBar(
-                                'Please agree to the terms and conditions and privacy policy.',
+                              AnimatedSnackBar.show(
+                                context,
+                                AppLocalizations.of(context)!
+                                    .pleaseAgreeToTheTermsAndConditionsAndPrivacyPolicy,
+                                "E",
                               );
                             }
                           },

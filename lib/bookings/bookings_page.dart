@@ -6,6 +6,7 @@ import 'package:premium_force_driver/providers/bookings_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
+import 'package:premium_force_driver/common_widgets/snackbar.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -55,7 +56,7 @@ class _BookingsPageState extends State<BookingsPage>
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: buidAppBar(context),
+        appBar: buildAppBar(context),
         body: Consumer<BookingsProvider>(
           builder: (context, bookingsProvider, _) {
             return Column(
@@ -148,12 +149,12 @@ class _BookingsPageState extends State<BookingsPage>
             Icon(Icons.error_outline, size: 50, color: Colors.red.shade300),
             const SizedBox(height: 16),
             Text(
-              'Error loading bookings',
+              loc.errorLoadingBookings,
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              provider.errorMessage ?? 'Please try again',
+              provider.errorMessage ?? loc.pleaseTryAgain,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
             ),
@@ -221,53 +222,44 @@ class _BookingsPageState extends State<BookingsPage>
                 dropoffLatitude: booking.dropoffLatitude,
                 dropoffLongitude: booking.dropoffLongitude,
                 onAccept: () async {
-                  final confirm = await _showConfirmationDialog(context, 'Accept Booking', 'Are you sure you want to accept this booking?');
+                  final confirm = await _showConfirmationDialog(context, loc.acceptBooking, loc.acceptBookingConfirm);
                   if (confirm != true) return;
                   final success = await provider.acceptBooking(booking.id);
                   if (success && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          provider.actionMessage ?? 'Booking accepted',
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
+                    AnimatedSnackBar.show(
+                      context,
+                      provider.actionMessage ?? loc.bookingAccepted,
+                      'S',
                     );
                   }
                 },
                 onReject: () async {
-                  final confirm = await _showConfirmationDialog(context, 'Reject Booking', 'Are you sure you want to reject this booking?');
+                  final confirm = await _showConfirmationDialog(context, loc.rejectBooking, loc.rejectBookingConfirm);
                   if (confirm != true) return;
                   final success = await provider.rejectBooking(booking.id);
                   if (success && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          provider.actionMessage ?? 'Booking rejected',
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
+                    AnimatedSnackBar.show(
+                      context,
+                      provider.actionMessage ?? loc.bookingRejected,
+                      'E',
                     );
                   }
                 },
                 onComplete: () async {
-                  final confirm = await _showConfirmationDialog(context, 'Complete Booking', 'Are you sure you want to complete this booking?');
+                  final confirm = await _showConfirmationDialog(context, loc.completeBooking, loc.completeBookingConfirm);
                   if (confirm != true) return;
-                  await TrackingService().stopTracking(saveToBackend: true);
+                  await TrackingService().stopTracking();
                   final success = await provider.completeBooking(booking.id);
                   if (success && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          provider.actionMessage ?? 'Booking completed',
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
+                    AnimatedSnackBar.show(
+                      context,
+                      provider.actionMessage ?? loc.bookingCompleted,
+                      'S',
                     );
                   }
                 },
                 onStartTracking: () async {
-                  final confirm = await _showConfirmationDialog(context, 'Start Tracking', 'Are you ready to start tracking for this booking?');
+                  final confirm = await _showConfirmationDialog(context, loc.startTracking, loc.startTrackingConfirm);
                   if (confirm != true) return;
                   final success = await provider.startTracking(booking.id);
                   if (success && context.mounted) {
@@ -278,52 +270,27 @@ class _BookingsPageState extends State<BookingsPage>
                       isChauffeur: booking.isHourly,
                       bookedHours: booking.estimatedDuration, // hours from booking
                     );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          provider.actionMessage ?? 'Tracking started',
-                        ),
-                        backgroundColor: Colors.blue,
-                      ),
+                    AnimatedSnackBar.show(
+                      context,
+                      provider.actionMessage ?? loc.trackingStarted,
+                      'S',
                     );
                     _openMaps(booking);
                   }
                 },
                 onStopTracking: () async {
-                  final confirm = await _showConfirmationDialog(context, 'Stop Tracking', 'Are you sure you want to stop tracking?');
+                  final confirm = await _showConfirmationDialog(context, loc.stopTracking, loc.stopTrackingConfirm);
                   if (confirm != true) return;
-                  // Stop the GPS stream and save chauffeur timing to backend
-                  int extraHours = await TrackingService().stopTracking(saveToBackend: true);
                   
-                  if (booking.isHourly == true && extraHours > 0) {
-                     final success = await provider.updateBookingStatus(booking.id, 'paymentpending', isHourly: true);
-                     if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              success
-                                  ? 'Extra hours detected. Customer needs to pay.'
-                                  : 'Sync pending for extra hours.',
-                            ),
-                            backgroundColor: success ? Colors.orange : Colors.red,
-                          ),
-                        );
-                     }
-                  } else {
-                     // Mark booking as completed (chauffeur trips end with stop tracking)
-                     final success = await provider.completeBooking(booking.id);
-                     if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              success
-                                  ? (provider.actionMessage ?? 'Trip ended')
-                                  : 'Tracking stopped, sync pending',
-                            ),
-                            backgroundColor: success ? Colors.green : Colors.orange,
-                          ),
-                        );
-                     }
+                  final success = await provider.stopTracking(booking.id);
+                  if (context.mounted) {
+                    AnimatedSnackBar.show(
+                      context,
+                      success
+                          ? (provider.actionMessage ?? loc.tripEnded)
+                          : (provider.actionMessage ?? loc.trackingStoppedSyncPending),
+                      success ? 'S' : 'E',
+                    );
                   }
                 },
                 onGetDirections: () {
@@ -360,8 +327,10 @@ class _BookingsPageState extends State<BookingsPage>
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.couldNotLaunchMaps)),
+        AnimatedSnackBar.show(
+          context,
+          AppLocalizations.of(context)!.couldNotLaunchMaps,
+          'E',
         );
       }
     }
@@ -371,17 +340,17 @@ class _BookingsPageState extends State<BookingsPage>
   String _getEmptyMessage(int tabIndex, AppLocalizations loc) {
     switch (tabIndex) {
       case 0:
-        return 'No upcoming bookings yet.\nWait for new ride requests!';
+        return loc.noUpcomingBookingsMessage;
       case 1:
-        return 'No ongoing rides right now.\nStart a booking to begin!';
+        return loc.noOngoingRidesMessage;
       case 2:
-        return 'You haven\'t completed any rides yet.\nComplete bookings to see them here!';
+        return loc.noCompletedRidesMessage;
       default:
-        return 'No bookings found.';
+        return loc.noBookingsFound;
     }
   }
 
-  PreferredSizeWidget buidAppBar(BuildContext context) {
+  PreferredSizeWidget buildAppBar(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return PreferredSize(
       preferredSize: Size.fromHeight(kToolbarHeight),
@@ -414,23 +383,26 @@ class _BookingsPageState extends State<BookingsPage>
   Future<bool?> _showConfirmationDialog(BuildContext context, String title, String content) {
     return showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        content: Text(content, style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC0C0C0)),
-            child: const Text('Confirm', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final loc = AppLocalizations.of(context)!;
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Text(title, style: const TextStyle(color: Colors.white)),
+          content: Text(content, style: const TextStyle(color: Colors.white70)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(loc.cancel, style: const TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC0C0C0)),
+              child: Text(loc.confirm, style: const TextStyle(color: Colors.black)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

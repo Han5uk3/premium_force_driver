@@ -14,6 +14,36 @@ class AnimatedSnackBar extends StatefulWidget {
 
   @override
   State<AnimatedSnackBar> createState() => AnimatedSnackBarState();
+
+  static OverlayEntry? _currentOverlay;
+
+  static void show(BuildContext context, String message, String type) {
+    dismiss();
+    final overlay = Overlay.of(context);
+    _currentOverlay = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: MediaQuery.paddingOf(context).bottom + 20,
+        left: 20,
+        right: 20,
+        child: Material(
+          color: Colors.transparent,
+          child: Center(
+            child: AnimatedSnackBar(
+              message: message,
+              type: type,
+              onDismissed: () => dismiss(),
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_currentOverlay!);
+  }
+
+  static void dismiss() {
+    _currentOverlay?.remove();
+    _currentOverlay = null;
+  }
 }
 
 class AnimatedSnackBarState extends State<AnimatedSnackBar>

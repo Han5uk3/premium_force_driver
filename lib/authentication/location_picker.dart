@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
+import 'package:premium_force_driver/common_widgets/snackbar.dart';
 
 class LocationPickerPage extends StatefulWidget {
   final double? initialLat;
@@ -147,11 +148,10 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.locationServicesAreDisabled),
-              backgroundColor: Colors.red,
-            ),
+          AnimatedSnackBar.show(
+            context,
+            AppLocalizations.of(context)!.locationServicesAreDisabled,
+            'E',
           );
         }
         setState(() => _isLoading = false);
@@ -163,11 +163,10 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.locationPermissionDenied),
-                backgroundColor: Colors.red,
-              ),
+            AnimatedSnackBar.show(
+              context,
+              AppLocalizations.of(context)!.locationPermissionDenied,
+              'E',
             );
           }
           setState(() => _isLoading = false);
@@ -177,13 +176,11 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
 
       if (permission == LocationPermission.deniedForever) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Location permissions are permanently denied. Enable from settings.',
-              ),
-              backgroundColor: Colors.red,
-            ),
+          AnimatedSnackBar.show(
+            context,
+            AppLocalizations.of(context)!
+                .locationPermissionsPermanentlyDenied,
+            'E',
           );
         }
         setState(() => _isLoading = false);
@@ -209,11 +206,10 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     } catch (e) {
       debugPrint('Error getting current location: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${AppLocalizations.of(context)!.errorGettingLocation}$e'),
-            backgroundColor: Colors.red,
-          ),
+        AnimatedSnackBar.show(
+          context,
+          '${AppLocalizations.of(context)!.errorGettingLocation}$e',
+          'E',
         );
       }
     }
@@ -332,7 +328,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                               fontSize: 15,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Search for a location...',
+                              hintText: AppLocalizations.of(context)!.searchForALocation,
                               hintStyle: TextStyle(
                                 color: Colors.white.withAlpha(120),
                                 fontSize: 15,
@@ -510,8 +506,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              const Text(
-                                'Selected Location',
+                              Text(
+                                AppLocalizations.of(context)!.selectedLocation,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
@@ -581,8 +577,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                                       const SizedBox(width: 10),
                                       Text(
                                         _isLoading
-                                            ? 'Getting location...'
-                                            : 'Use Current Location',
+                                            ? AppLocalizations.of(context)!.gettingLocation
+                                            : AppLocalizations.of(context)!.useCurrentLocation,
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 15,
@@ -601,13 +597,11 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                         GestureDetector(
                           onTap: () {
                             if (_selectedAddress.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Please select a location first',
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
+                              AnimatedSnackBar.show(
+                                context,
+                                AppLocalizations.of(context)!
+                                    .pleaseSelectALocationFirst,
+                                'E',
                               );
                               return;
                             }
@@ -639,9 +633,9 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                                 ),
                               ],
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Text(
-                                'Confirm Location',
+                                AppLocalizations.of(context)!.confirmLocation,
                                 style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 18,

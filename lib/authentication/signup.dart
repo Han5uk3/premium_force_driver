@@ -10,6 +10,7 @@ import 'package:premium_force_driver/home/home.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
+import 'package:premium_force_driver/common_widgets/snackbar.dart';
 
 class SignUpPage extends StatefulWidget {
   final String countryCode;
@@ -240,21 +241,19 @@ class _SignUpPageState extends State<SignUpPage>
     if (!_formKey.currentState!.validate()) return;
 
     if (_profileImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.pleaseAddAProfilePicture),
-          backgroundColor: Colors.red,
-        ),
+      AnimatedSnackBar.show(
+        context,
+        AppLocalizations.of(context)!.pleaseAddAProfilePicture,
+        'E',
       );
       return;
     }
 
     if (_locationController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.pleaseSelectYourLocation),
-          backgroundColor: Colors.red,
-        ),
+      AnimatedSnackBar.show(
+        context,
+        AppLocalizations.of(context)!.pleaseSelectYourLocation,
+        'E',
       );
       return;
     }
@@ -312,11 +311,11 @@ class _SignUpPageState extends State<SignUpPage>
         (route) => false,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] as String? ?? 'Signup failed'),
-          backgroundColor: Colors.red,
-        ),
+      AnimatedSnackBar.show(
+        context,
+        result['message'] as String? ??
+            AppLocalizations.of(context)!.signupFailed,
+        'E',
       );
     }
   }

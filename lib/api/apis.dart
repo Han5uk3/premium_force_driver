@@ -727,24 +727,20 @@ class ApiService {
   ///
   /// Calls `PUT /api/hourly-bookings/{bookingId}` with timing fields.
   /// [extraHours] is > 0 when the driver ran over the booked hour allocation.
-  Future<Map<String, dynamic>> saveChauffeurTripTimes({
+  /// Update hourly booking data using PUT method.
+  /// As requested, this updates fields as status changes.
+  Future<Map<String, dynamic>> updateHourlyBooking({
     required String bookingId,
-    required String startTime,
-    required String stopTime,
-    required int tripDurationSeconds,
-    int extraHours = 0,
+    required Map<String, dynamic> data,
     String? token,
   }) async {
     try {
       final authToken = token ?? UserLocalStorage.getToken();
-      final data = <String, dynamic>{
-        'trackingStartTime': startTime,
-        'trackingStopTime': stopTime,
-        'tripDurationSeconds': tripDurationSeconds,
-      };
-      if (extraHours > 0) {
-        data['extraHours'] = extraHours;
+      // Ensure the bookingID is in the body if the backend requires it
+      if (!data.containsKey('bookingID')) {
+        data['bookingId'] = bookingId;
       }
+
       final response = await _dio.put(
         '/hourly-bookings/$bookingId',
         data: data,
@@ -770,7 +766,9 @@ class ApiService {
           : '/drivers/complete-booking/tracking';
       final response = await _dio.post(
         path,
-        data: {'bookingID': bookingId},
+        data: {
+          'bookingID': bookingId,
+        },
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);

@@ -1297,6 +1297,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OK'**
   String get ok;
+
+  /// No description provided for @errorLoadingBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading bookings'**
+  String get errorLoadingBookings;
+
+  /// No description provided for @pleaseTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again'**
+  String get pleaseTryAgain;
+
+  /// No description provided for @noUpcomingBookingsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming bookings yet.\nWait for new ride requests!'**
+  String get noUpcomingBookingsMessage;
+
+  /// No description provided for @noOngoingRidesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No ongoing rides right now.\nStart a booking to begin!'**
+  String get noOngoingRidesMessage;
+
+  /// No description provided for @noCompletedRidesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t completed any rides yet.\nComplete bookings to see them here!'**
+  String get noCompletedRidesMessage;
+
+  /// No description provided for @noBookingsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookings found.'**
+  String get noBookingsFound;
+
+  /// No description provided for @acceptBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Booking'**
+  String get acceptBooking;
+
+  /// No description provided for @acceptBookingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to accept this booking?'**
+  String get acceptBookingConfirm;
+
+  /// No description provided for @rejectBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject Booking'**
+  String get rejectBooking;
+
+  /// No description provided for @rejectBookingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reject this booking?'**
+  String get rejectBookingConfirm;
+
+  /// No description provided for @completeBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Booking'**
+  String get completeBooking;
+
+  /// No description provided for @completeBookingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to complete this booking?'**
+  String get completeBookingConfirm;
+
+  /// No description provided for @startTrackingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you ready to start tracking for this booking?'**
+  String get startTrackingConfirm;
+
+  /// No description provided for @stopTrackingConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to stop tracking?'**
+  String get stopTrackingConfirm;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @bookingAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking accepted'**
+  String get bookingAccepted;
+
+  /// No description provided for @bookingRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking rejected'**
+  String get bookingRejected;
+
+  /// No description provided for @bookingCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking completed'**
+  String get bookingCompleted;
+
+  /// No description provided for @trackingStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking started'**
+  String get trackingStarted;
+
+  /// No description provided for @tripEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip ended'**
+  String get tripEnded;
+
+  /// No description provided for @extraHoursDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra hours detected. Customer needs to pay.'**
+  String get extraHoursDetected;
+
+  /// No description provided for @syncPendingExtraHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync pending for extra hours.'**
+  String get syncPendingExtraHours;
+
+  /// No description provided for @trackingStoppedSyncPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking stopped, sync pending'**
+  String get trackingStoppedSyncPending;
+
+  /// No description provided for @customerReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Review'**
+  String get customerReview;
+
+  /// No description provided for @assigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned'**
+  String get assigned;
+
+  /// No description provided for @paymentPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Pending'**
+  String get paymentPending;
+
+  /// No description provided for @reviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed'**
+  String get reviewed;
+
+  /// No description provided for @tracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking'**
+  String get tracking;
+
+  /// No description provided for @startTrackingAvailableOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Tracking available on booking date'**
+  String get startTrackingAvailableOnDate;
+
+  /// No description provided for @locationPermissionsPermanentlyDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permissions are permanently denied. Enable from settings.'**
+  String get locationPermissionsPermanentlyDenied;
+
+  /// No description provided for @searchForALocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a location...'**
+  String get searchForALocation;
+
+  /// No description provided for @selectedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected Location'**
+  String get selectedLocation;
+
+  /// No description provided for @gettingLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting location...'**
+  String get gettingLocation;
+
+  /// No description provided for @useCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Current Location'**
+  String get useCurrentLocation;
+
+  /// No description provided for @pleaseSelectALocationFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a location first'**
+  String get pleaseSelectALocationFirst;
+
+  /// No description provided for @confirmLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Location'**
+  String get confirmLocation;
+
+  /// No description provided for @signupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Signup failed'**
+  String get signupFailed;
+
+  /// No description provided for @byClickingContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'By Clicking continue button you agree to our '**
+  String get byClickingContinue;
+
+  /// No description provided for @noDriverRegisteredError.
+  ///
+  /// In en, this message translates to:
+  /// **'No driver registered with this phone number'**
+  String get noDriverRegisteredError;
+
+  /// No description provided for @voiceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Note'**
+  String get voiceNote;
+
+  /// No description provided for @recordVoiceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Record voice note'**
+  String get recordVoiceNote;
+
+  /// No description provided for @saveVoiceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Voice Note'**
+  String get saveVoiceNote;
 }
 
 class _AppLocalizationsDelegate

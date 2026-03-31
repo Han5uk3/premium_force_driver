@@ -626,4 +626,135 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ok => 'حسناً';
+
+  @override
+  String get errorLoadingBookings => 'خطأ في تحميل الحجوزات';
+
+  @override
+  String get pleaseTryAgain => 'يرجى المحاولة مرة أخرى';
+
+  @override
+  String get noUpcomingBookingsMessage =>
+      'لا توجد حجوزات قادمة بعد.\nانتظر طلبات رحلات جديدة!';
+
+  @override
+  String get noOngoingRidesMessage =>
+      'لا توجد رحلات جارية الآن.\nابدأ حجزاً للبدء!';
+
+  @override
+  String get noCompletedRidesMessage =>
+      'لم تكمل أي رحلات بعد.\nأكمل الحجوزات لرؤيتها هنا!';
+
+  @override
+  String get noBookingsFound => 'لم يتم العثور على حجوزات.';
+
+  @override
+  String get acceptBooking => 'قبول الحجز';
+
+  @override
+  String get acceptBookingConfirm => 'هل أنت متأكد أنك تريد قبول هذا الحجز؟';
+
+  @override
+  String get rejectBooking => 'رفض الحجز';
+
+  @override
+  String get rejectBookingConfirm => 'هل أنت متأكد أنك تريد رفض هذا الحجز؟';
+
+  @override
+  String get completeBooking => 'إكمال الحجز';
+
+  @override
+  String get completeBookingConfirm => 'هل أنت متأكد أنك تريد إكمال هذا الحجز؟';
+
+  @override
+  String get startTrackingConfirm => 'هل أنت مستعد لبدء التتبع لهذا الحجز؟';
+
+  @override
+  String get stopTrackingConfirm => 'هل أنت متأكد أنك تريد إيقاف التتبع؟';
+
+  @override
+  String get confirm => 'تأكيد';
+
+  @override
+  String get bookingAccepted => 'تم قبول الحجز';
+
+  @override
+  String get bookingRejected => 'تم رفض الحجز';
+
+  @override
+  String get bookingCompleted => 'تم إكمال الحجز';
+
+  @override
+  String get trackingStarted => 'بدأ التتبع';
+
+  @override
+  String get tripEnded => 'انتهت الرحلة';
+
+  @override
+  String get extraHoursDetected =>
+      'تم اكتشاف ساعات إضافية. العميل بحاجة للدفع.';
+
+  @override
+  String get syncPendingExtraHours => 'مزامنة معلقة للساعات الإضافية.';
+
+  @override
+  String get trackingStoppedSyncPending => 'تم إيقاف التتبع، المزامنة معلقة';
+
+  @override
+  String get customerReview => 'تقييم العميل';
+
+  @override
+  String get assigned => 'مكلف';
+
+  @override
+  String get paymentPending => 'في انتظار الدفع';
+
+  @override
+  String get reviewed => 'تم التقييم';
+
+  @override
+  String get tracking => 'تتبع';
+
+  @override
+  String get startTrackingAvailableOnDate => 'بدء التتبع متاح في تاريخ الحجز';
+
+  @override
+  String get locationPermissionsPermanentlyDenied =>
+      'أذونات الموقع مرفوضة دائمًا. تمكين من الإعدادات.';
+
+  @override
+  String get searchForALocation => 'ابحث عن موقع...';
+
+  @override
+  String get selectedLocation => 'الموقع المختار';
+
+  @override
+  String get gettingLocation => 'جاري الحصول على الموقع...';
+
+  @override
+  String get useCurrentLocation => 'استخدام الموقع الحالي';
+
+  @override
+  String get pleaseSelectALocationFirst => 'يرجى اختيار موقع أولاً';
+
+  @override
+  String get confirmLocation => 'تأكيد الموقع';
+
+  @override
+  String get signupFailed => 'فشل إنشاء الحساب';
+
+  @override
+  String get byClickingContinue => 'بالنقر على زر المتابعة، فإنك توافق على ';
+
+  @override
+  String get noDriverRegisteredError => 'لا يوجد سائق مسجل بهذا الرقم';
+
+  @override
+  String get voiceNote => 'ملاحظة صوتية';
+
+  @override
+  String get recordVoiceNote => 'تسجيل ملاحظة صوتية';
+
+  @override
+  String get saveVoiceNote => 'حفظ الملاحظة الصوتية';
 }

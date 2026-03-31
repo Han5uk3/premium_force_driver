@@ -64,7 +64,7 @@ class TrackingService {
     }
 
     // Stop any existing stream first
-    stopTracking(saveToBackend: false);
+    stopTracking();
 
     // Save session info
     _currentBookingId = bookingId;
@@ -102,9 +102,8 @@ class TrackingService {
     });
   }
 
-  /// Stop tracking. For chauffeur bookings, writes [stopTime] and [tripDuration]
-  /// to RTDB and — if [saveToBackend] is true — also sends to the REST API.
-  Future<int> stopTracking({bool saveToBackend = true}) async {
+  /// Stop tracking. For chauffeur bookings, writes [stopTime] and [tripDuration] to RTDB.
+  Future<int> stopTracking() async {
     _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
 
@@ -142,17 +141,6 @@ class TrackingService {
         }
 
         debugPrint('⏱️ Chauffeur trip — booked: ${_bookedHours}h, actual: ${actualHoursDecimal.toStringAsFixed(2)}h, extra: ${extraHours}h');
-
-        // Persist times to the backend if requested
-        if (saveToBackend) {
-          _saveChauffeurTripTimes(
-            bookingId: bookingId,
-            startTime: _startTime!,
-            stopTime: stopTime,
-            durationSeconds: durationSeconds,
-            extraHours: extraHours,
-          );
-        }
       }
 
       await sessionRef.update(updateData);
@@ -166,30 +154,6 @@ class TrackingService {
     _startTime = null;
 
     return extraHours;
-  }
-
-  /// Save chauffeur trip timing data to backend.
-  void _saveChauffeurTripTimes({
-    required String bookingId,
-    required DateTime startTime,
-    required DateTime stopTime,
-    required int durationSeconds,
-    int extraHours = 0,
-  }) {
-    _apiService
-        .saveChauffeurTripTimes(
-          bookingId: bookingId,
-          startTime: startTime.toIso8601String(),
-          stopTime: stopTime.toIso8601String(),
-          tripDurationSeconds: durationSeconds,
-          extraHours: extraHours,
-        )
-        .then((_) {
-          debugPrint('✅ Chauffeur trip times saved to backend');
-        })
-        .catchError((e) {
-          debugPrint('❌ Failed to save chauffeur trip times: $e');
-        });
   }
 
   void _updateLocationInFirebase(String bookingId, Position position) {

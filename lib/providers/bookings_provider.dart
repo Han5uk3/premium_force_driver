@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/models/booking.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
+import 'package:premium_force_driver/services/tracking_service.dart';
 
 enum BookingStatus { initial, loading, loaded, failure }
 
@@ -123,17 +124,28 @@ class BookingsProvider extends ChangeNotifier {
     }
   }
 
-  /// Start tracking a booking (moves to starttracking status).
   Future<bool> startTracking(String bookingId, {bool skipApi = false}) async {
     try {
+      final startedAt = DateTime.now().toIso8601String();
       if (!skipApi) {
         final token = UserLocalStorage.getToken();
         final booking = _allBookings.firstWhere((b) => b.id == bookingId);
-        final response = await _apiService.startTrackingBooking(
-          bookingId: bookingId,
-          isHourly: booking.isHourly,
-          token: token,
-        );
+        
+        final response = booking.isHourly
+            ? await _apiService.updateHourlyBooking(
+                bookingId: bookingId,
+                token: token,
+                data: {
+                  ...booking.toJson(),
+                  'bookingStatus': 'starttrack',
+                  'startedAt': startedAt,
+                },
+              )
+            : await _apiService.startTrackingBooking(
+                bookingId: bookingId,
+                token: token,
+              );
+
         if (response['success'] != true) {
           _actionMessage = response['message'] ?? 'Failed to start tracking';
           notifyListeners();
@@ -142,7 +154,11 @@ class BookingsProvider extends ChangeNotifier {
       }
       
       _actionMessage = 'Tracking started!';
-      _updateBookingInList(bookingId, 'starttracking');
+      _updateBookingInList(
+        bookingId,
+        'starttracking',
+        startedAt: startedAt,
+      );
       notifyListeners();
       return true;
     } catch (e) {
@@ -153,16 +169,98 @@ class BookingsProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> stopTracking(String bookingId) async {
+    try {
+      final booking = _allBookings.firstWhere((b) => b.id == bookingId);
+      final TrackingService trackingService = TrackingService();
+      bool success = false;
+      
+      if (booking.isHourly) {
+        // Calculate extra hours and payment
+        final stopTime = DateTime.now();
+        final int extraHours = await trackingService.stopTracking();
+        
+        final double discountPercentage = booking.discountPercentage ?? 0;
+        final double extraDiscount = (discountPercentage > 0) ? discountPercentage : 0;
+        
+        // Use a dummy hourly rate for extra hours (TODO: Fetch from API later)
+        const double dummyHourlyRate = 10;
+        final double extraPayment = extraHours * dummyHourlyRate;
+        
+        final status = extraHours > 0 ? 'paymentpending' : 'C';
+
+        success = await updateBookingStatus(
+          bookingId,
+          status,
+          isHourly: true,
+          extraData: {
+            ...booking.toJson(),
+            'stoppedAt': stopTime.toIso8601String(),
+            'extraHours': extraHours,
+            'extraDiscount': extraDiscount,
+            'extraPayment': extraPayment,
+            'extraPaymentCompleted': false,
+            'bookingStatus': status,
+          },
+        );
+
+        if (success) {
+          _updateBookingInList(
+            bookingId,
+            status,
+            extraHours: extraHours,
+            stoppedAt: stopTime.toIso8601String(),
+          );
+          _actionMessage = extraHours > 0 ? 'Extra hours detected. Payment pending.' : 'Trip completed successfully!';
+        }
+      } else {
+        // Regular booking handling
+        await trackingService.stopTracking();
+        success = await completeBooking(bookingId);
+        
+        if (success) {
+          _updateBookingInList(
+            bookingId,
+            'C',
+            stoppedAt: DateTime.now().toIso8601String(),
+          );
+          _actionMessage = 'Trip completed successfully!';
+        }
+      }
+      
+      notifyListeners();
+      return success;
+    } catch (e) {
+      debugPrint('Stop tracking error: $e');
+      _actionMessage = 'Error stopping tracking: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Generic update status
-  Future<bool> updateBookingStatus(String bookingId, String status, {bool isHourly = false}) async {
+  Future<bool> updateBookingStatus(String bookingId, String status, {bool isHourly = false, Map<String, dynamic>? extraData}) async {
     try {
       final token = UserLocalStorage.getToken();
-      final response = await _apiService.updateBookingStatus(
-        bookingId: bookingId,
-        status: status,
-        isHourly: isHourly,
-        token: token,
-      );
+      Map<String, dynamic> response;
+      
+      if (isHourly && extraData != null) {
+        // For hourly bookings, use the PUT method as requested for status changes including data
+        response = await _apiService.updateHourlyBooking(
+          bookingId: bookingId,
+          data: extraData,
+          token: token,
+        );
+      } else {
+        // Use regular PATCH for status updates
+        response = await _apiService.updateBookingStatus(
+          bookingId: bookingId,
+          status: status,
+          isHourly: isHourly,
+          token: token,
+        );
+      }
+      
       if (response['success'] == true) {
         _actionMessage = 'Status updated';
         _updateBookingInList(bookingId, status);
@@ -287,10 +385,21 @@ class BookingsProvider extends ChangeNotifier {
   }
 
   /// Update a booking in the local list after an action.
-  void _updateBookingInList(String bookingId, String newStatus) {
+  void _updateBookingInList(
+    String bookingId,
+    String newStatus, {
+    String? startedAt,
+    String? stoppedAt,
+    int? extraHours,
+  }) {
     final index = _allBookings.indexWhere((b) => b.id == bookingId);
     if (index != -1) {
-      _allBookings[index] = _allBookings[index].copyWith(status: newStatus);
+      _allBookings[index] = _allBookings[index].copyWith(
+        status: newStatus,
+        startedAt: startedAt,
+        stoppedAt: stoppedAt,
+        extraHours: extraHours,
+      );
       _filterBookingsByStatus();
     }
   }

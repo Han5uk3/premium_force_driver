@@ -299,8 +299,8 @@ class Bookingcard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            "Customer Review",
+                          Text(
+                            loc.customerReview,
                             style: TextStyle(
                               color: Colors.amber,
                               fontWeight: FontWeight.bold,
@@ -399,16 +399,16 @@ class Bookingcard extends StatelessWidget {
         return loc.cancelled;
       case "assigned":
       case "ac":
-        return "Assigned";
+        return loc.assigned;
       case "paymentpending":
-        return "Payment Pending";
+        return loc.paymentPending;
       case "reviewed":
-        return "Reviewed";
+        return loc.reviewed;
       case "ongoing":
       case "og":
-        return "Ongoing";
+        return loc.ongoing;
       case "starttracking":
-        return "Tracking";
+        return loc.tracking;
       case "q":
       case "Q":
         return loc.pickup;
@@ -493,7 +493,7 @@ class Bookingcard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
-              "Start Tracking available on booking date",
+              loc.startTrackingAvailableOnDate,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white54, fontSize: 13),
             ),

@@ -32,6 +32,14 @@ class BookingModel {
   final double? discountPercentage;
   final String? orderID;
   final String? transactionID;
+  final String? startedAt;
+  final String? stoppedAt;
+  final int? extraHours;
+  final bool? extraPaymentCompleted;
+  final double? extraDiscount;
+  final double? extraPayment;
+  final String? extraOrderID;
+  final String? extraTransactionID;
 
   // Modern Nested Objects from rich backend response
   final CityDetails? city;
@@ -82,6 +90,14 @@ class BookingModel {
     this.discountPercentage,
     this.orderID,
     this.transactionID,
+    this.startedAt,
+    this.stoppedAt,
+    this.extraHours,
+    this.extraPaymentCompleted,
+    this.extraDiscount,
+    this.extraPayment,
+    this.extraOrderID,
+    this.extraTransactionID,
   });
 
   /// Readable car name (e.g. "S-Class")
@@ -186,6 +202,14 @@ class BookingModel {
           : null,
       orderID: json['orderID']?.toString(),
       transactionID: json['transactionID']?.toString(),
+      startedAt: json['startedAt']?.toString(),
+      stoppedAt: json['stoppedAt']?.toString(),
+      extraHours: json['extraHours'] != null ? toolToInt(json['extraHours']) : (json['extrahours'] != null ? toolToInt(json['extrahours']) : null),
+      extraPaymentCompleted: json['extraPaymentCompleted'] is bool ? json['extraPaymentCompleted'] : (json['extraPaymentCompleted']?.toString().toLowerCase() == 'true'),
+      extraDiscount: toDouble(json['extraDiscount']),
+      extraPayment: toDouble(json['extraPayment']),
+      extraOrderID: json['extraOrderID']?.toString(),
+      extraTransactionID: json['extraTransactionID']?.toString(),
     );
   }
 
@@ -220,6 +244,14 @@ class BookingModel {
     'discountPercentage': discountPercentage,
     'orderID': orderID,
     'transactionID': transactionID,
+    'startedAt': startedAt,
+    'stoppedAt': stoppedAt,
+    'extraHours': extraHours,
+    'extraPaymentCompleted': extraPaymentCompleted,
+    'extraDiscount': extraDiscount,
+    'extraPayment': extraPayment,
+    'extraOrderID': extraOrderID,
+    'extraTransactionID': extraTransactionID,
     if (originalIds != null) 'originalIds': {
       'cityID': originalIds!.cityID,
       'airportID': originalIds!.airportID,
@@ -265,6 +297,9 @@ class BookingModel {
     OriginalIds? originalIds,
     Map<String, dynamic>? trackingTimeline,
     String? paymentStatus,
+    String? startedAt,
+    String? stoppedAt,
+    int? extraHours,
   }) => BookingModel(
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
@@ -303,6 +338,14 @@ class BookingModel {
     discountPercentage: discountPercentage ?? this.discountPercentage,
     orderID: orderID ?? this.orderID,
     transactionID: transactionID ?? this.transactionID,
+    startedAt: startedAt ?? this.startedAt,
+    stoppedAt: stoppedAt ?? this.stoppedAt,
+    extraHours: extraHours ?? this.extraHours,
+    extraPaymentCompleted: extraPaymentCompleted ?? this.extraPaymentCompleted,
+    extraDiscount: extraDiscount ?? this.extraDiscount,
+    extraPayment: extraPayment ?? this.extraPayment,
+    extraOrderID: extraOrderID ?? this.extraOrderID,
+    extraTransactionID: extraTransactionID ?? this.extraTransactionID,
   );
 
   @override

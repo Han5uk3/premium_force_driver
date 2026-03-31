@@ -632,4 +632,142 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ok => 'OK';
+
+  @override
+  String get errorLoadingBookings => 'Error loading bookings';
+
+  @override
+  String get pleaseTryAgain => 'Please try again';
+
+  @override
+  String get noUpcomingBookingsMessage =>
+      'No upcoming bookings yet.\nWait for new ride requests!';
+
+  @override
+  String get noOngoingRidesMessage =>
+      'No ongoing rides right now.\nStart a booking to begin!';
+
+  @override
+  String get noCompletedRidesMessage =>
+      'You haven\'t completed any rides yet.\nComplete bookings to see them here!';
+
+  @override
+  String get noBookingsFound => 'No bookings found.';
+
+  @override
+  String get acceptBooking => 'Accept Booking';
+
+  @override
+  String get acceptBookingConfirm =>
+      'Are you sure you want to accept this booking?';
+
+  @override
+  String get rejectBooking => 'Reject Booking';
+
+  @override
+  String get rejectBookingConfirm =>
+      'Are you sure you want to reject this booking?';
+
+  @override
+  String get completeBooking => 'Complete Booking';
+
+  @override
+  String get completeBookingConfirm =>
+      'Are you sure you want to complete this booking?';
+
+  @override
+  String get startTrackingConfirm =>
+      'Are you ready to start tracking for this booking?';
+
+  @override
+  String get stopTrackingConfirm => 'Are you sure you want to stop tracking?';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get bookingAccepted => 'Booking accepted';
+
+  @override
+  String get bookingRejected => 'Booking rejected';
+
+  @override
+  String get bookingCompleted => 'Booking completed';
+
+  @override
+  String get trackingStarted => 'Tracking started';
+
+  @override
+  String get tripEnded => 'Trip ended';
+
+  @override
+  String get extraHoursDetected =>
+      'Extra hours detected. Customer needs to pay.';
+
+  @override
+  String get syncPendingExtraHours => 'Sync pending for extra hours.';
+
+  @override
+  String get trackingStoppedSyncPending => 'Tracking stopped, sync pending';
+
+  @override
+  String get customerReview => 'Customer Review';
+
+  @override
+  String get assigned => 'Assigned';
+
+  @override
+  String get paymentPending => 'Payment Pending';
+
+  @override
+  String get reviewed => 'Reviewed';
+
+  @override
+  String get tracking => 'Tracking';
+
+  @override
+  String get startTrackingAvailableOnDate =>
+      'Start Tracking available on booking date';
+
+  @override
+  String get locationPermissionsPermanentlyDenied =>
+      'Location permissions are permanently denied. Enable from settings.';
+
+  @override
+  String get searchForALocation => 'Search for a location...';
+
+  @override
+  String get selectedLocation => 'Selected Location';
+
+  @override
+  String get gettingLocation => 'Getting location...';
+
+  @override
+  String get useCurrentLocation => 'Use Current Location';
+
+  @override
+  String get pleaseSelectALocationFirst => 'Please select a location first';
+
+  @override
+  String get confirmLocation => 'Confirm Location';
+
+  @override
+  String get signupFailed => 'Signup failed';
+
+  @override
+  String get byClickingContinue =>
+      'By Clicking continue button you agree to our ';
+
+  @override
+  String get noDriverRegisteredError =>
+      'No driver registered with this phone number';
+
+  @override
+  String get voiceNote => 'Voice Note';
+
+  @override
+  String get recordVoiceNote => 'Record voice note';
+
+  @override
+  String get saveVoiceNote => 'Save Voice Note';
 }

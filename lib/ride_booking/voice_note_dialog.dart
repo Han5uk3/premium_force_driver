@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'dart:async';
+import 'package:premium_force_driver/l10n/app_localizations.dart';
 
 class VoiceNoteDialog extends StatefulWidget {
   final String? initialAudioPath;
@@ -162,8 +163,8 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Voice Note',
+                Text(
+                  AppLocalizations.of(context)!.voiceNote,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -276,11 +277,11 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
                       ),
                     ),
                   ] else ...[
-                    const Expanded(
+                    Expanded(
                       child: Padding(
                         padding: EdgeInsets.only(left: 8.0),
                         child: Text(
-                          'Record voice note',
+                          AppLocalizations.of(context)!.recordVoiceNote,
                           style: TextStyle(color: Colors.white60, fontSize: 14),
                         ),
                       ),
@@ -321,8 +322,8 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Save Voice Note',
+                child: Text(
+                  AppLocalizations.of(context)!.saveVoiceNote,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),

@@ -24,44 +24,15 @@ class OTPVerificationPage extends StatefulWidget {
 class _OTPVerificationPageState extends State<OTPVerificationPage> {
   final TextEditingController _otpController = TextEditingController();
   final FocusNode _otpFocusNode = FocusNode();
-  OverlayEntry? _overlayEntry;
   bool _isVerifying = false;
 
   @override
   void dispose() {
-    _overlayEntry?.remove();
     _otpController.dispose();
     _otpFocusNode.dispose();
     super.dispose();
   }
 
-  void _showCustomSnackBar(String message) {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        left: 20,
-        right: 20,
-        child: Material(
-          color: Colors.transparent,
-          child: AnimatedSnackBar(
-            message: message,
-            type: "E",
-            onDismissed: () {
-              if (mounted) {
-                _overlayEntry?.remove();
-                _overlayEntry = null;
-              }
-            },
-          ),
-        ),
-      ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
-  }
 
   /// Formats seconds as mm:ss (e.g. 01:05).
   String _formatCountdown(int seconds) {
@@ -73,7 +44,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   /// Handle OTP verification and navigate based on result.
   Future<void> _handleVerify() async {
     if (_otpController.text.length != 6) {
-      _showCustomSnackBar("Please enter a valid OTP");
+      AnimatedSnackBar.show(context, "Please enter a valid OTP", "E");
       return;
     }
 
@@ -109,7 +80,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       );
     } else if (authProvider.status == AuthStatus.failure &&
         authProvider.errorMessage != null) {
-      _showCustomSnackBar(authProvider.errorMessage!);
+      AnimatedSnackBar.show(context, authProvider.errorMessage!, "E");
     }
   }
 
@@ -257,8 +228,10 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                   countryCode: widget.countryCode,
                                   phoneNumber: widget.phoneNumber,
                                 );
-                                _showCustomSnackBar(
+                                AnimatedSnackBar.show(
+                                  context,
                                   "OTP has been resent to ${widget.countryCode} ${widget.phoneNumber}",
+                                  "S",
                                 );
                               }
                             : null,

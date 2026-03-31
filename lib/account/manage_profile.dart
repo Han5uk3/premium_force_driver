@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/common_widgets/premiumloader.dart';
+import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/common_widgets/textfield.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
@@ -242,22 +243,20 @@ class _ManageProfilePageState extends State<ManageProfilePage>
     setState(() => _isLoading = false);
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.profileUpdatedSuccessfully),
-          backgroundColor: Colors.green,
-        ),
+      AnimatedSnackBar.show(
+        context,
+        AppLocalizations.of(context)!.profileUpdatedSuccessfully,
+        'S',
       );
 
       if (!mounted) return;
       Navigator.pop(context);
     } else {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Update failed'),
-          backgroundColor: Colors.red,
-        ),
+      AnimatedSnackBar.show(
+        context,
+        authProvider.errorMessage ?? 'Update failed',
+        'E',
       );
     }
   }
