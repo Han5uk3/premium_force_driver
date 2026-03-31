@@ -124,35 +124,53 @@ class BookingsProvider extends ChangeNotifier {
   }
 
   /// Start tracking a booking (moves to starttracking status).
-  Future<bool> startTracking(String bookingId) async {
+  Future<bool> startTracking(String bookingId, {bool skipApi = false}) async {
     try {
-      final token = UserLocalStorage.getToken();
-
-      final booking = _allBookings.firstWhere((b) => b.id == bookingId);
-      final response = await _apiService.updateBookingStatus(
-        bookingId: bookingId,
-        status: 'starttracking',
-        isHourly: booking.isHourly,
-        token: token,
-      );
-
-      if (response['success'] == true) {
-        _actionMessage = 'Tracking started!';
-
-        // Update the booking in the list
-        _updateBookingInList(bookingId, 'starttracking');
-
-        notifyListeners();
-        return true;
-      } else {
-        _actionMessage = response['message'] ?? 'Failed to start tracking';
-        notifyListeners();
-        return false;
+      if (!skipApi) {
+        final token = UserLocalStorage.getToken();
+        final booking = _allBookings.firstWhere((b) => b.id == bookingId);
+        final response = await _apiService.startTrackingBooking(
+          bookingId: bookingId,
+          isHourly: booking.isHourly,
+          token: token,
+        );
+        if (response['success'] != true) {
+          _actionMessage = response['message'] ?? 'Failed to start tracking';
+          notifyListeners();
+          return false;
+        }
       }
+      
+      _actionMessage = 'Tracking started!';
+      _updateBookingInList(bookingId, 'starttracking');
+      notifyListeners();
+      return true;
     } catch (e) {
       debugPrint('Start tracking error: $e');
       _actionMessage = 'Error starting tracking: $e';
       notifyListeners();
+      return false;
+    }
+  }
+
+  /// Generic update status
+  Future<bool> updateBookingStatus(String bookingId, String status, {bool isHourly = false}) async {
+    try {
+      final token = UserLocalStorage.getToken();
+      final response = await _apiService.updateBookingStatus(
+        bookingId: bookingId,
+        status: status,
+        isHourly: isHourly,
+        token: token,
+      );
+      if (response['success'] == true) {
+        _actionMessage = 'Status updated';
+        _updateBookingInList(bookingId, status);
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
       return false;
     }
   }
@@ -202,8 +220,10 @@ class BookingsProvider extends ChangeNotifier {
         return false;
       }
 
+      final booking = _allBookings.firstWhere((b) => b.id == bookingId);
       final response = await _apiService.completeBooking(
         bookingId: bookingId,
+        isHourly: booking.isHourly,
         driverId: driverId,
         token: token,
       );
@@ -250,13 +270,20 @@ class BookingsProvider extends ChangeNotifier {
       return dateB.compareTo(dateA);
     });
 
-    _upcomingBookings = _allBookings.where((b) => b.status == 'P').toList();
-    _ongoingBookings = _allBookings
-        .where((b) => b.status == 'AC' || b.status == 'OG' || b.status == 'starttracking')
-        .toList();
-    _completedBookings = _allBookings
-        .where((b) => b.status == 'C' || b.status == 'CA')
-        .toList();
+    _upcomingBookings = _allBookings.where((b) {
+      final s = b.status.toLowerCase().trim();
+      return s == 'p' || s == 'pending';
+    }).toList();
+    
+    _ongoingBookings = _allBookings.where((b) {
+      final s = b.status.toLowerCase().trim();
+      return s == 'ac' || s == 'assigned' || s == 'og' || s == 'starttracking' || s == 'paymentpending';
+    }).toList();
+    
+    _completedBookings = _allBookings.where((b) {
+      final s = b.status.toLowerCase().trim();
+      return s == 'c' || s == 'completed' || s == 'ca' || s == 'cancelled' || s == 'reviewed';
+    }).toList();
   }
 
   /// Update a booking in the local list after an action.

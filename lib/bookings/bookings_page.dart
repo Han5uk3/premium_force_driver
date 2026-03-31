@@ -197,6 +197,9 @@ class _BookingsPageState extends State<BookingsPage>
                   : booking.createdAt;
           
           final effectiveDateTime = displayDateTime ?? booking.createdAt;
+          final isToday = effectiveDateTime.year == DateTime.now().year &&
+                          effectiveDateTime.month == DateTime.now().month &&
+                          effectiveDateTime.day == DateTime.now().day;
 
           return Column(
             children: [
@@ -214,7 +217,12 @@ class _BookingsPageState extends State<BookingsPage>
                 rating: booking.rating,
                 reviewText: booking.review,
                 isChauffeur: booking.isHourly,
+                isToday: isToday,
+                dropoffLatitude: booking.dropoffLatitude,
+                dropoffLongitude: booking.dropoffLongitude,
                 onAccept: () async {
+                  final confirm = await _showConfirmationDialog(context, 'Accept Booking', 'Are you sure you want to accept this booking?');
+                  if (confirm != true) return;
                   final success = await provider.acceptBooking(booking.id);
                   if (success && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -228,6 +236,8 @@ class _BookingsPageState extends State<BookingsPage>
                   }
                 },
                 onReject: () async {
+                  final confirm = await _showConfirmationDialog(context, 'Reject Booking', 'Are you sure you want to reject this booking?');
+                  if (confirm != true) return;
                   final success = await provider.rejectBooking(booking.id);
                   if (success && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -241,9 +251,11 @@ class _BookingsPageState extends State<BookingsPage>
                   }
                 },
                 onComplete: () async {
+                  final confirm = await _showConfirmationDialog(context, 'Complete Booking', 'Are you sure you want to complete this booking?');
+                  if (confirm != true) return;
+                  await TrackingService().stopTracking(saveToBackend: true);
                   final success = await provider.completeBooking(booking.id);
                   if (success && context.mounted) {
-                    TrackingService().stopTracking(); // Stop tracking on completion
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -255,6 +267,8 @@ class _BookingsPageState extends State<BookingsPage>
                   }
                 },
                 onStartTracking: () async {
+                  final confirm = await _showConfirmationDialog(context, 'Start Tracking', 'Are you ready to start tracking for this booking?');
+                  if (confirm != true) return;
                   final success = await provider.startTracking(booking.id);
                   if (success && context.mounted) {
                     await TrackingService().startTracking(
@@ -276,21 +290,40 @@ class _BookingsPageState extends State<BookingsPage>
                   }
                 },
                 onStopTracking: () async {
+                  final confirm = await _showConfirmationDialog(context, 'Stop Tracking', 'Are you sure you want to stop tracking?');
+                  if (confirm != true) return;
                   // Stop the GPS stream and save chauffeur timing to backend
-                  await TrackingService().stopTracking(saveToBackend: true);
-                  // Mark booking as completed (chauffeur trips end with stop tracking)
-                  final success = await provider.completeBooking(booking.id);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          success
-                              ? (provider.actionMessage ?? 'Trip ended')
-                              : 'Tracking stopped, sync pending',
-                        ),
-                        backgroundColor: success ? Colors.green : Colors.orange,
-                      ),
-                    );
+                  int extraHours = await TrackingService().stopTracking(saveToBackend: true);
+                  
+                  if (booking.isHourly == true && extraHours > 0) {
+                     final success = await provider.updateBookingStatus(booking.id, 'paymentpending', isHourly: true);
+                     if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              success
+                                  ? 'Extra hours detected. Customer needs to pay.'
+                                  : 'Sync pending for extra hours.',
+                            ),
+                            backgroundColor: success ? Colors.orange : Colors.red,
+                          ),
+                        );
+                     }
+                  } else {
+                     // Mark booking as completed (chauffeur trips end with stop tracking)
+                     final success = await provider.completeBooking(booking.id);
+                     if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              success
+                                  ? (provider.actionMessage ?? 'Trip ended')
+                                  : 'Tracking stopped, sync pending',
+                            ),
+                            backgroundColor: success ? Colors.green : Colors.orange,
+                          ),
+                        );
+                     }
                   }
                 },
                 onGetDirections: () {
@@ -374,6 +407,29 @@ class _BookingsPageState extends State<BookingsPage>
           backgroundColor: Colors.transparent,
           automaticallyImplyLeading: false,
         ),
+      ),
+    );
+  }
+
+  Future<bool?> _showConfirmationDialog(BuildContext context, String title, String content) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
+        content: Text(content, style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC0C0C0)),
+            child: const Text('Confirm', style: TextStyle(color: Colors.black)),
+          ),
+        ],
       ),
     );
   }

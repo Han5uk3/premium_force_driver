@@ -10,8 +10,11 @@ class TrackingService {
   TrackingService._internal();
 
   StreamSubscription<Position>? _positionStreamSubscription;
+  final StreamController<Position> _positionStreamController = StreamController<Position>.broadcast();
   final FirebaseDatabase _database = FirebaseDatabase.instance;
   final ApiService _apiService = ApiService();
+
+  Stream<Position> get positionStream => _positionStreamController.stream;
 
   // Store current session info for stop tracking
   String? _currentBookingId;
@@ -93,19 +96,24 @@ class TrackingService {
       locationSettings: locationSettings,
     ).listen((Position position) {
       _updateLocationInFirebase(bookingId, position);
+      if (!_positionStreamController.isClosed) {
+        _positionStreamController.add(position);
+      }
     });
   }
 
   /// Stop tracking. For chauffeur bookings, writes [stopTime] and [tripDuration]
   /// to RTDB and — if [saveToBackend] is true — also sends to the REST API.
-  Future<void> stopTracking({bool saveToBackend = true}) async {
+  Future<int> stopTracking({bool saveToBackend = true}) async {
     _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
 
-    if (_currentBookingId == null) return;
+    if (_currentBookingId == null) return 0;
 
     final bookingId = _currentBookingId!;
     final stopTime = DateTime.now();
+
+    int extraHours = 0;
 
     // Mark session inactive in RTDB
     try {
@@ -123,7 +131,7 @@ class TrackingService {
         // Calculate extra hours: actual hours – booked hours, rounded
         // e.g. 1.56 extra → 2 h, 1.48 extra → 1 h (standard round)
         final actualHoursDecimal = durationSeconds / 3600.0;
-        int extraHours = 0;
+        
         if (_bookedHours > 0 && actualHoursDecimal > _bookedHours) {
           final overDecimal = actualHoursDecimal - _bookedHours;
           extraHours = overDecimal.round(); // ≥0.5 → up, <0.5 → down
@@ -156,6 +164,8 @@ class TrackingService {
     _isChauffeur = false;
     _bookedHours = 0;
     _startTime = null;
+
+    return extraHours;
   }
 
   /// Save chauffeur trip timing data to backend.

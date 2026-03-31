@@ -1,3 +1,5 @@
+import 'package:geolocator/geolocator.dart';
+import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:flutter/material.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 
@@ -22,6 +24,9 @@ class Bookingcard extends StatelessWidget {
   final VoidCallback? onGetDirections;
   final double? rating;
   final String? reviewText;
+  final bool isToday;
+  final double? dropoffLatitude;
+  final double? dropoffLongitude;
 
   const Bookingcard({
     super.key,
@@ -45,6 +50,9 @@ class Bookingcard extends StatelessWidget {
     this.onGetDirections,
     this.rating,
     this.reviewText,
+    this.isToday = true,
+    this.dropoffLatitude,
+    this.dropoffLongitude,
   });
 
   @override
@@ -335,15 +343,15 @@ class Bookingcard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    if (status == 'P') // Pending - show Accept and Reject
+                    if (status == 'pending') // Pending - show Accept and Reject
                       ..._buildPendingActions(loc)
-                    else if (status == 'AC') // Accepted - show Start Tracking
+                    else if (status == 'assigned') // Accepted - show Start Tracking
                       ..._buildAcceptedActions(loc)
                     else if (status == 'starttracking') // Tracking
                       ...(isChauffeur
                           ? _buildChauffeurTrackingActions(loc)
                           : _buildTrackingActions(loc))
-                    else if (status == 'OG') // Ongoing - show Complete
+                    else if (status == 'ongoing') // Ongoing - show Complete
                       ..._buildOngoingActions(loc),
                   ],
                 ),
@@ -376,26 +384,28 @@ class Bookingcard extends StatelessWidget {
     );
   }
 
-  String getStatusText(String status, AppLocalizations loc) {
-    switch (status) {
-      case "Completed":
-      case "C":
+  String getStatusText(String statusLocal, AppLocalizations loc) {
+    statusLocal = statusLocal.toLowerCase().trim();
+    switch (statusLocal) {
+      case "completed":
       case "c":
         return loc.completed;
-      case "Pending":
-      case "P":
+      case "pending":
       case "p":
         return loc.pending;
-      case "Cancelled":
-      case "CA":
-      case "X":
+      case "cancelled":
+      case "ca":
       case "x":
         return loc.cancelled;
-      case "Accepted":
-      case "AC":
-        return "Accepted"; // Replace with loc.accepted if available
-      case "Ongoing":
-      case "OG":
+      case "assigned":
+      case "ac":
+        return "Assigned";
+      case "paymentpending":
+        return "Payment Pending";
+      case "reviewed":
+        return "Reviewed";
+      case "ongoing":
+      case "og":
         return "Ongoing";
       case "starttracking":
         return "Tracking";
@@ -410,27 +420,29 @@ class Bookingcard extends StatelessWidget {
     }
   }
 
-  Color getColorByStatus(String status) {
-    switch (status) {
-      case "Completed":
-      case "C":
+  Color getColorByStatus(String statusLocal) {
+    statusLocal = statusLocal.toLowerCase().trim();
+    switch (statusLocal) {
+      case "completed":
       case "c":
         return Colors.green;
-      case "Pending":
-      case "P":
+      case "pending":
       case "p":
         return Colors.orange;
-      case "Accepted":
-      case "AC":
+      case "assigned":
+      case "ac":
         return Colors.blue;
-      case "Ongoing":
-      case "OG":
+      case "ongoing":
+      case "og":
         return Colors.indigo;
       case "starttracking":
         return Colors.teal;
-      case "Cancelled":
-      case "CA":
-      case "X":
+      case "paymentpending":
+        return Colors.amber;
+      case "reviewed":
+        return Colors.purple;
+      case "cancelled":
+      case "ca":
       case "x":
         return Colors.red;
       default:
@@ -439,8 +451,9 @@ class Bookingcard extends StatelessWidget {
   }
 
   bool _shouldShowActions() {
+    final s = status.toLowerCase().trim();
     return bookingId != null &&
-        (status == 'P' || status == 'AC' || status == 'OG' || status == 'starttracking');
+        (s == 'pending' || s == 'assigned' || s == 'starttracking' || s == 'ongoing');
   }
 
   List<Widget> _buildPendingActions(AppLocalizations loc) {
@@ -474,6 +487,20 @@ class Bookingcard extends StatelessWidget {
   }
 
   List<Widget> _buildAcceptedActions(AppLocalizations loc) {
+    if (!isToday) {
+      return [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              "Start Tracking available on booking date",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white54, fontSize: 13),
+            ),
+          )
+        )
+      ];
+    }
     return [
       Expanded(
         child: ElevatedButton.icon(
@@ -506,15 +533,47 @@ class Bookingcard extends StatelessWidget {
       ),
       const SizedBox(width: 8),
       Expanded(
-        child: ElevatedButton.icon(
-          onPressed: onComplete,
-          icon: const Icon(Icons.stop_circle, size: 16),
-          label: Text(loc.stopTracking),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red.shade700,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-          ),
+        child: StreamBuilder<Position>(
+          stream: TrackingService().positionStream,
+          builder: (context, snapshot) {
+            bool canStop = false;
+            if (dropoffLatitude != null && dropoffLongitude != null && snapshot.hasData) {
+              final pos = snapshot.data!;
+              final distance = Geolocator.distanceBetween(
+                pos.latitude, pos.longitude, 
+                dropoffLatitude!, dropoffLongitude!
+              );
+              if (distance <= 500) { // 500 meters threshold
+                canStop = true;
+              }
+            } else if (dropoffLatitude == null) {
+              canStop = true; // fallback
+            }
+
+            if (!canStop) {
+               return ElevatedButton.icon(
+                onPressed: null,
+                icon: const Icon(Icons.stop_circle, size: 16),
+                label: Text(loc.stopTracking),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade700,
+                  foregroundColor: Colors.white54,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              );
+            }
+
+            return ElevatedButton.icon(
+              onPressed: onComplete,
+              icon: const Icon(Icons.stop_circle, size: 16),
+              label: Text(loc.stopTracking),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+            );
+          }
         ),
       ),
     ];

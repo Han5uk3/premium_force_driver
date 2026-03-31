@@ -425,6 +425,7 @@ class ApiService {
       final fields = <String, dynamic>{
         'firstName': firstName,
         'lastName': lastName,
+        'driverName': '$firstName $lastName'.trim(),
         'email': email,
         'countryCode': countryCode,
         'phoneNumber': phoneNumber,
@@ -486,6 +487,9 @@ class ApiService {
   }) async {
     try {
       final fields = <String, dynamic>{};
+      if (firstName != null || lastName != null) {
+        fields['driverName'] = '${firstName ?? ''} ${lastName ?? ''}'.trim();
+      }
       if (firstName != null) fields['firstName'] = firstName;
       if (lastName != null) fields['lastName'] = lastName;
       if (email != null) fields['email'] = email;
@@ -657,20 +661,17 @@ class ApiService {
 
   /// Accept a booking by [bookingId].
   ///
-  /// Calls `PUT /api/bookings/{bookingId}` or `/api/hourly-bookings/{bookingId}` to update status to "AC" (Accepted).
+  /// Calls `PATCH /api/bookings/{bookingId}/status` or `/api/hourly-bookings/{bookingId}/status` to update status to "AC" (Accepted).
   Future<Map<String, dynamic>> acceptBooking({
     required String bookingId,
     bool isHourly = false,
     String? token,
   }) async {
     try {
-      final path = isHourly ? '/hourly-bookings/$bookingId' : '/bookings/$bookingId';
-      final response = await _dio.put(
+      final path = isHourly ? '/hourly-bookings/$bookingId/status' : '/bookings/$bookingId/status';
+      final response = await _dio.patch(
         path,
-        data: {
-          'status': 'AC',
-          'bookingStatus': 'AC',
-        }, // AC = Accepted
+        data: {'bookingID': bookingId, 'status': 'AC'}, // AC = Accepted
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
@@ -681,7 +682,7 @@ class ApiService {
 
   /// Update booking status.
   ///
-  /// Calls `PUT /api/bookings/{bookingId}` or `/api/hourly-bookings/{bookingId}`.
+  /// Calls `PATCH /api/bookings/{bookingId}/status` or `/api/hourly-bookings/{bookingId}/status`.
   Future<Map<String, dynamic>> updateBookingStatus({
     required String bookingId,
     required String status,
@@ -689,13 +690,10 @@ class ApiService {
     String? token,
   }) async {
     try {
-      final path = isHourly ? '/hourly-bookings/$bookingId' : '/bookings/$bookingId';
-      final response = await _dio.put(
+      final path = isHourly ? '/hourly-bookings/$bookingId/status' : '/bookings/$bookingId/status';
+      final response = await _dio.patch(
         path,
-        data: {
-          'bookingStatus': status,
-          'status': status,
-        }, // Send both to be safe
+        data: {'bookingID': bookingId, 'status': status},
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
@@ -706,20 +704,17 @@ class ApiService {
 
   /// Reject a booking by [bookingId].
   ///
-  /// Calls `PUT /api/bookings/{bookingId}` or `/api/hourly-bookings/{bookingId}` to update status to "CA" (Cancelled).
+  /// Calls `PATCH /api/bookings/{bookingId}/status` or `/api/hourly-bookings/{bookingId}/status` to update status to "CA" (Cancelled).
   Future<Map<String, dynamic>> rejectBooking({
     required String bookingId,
     bool isHourly = false,
     String? token,
   }) async {
     try {
-      final path = isHourly ? '/hourly-bookings/$bookingId' : '/bookings/$bookingId';
-      final response = await _dio.put(
+      final path = isHourly ? '/hourly-bookings/$bookingId/status' : '/bookings/$bookingId/status';
+      final response = await _dio.patch(
         path,
-        data: {
-          'status': 'CA',
-          'bookingStatus': 'CA',
-        }, // CA = Cancelled
+        data: {'bookingID': bookingId, 'status': 'CA'}, // CA = Cancelled
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
@@ -761,18 +756,45 @@ class ApiService {
     }
   }
 
-  /// Mark a booking as completed (trip finished).
+  /// Start tracking a booking.
   ///
-  /// Calls `POST /api/drivers/complete-booking/` endpoint.
-  Future<Map<String, dynamic>> completeBooking({
+  /// Calls `POST /api/drivers/complete-booking/tracking` or `/HourlyBooking`.
+  Future<Map<String, dynamic>> startTrackingBooking({
     required String bookingId,
-    required String driverId,
+    bool isHourly = false,
     String? token,
   }) async {
     try {
+      final path = isHourly
+          ? '/drivers/complete-booking/tracking/HourlyBooking'
+          : '/drivers/complete-booking/tracking';
       final response = await _dio.post(
-        '/drivers/complete-booking/',
-        data: {'bookingId': bookingId, 'driverId': driverId},
+        path,
+        data: {'bookingID': bookingId},
+        options: token != null ? _authOptions(token) : null,
+      );
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  /// Mark a booking as completed (trip finished).
+  ///
+  /// Calls `POST /api/drivers/complete-trip/` endpoint.
+  Future<Map<String, dynamic>> completeBooking({
+    required String bookingId,
+    bool isHourly = false,
+    String? driverId, // kept for backward compatibility if needed elsewhere
+    String? token,
+  }) async {
+    try {
+      final path = isHourly
+          ? '/drivers/complete-trip/HourlyBooking'
+          : '/drivers/complete-trip/';
+      final response = await _dio.post(
+        path,
+        data: {'bookingID': bookingId},
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
