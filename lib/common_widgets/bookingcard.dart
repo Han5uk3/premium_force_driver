@@ -1,6 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:flutter/material.dart';
+import 'voice_player.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 
 class Bookingcard extends StatelessWidget {
@@ -27,6 +28,8 @@ class Bookingcard extends StatelessWidget {
   final bool isToday;
   final double? dropoffLatitude;
   final double? dropoffLongitude;
+  final String? specialRequestText;
+  final String? specialRequestAudio;
 
   const Bookingcard({
     super.key,
@@ -53,6 +56,8 @@ class Bookingcard extends StatelessWidget {
     this.isToday = true,
     this.dropoffLatitude,
     this.dropoffLongitude,
+    this.specialRequestText,
+    this.specialRequestAudio,
   });
 
   @override
@@ -283,6 +288,51 @@ class Bookingcard extends StatelessWidget {
                 SizedBox(height: 8),
               ],
             ),
+
+            // Special Requests Section
+            if ((specialRequestText != null && specialRequestText!.isNotEmpty) || (specialRequestAudio != null && specialRequestAudio!.isNotEmpty)) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.notes, color: Color(0xFFE4A46B), size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          loc.specialRequests,
+                          style: TextStyle(
+                            color: Color(0xFFE4A46B),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (specialRequestText != null && specialRequestText!.isNotEmpty) ...[
+                      SizedBox(height: 4),
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          specialRequestText!,
+                          style: TextStyle(color: Colors.white, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                    if (specialRequestAudio != null && specialRequestAudio!.isNotEmpty) ...[
+                      SizedBox(height: 8),
+                      VoicePlayer(audioUrl: specialRequestAudio!),
+                    ],
+                  ],
+                ),
+              ),
+              Divider(color: Color(0xFF505050), height: 5),
+            ],
             if (rating != null && (status.toLowerCase().trim() == 'completed' || status.toLowerCase().trim() == 'c')) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
@@ -343,15 +393,15 @@ class Bookingcard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    if (status == 'pending') // Pending - show Accept and Reject
+                    if (status.toLowerCase() == 'p' || status.toLowerCase() == 'pending')
                       ..._buildPendingActions(loc)
-                    else if (status == 'assigned') // Accepted - show Start Tracking
+                    else if (status.toLowerCase() == 'ac' || status.toLowerCase() == 'accepted' || status.toLowerCase() == 'assigned')
                       ..._buildAcceptedActions(loc)
-                    else if (status == 'starttracking') // Tracking
+                    else if (status.toLowerCase() == 'starttracking')
                       ...(isChauffeur
                           ? _buildChauffeurTrackingActions(loc)
                           : _buildTrackingActions(loc))
-                    else if (status == 'ongoing') // Ongoing - show Complete
+                    else if (status.toLowerCase() == 'og' || status.toLowerCase() == 'ongoing')
                       ..._buildOngoingActions(loc),
                   ],
                 ),
@@ -453,7 +503,7 @@ class Bookingcard extends StatelessWidget {
   bool _shouldShowActions() {
     final s = status.toLowerCase().trim();
     return bookingId != null &&
-        (s == 'pending' || s == 'assigned' || s == 'starttracking' || s == 'ongoing');
+        (s == 'pending' || s == 'p' || s == 'assigned' || s == 'ac' || s == 'accepted' || s == 'starttracking' || s == 'ongoing' || s == 'og');
   }
 
   List<Widget> _buildPendingActions(AppLocalizations loc) {

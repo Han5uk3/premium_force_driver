@@ -241,7 +241,14 @@
   "noDriverRegisteredError": "لا يوجد سائق مسجل بهذا الرقم",
   "voiceNote": "ملاحظة صوتية",
   "recordVoiceNote": "تسجيل ملاحظة صوتية",
-  "saveVoiceNote": "حفظ الملاحظة الصوتية"
+  "saveVoiceNote": "حفظ الملاحظة الصوتية",
+  "bookingInfo": "معلومات الحجز",
+  "date": "التاريخ",
+  "time": "الوقت",
+  "customerInfo": "تفاصيل العميل",
+  "fare": "الأجرة",
+  "riyal": "ر.س",
+  "extraHoursCharge": "رسوم الساعات الإضافية"
 }
 
 

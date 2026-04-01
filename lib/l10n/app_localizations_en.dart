@@ -770,4 +770,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveVoiceNote => 'Save Voice Note';
+
+  @override
+  String get bookingInfo => 'Booking Information';
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get time => 'Time';
+
+  @override
+  String get customerInfo => 'Customer Details';
+
+  @override
+  String get fare => 'Fare';
+
+  @override
+  String get riyal => 'SAR';
+
+  @override
+  String get extraHoursCharge => 'Extra Hours Charge';
 }

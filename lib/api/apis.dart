@@ -570,8 +570,8 @@ class ApiService {
         final data = response.data;
         List<BookingModel> bookings = [];
 
-        if (data is Map<String, dynamic> && data.containsKey('bookings')) {
-          final bookingsList = data['bookings'] as List?;
+        if (data is Map<String, dynamic> && (data.containsKey('bookings') || data.containsKey('data'))) {
+          final bookingsList = (data['bookings'] ?? data['data']) as List?;
           if (bookingsList != null) {
             bookings = bookingsList
                 .map((b) => BookingModel.fromJson(b as Map<String, dynamic>))

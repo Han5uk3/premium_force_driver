@@ -1549,6 +1549,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save Voice Note'**
   String get saveVoiceNote;
+
+  /// No description provided for @bookingInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Information'**
+  String get bookingInfo;
+
+  /// No description provided for @date.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get date;
+
+  /// No description provided for @time.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get time;
+
+  /// No description provided for @customerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Details'**
+  String get customerInfo;
+
+  /// No description provided for @fare.
+  ///
+  /// In en, this message translates to:
+  /// **'Fare'**
+  String get fare;
+
+  /// No description provided for @riyal.
+  ///
+  /// In en, this message translates to:
+  /// **'SAR'**
+  String get riyal;
+
+  /// No description provided for @extraHoursCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Hours Charge'**
+  String get extraHoursCharge;
 }
 
 class _AppLocalizationsDelegate

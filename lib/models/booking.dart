@@ -40,6 +40,8 @@ class BookingModel {
   final double? extraPayment;
   final String? extraOrderID;
   final String? extraTransactionID;
+  final String? specialRequestText;
+  final String? specialRequestAudio;
 
   // Modern Nested Objects from rich backend response
   final CityDetails? city;
@@ -98,6 +100,8 @@ class BookingModel {
     this.extraPayment,
     this.extraOrderID,
     this.extraTransactionID,
+    this.specialRequestText,
+    this.specialRequestAudio,
   });
 
   /// Readable car name (e.g. "S-Class")
@@ -135,26 +139,41 @@ class BookingModel {
       if (status == null) return 'P';
       final s = status.toString().toLowerCase().trim();
       if (s == 'p' || s == 'pending') return 'P';
-      if (s == 'ac' || s == 'accepted') return 'AC';
-      if (s == 'og' || s == 'ongoing' || s == 'starttracking') return 'OG';
-      if (s == 'c' || s == 'completed') return 'C';
+      if (s == 'ac' || s == 'accepted' || s == 'assigned') return 'AC'; // Map 'assigned' to AC
+      if (s == 'og' || s == 'ongoing') return 'OG';
+      if (s == 'starttracking' || s == 'starttrack') return 'starttracking';
+      if (s == 'stoptracking' || s == 'stoptrack') return 'stoptracking';
+      if (s == 'c' || s == 'completed' || s == 'reviewed') return 'C';
       if (s == 'ca' || s == 'cancelled' || s == 'x') return 'CA';
-      return 'P'; // Default to pending
+      if (s == 'paymentpending') return 'paymentpending';
+      return s.toUpperCase(); // Fallback to raw status in caps
     }
 
     // Parse nested objects if present
+    final customerObj = json['customer'] ?? json['customerID'];
+    final customerData = customerObj is Map<String, dynamic> ? UserModel.fromJson(customerObj) : null;
+    
+    final driverObj = json['driver'] ?? json['driverID'];
+    final driverData = driverObj is Map<String, dynamic> ? DriverModel.fromJson(driverObj) : null;
+
     final cityData = json['city'] != null ? CityDetails.fromJson(json['city']) : null;
     final airportData = json['airport'] != null ? AirportDetails.fromJson(json['airport']) : null;
     final terminalData = json['terminal'] != null ? TerminalDetails.fromJson(json['terminal']) : null;
     final carData = json['car'] != null ? CarDetails.fromJson(json['car']) : null;
-    final customerData = json['customer'] != null ? UserModel.fromJson(json['customer']) : null;
-    final driverData = json['driver'] != null ? DriverModel.fromJson(json['driver']) : null;
-    final ids = json['originalIds'] != null ? OriginalIds.fromJson(json['originalIds']) : null;
+    
+    final ids = json['originalIds'] != null ? OriginalIds.fromJson(json['originalIds']) : OriginalIds(
+      cityID: json['cityID']?.toString(),
+      airportID: json['airportID']?.toString(),
+      terminalID: json['terminalID']?.toString(),
+      carID: json['carID']?.toString(),
+      customerID: customerData?.uid ?? (json['customerID'] is String ? json['customerID'] : null),
+      driverID: driverData?.uid ?? (json['driverID'] is String ? json['driverID'] : null),
+    );
 
     return BookingModel(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
-      customerId: json['customerID']?.toString() ?? json['customerId']?.toString() ?? ids?.customerID ?? '',
-      driverId: json['driverID']?.toString() ?? json['driverId']?.toString() ?? ids?.driverID,
+      customerId: customerData?.uid ?? json['customerID']?.toString() ?? json['customerId']?.toString() ?? ids.customerID ?? '',
+      driverId: driverData?.uid ?? json['driverID']?.toString() ?? json['driverId']?.toString() ?? ids.driverID ?? '',
       pickupLocation: json['pickupAddress']?.toString() ?? json['pickupLocation']?.toString() ?? json['pickupAdddress']?.toString() ?? terminalData?.terminalName ?? airportData?.airportName ?? '',
       dropoffLocation: json['dropOffAddress']?.toString() ?? json['dropoffLocation']?.toString() ?? '',
       pickupLatitude: toDouble(json['pickupLat'] ?? json['pickupLatitude']),
@@ -210,6 +229,8 @@ class BookingModel {
       extraPayment: toDouble(json['extraPayment']),
       extraOrderID: json['extraOrderID']?.toString(),
       extraTransactionID: json['extraTransactionID']?.toString(),
+      specialRequestText: json['specialRequestText']?.toString(),
+      specialRequestAudio: json['specialRequestAudio']?.toString(),
     );
   }
 
@@ -252,6 +273,8 @@ class BookingModel {
     'extraPayment': extraPayment,
     'extraOrderID': extraOrderID,
     'extraTransactionID': extraTransactionID,
+    'specialRequestText': specialRequestText,
+    'specialRequestAudio': specialRequestAudio,
     if (originalIds != null) 'originalIds': {
       'cityID': originalIds!.cityID,
       'airportID': originalIds!.airportID,
@@ -300,6 +323,8 @@ class BookingModel {
     String? startedAt,
     String? stoppedAt,
     int? extraHours,
+    String? specialRequestText,
+    String? specialRequestAudio,
   }) => BookingModel(
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
@@ -346,6 +371,8 @@ class BookingModel {
     extraPayment: extraPayment ?? this.extraPayment,
     extraOrderID: extraOrderID ?? this.extraOrderID,
     extraTransactionID: extraTransactionID ?? this.extraTransactionID,
+    specialRequestText: specialRequestText ?? this.specialRequestText,
+    specialRequestAudio: specialRequestAudio ?? this.specialRequestAudio,
   );
 
   @override

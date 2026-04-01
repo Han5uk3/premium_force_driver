@@ -757,4 +757,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get saveVoiceNote => 'حفظ الملاحظة الصوتية';
+
+  @override
+  String get bookingInfo => 'معلومات الحجز';
+
+  @override
+  String get date => 'التاريخ';
+
+  @override
+  String get time => 'الوقت';
+
+  @override
+  String get customerInfo => 'تفاصيل العميل';
+
+  @override
+  String get fare => 'الأجرة';
+
+  @override
+  String get riyal => 'ر.س';
+
+  @override
+  String get extraHoursCharge => 'رسوم الساعات الإضافية';
 }

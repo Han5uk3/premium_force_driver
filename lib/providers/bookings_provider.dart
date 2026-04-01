@@ -91,6 +91,15 @@ class BookingsProvider extends ChangeNotifier {
     await fetchBookings();
   }
 
+  /// Get a single booking from the local cache by ID.
+  BookingModel? getBookingById(String bookingId) {
+    try {
+      return _allBookings.firstWhere((b) => b.id == bookingId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Accept a booking by its ID.
   Future<bool> acceptBooking(String bookingId) async {
     try {
@@ -370,12 +379,12 @@ class BookingsProvider extends ChangeNotifier {
 
     _upcomingBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
-      return s == 'p' || s == 'pending';
+      return s == 'p' || s == 'pending' || s == 'ac' || s == 'assigned' || s == 'accepted';
     }).toList();
     
     _ongoingBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
-      return s == 'ac' || s == 'assigned' || s == 'og' || s == 'starttracking' || s == 'paymentpending';
+      return s == 'og' || s == 'ongoing' || s == 'starttracking' || s == 'stoptracking' || s == 'paymentpending';
     }).toList();
     
     _completedBookings = _allBookings.where((b) {

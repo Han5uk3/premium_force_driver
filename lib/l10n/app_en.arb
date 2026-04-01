@@ -241,7 +241,14 @@
   "noDriverRegisteredError": "No driver registered with this phone number",
   "voiceNote": "Voice Note",
   "recordVoiceNote": "Record voice note",
-  "saveVoiceNote": "Save Voice Note"
+  "saveVoiceNote": "Save Voice Note",
+  "bookingInfo": "Booking Information",
+  "date": "Date",
+  "time": "Time",
+  "customerInfo": "Customer Details",
+  "fare": "Fare",
+  "riyal": "SAR",
+  "extraHoursCharge": "Extra Hours Charge"
 }
 
 
