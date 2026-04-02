@@ -35,7 +35,6 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
     super.dispose();
   }
 
-
   /// Show dialog when driver is not registered
   void _showNotRegisteredDialog() {
     showDialog(
@@ -141,9 +140,10 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                     borderRadius: BorderRadius.circular(100),
                                     onTap: () {
                                       bool isCurrentlyEnglish =
-                                          Localizations.localeOf(context)
-                                                  .languageCode ==
-                                              'en';
+                                          Localizations.localeOf(
+                                            context,
+                                          ).languageCode ==
+                                          'en';
                                       MainApp.setLocale(
                                         context,
                                         Locale(
@@ -152,8 +152,9 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       );
                                     },
                                     child: SvgPicture.asset(
-                                      Localizations.localeOf(context)
-                                                  .languageCode ==
+                                      Localizations.localeOf(
+                                                context,
+                                              ).languageCode ==
                                               'en'
                                           ? 'assets/flags/en.svg'
                                           : 'assets/flags/ar.svg',
@@ -317,8 +318,9 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                   ),
                                   children: [
                                     TextSpan(
-                                      text:
-                                          AppLocalizations.of(context)!.byClickingContinue,
+                                      text: AppLocalizations.of(
+                                        context,
+                                      )!.byClickingContinue,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -327,7 +329,8 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       ),
                                     ),
                                     TextSpan(
-                                      text: AppLocalizations.of(context)!.termsAndConditions,
+                                      text:
+                                          " ${AppLocalizations.of(context)!.termsAndConditions} ",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -345,7 +348,8 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       ),
                                     ),
                                     TextSpan(
-                                      text: AppLocalizations.of(context)!.privacyPolicy,
+                                      text:
+                                          " ${AppLocalizations.of(context)!.privacyPolicy} ",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -395,7 +399,9 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                 final errorMsg =
                                     authProvider.errorMessage ?? '';
                                 if (errorMsg.contains(
-                                  AppLocalizations.of(context)!.noDriverRegisteredError,
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.noDriverRegisteredError,
                                 )) {
                                   _showNotRegisteredDialog();
                                 } else {
@@ -405,8 +411,9 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                             } else if (_isAgreed == false) {
                               AnimatedSnackBar.show(
                                 context,
-                                AppLocalizations.of(context)!
-                                    .pleaseAgreeToTheTermsAndConditionsAndPrivacyPolicy,
+                                AppLocalizations.of(
+                                  context,
+                                )!.pleaseAgreeToTheTermsAndConditionsAndPrivacyPolicy,
                                 "E",
                               );
                             }

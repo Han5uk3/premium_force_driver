@@ -85,8 +85,24 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                 children: [
                   _buildDetailRow(
                     loc.service,
-                    _currentBooking.rideType,
+                    _currentBooking.isHourly
+                        ? loc.chauffeur
+                        : _currentBooking.pickupLocation.toLowerCase().contains(
+                            'airport',
+                          )
+                        ? loc.airportArrival
+                        : _currentBooking.dropoffLocation
+                              .toLowerCase()
+                              .contains('airport')
+                        ? loc.airportDeparture
+                        : loc.privateTransfer,
                     Icons.drive_eta,
+                  ),
+                  const Divider(color: Colors.white10, height: 24),
+                  _buildDetailRow(
+                    loc.vehicleType,
+                    _currentBooking.displayRideType,
+                    Icons.directions_car_outlined,
                   ),
                   const Divider(color: Colors.white10, height: 24),
                   _buildDetailRow(
@@ -94,6 +110,14 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     _currentBooking.passengerCount.toString(),
                     Icons.groups_outlined,
                   ),
+                  if (_currentBooking.isHourly) ...[
+                    const Divider(color: Colors.white10, height: 24),
+                    _buildDetailRow(
+                      loc.duration,
+                      "${_currentBooking.estimatedDuration} ${loc.hrs}",
+                      Icons.timer_outlined,
+                    ),
+                  ],
                   const Divider(color: Colors.white10, height: 24),
                   _buildDetailRow(
                     loc.pickup,
@@ -101,13 +125,15 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     Icons.location_on,
                     color: Colors.green,
                   ),
-                  const SizedBox(height: 16),
-                  _buildDetailRow(
-                    loc.dropoff,
-                    _currentBooking.dropoffLocation,
-                    Icons.location_on,
-                    color: Colors.red,
-                  ),
+                  if (!_currentBooking.isHourly) ...[
+                    const SizedBox(height: 16),
+                    _buildDetailRow(
+                      loc.dropoff,
+                      _currentBooking.dropoffLocation,
+                      Icons.location_on,
+                      color: Colors.red,
+                    ),
+                  ],
                   const Divider(color: Colors.white10, height: 24),
                   Row(
                     children: [
@@ -178,6 +204,56 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
               ),
             ),
             const SizedBox(height: 20),
+
+            // Passenger Info (New)
+            if ((_currentBooking.passengerNames != null &&
+                    _currentBooking.passengerNames!.isNotEmpty) ||
+                (_currentBooking.passengerMobile != null &&
+                    _currentBooking.passengerMobile!.isNotEmpty)) ...[
+              _buildSectionTitle(loc.passengerName),
+              _buildSectionCard(
+                child: Column(
+                  children: [
+                    if (_currentBooking.passengerNames != null &&
+                        _currentBooking.passengerNames!.isNotEmpty)
+                      _buildDetailRow(
+                        loc.passengerName,
+                        _currentBooking.passengerNames!.join(", "),
+                        Icons.person_outline,
+                      ),
+                    if (_currentBooking.passengerNames != null &&
+                        _currentBooking.passengerNames!.isNotEmpty &&
+                        _currentBooking.passengerMobile != null &&
+                        _currentBooking.passengerMobile!.isNotEmpty)
+                      const Divider(color: Colors.white10, height: 24),
+                    if (_currentBooking.passengerMobile != null &&
+                        _currentBooking.passengerMobile!.isNotEmpty)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDetailRow(
+                              loc.mobileNumber,
+                              _currentBooking.passengerMobile!,
+                              Icons.phone_android,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => _makePhoneCall(
+                              _currentBooking.passengerMobile!,
+                            ),
+                            icon: const Icon(
+                              Icons.phone,
+                              color: Color(0xFFE4A46B),
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
 
             // Customer Info
             if (_currentBooking.customer != null) ...[
@@ -455,8 +531,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         if (confirm != true) return;
 
         // Check for location permissions (foreground & background)
-        final hasPermissions =
-            await TrackingService().handleLocationPermissions(context);
+        final hasPermissions = await TrackingService()
+            .handleLocationPermissions(context);
         if (!hasPermissions) return;
 
         final success = await provider.startTracking(_currentBooking.id);
@@ -493,8 +569,12 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             listenable: TrackingService(),
             builder: (context, _) {
               return _buildActionButton(
-                TrackingService().isPaused ? loc.resumeTracking : loc.pauseTracking,
-                TrackingService().isPaused ? Colors.green.shade700 : Colors.orange.shade700,
+                TrackingService().isPaused
+                    ? loc.resumeTracking
+                    : loc.pauseTracking,
+                TrackingService().isPaused
+                    ? Colors.green.shade700
+                    : Colors.orange.shade700,
                 () async {
                   if (TrackingService().isPaused) {
                     await TrackingService().resumeTracking(
@@ -508,12 +588,16 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                   if (mounted) {
                     AnimatedSnackBar.show(
                       context,
-                      TrackingService().isPaused ? loc.trackingPaused : loc.trackingResumed,
+                      TrackingService().isPaused
+                          ? loc.trackingPaused
+                          : loc.trackingResumed,
                       'S',
                     );
                   }
                 },
-                icon: TrackingService().isPaused ? Icons.play_arrow : Icons.pause,
+                icon: TrackingService().isPaused
+                    ? Icons.play_arrow
+                    : Icons.pause,
               );
             },
           ),

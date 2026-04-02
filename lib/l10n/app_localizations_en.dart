@@ -57,6 +57,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get airportDeparture => 'Airport Departure';
 
   @override
+  String get privateTransfer => 'Private Transfer';
+
+  @override
   String get chauffeurService => 'Chauffeur Service';
 
   @override
@@ -75,7 +78,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get riyadh => 'Riyadh';
 
   @override
+  String get duration => 'Duration';
+
+  @override
+  String get hours => 'hours';
+
+  @override
+  String get vehicleType => 'Vehicle Type';
+
+  @override
   String get jeddah => 'Jeddah';
+
+  @override
+  String get hrs => 'hrs';
 
   @override
   String get dammam => 'Dammam';

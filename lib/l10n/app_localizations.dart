@@ -194,6 +194,12 @@ abstract class AppLocalizations {
   /// **'Airport Departure'**
   String get airportDeparture;
 
+  /// No description provided for @privateTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Private Transfer'**
+  String get privateTransfer;
+
   /// No description provided for @chauffeurService.
   ///
   /// In en, this message translates to:
@@ -230,11 +236,35 @@ abstract class AppLocalizations {
   /// **'Riyadh'**
   String get riyadh;
 
+  /// No description provided for @duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get duration;
+
+  /// No description provided for @hours.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get hours;
+
+  /// No description provided for @vehicleType.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Type'**
+  String get vehicleType;
+
   /// No description provided for @jeddah.
   ///
   /// In en, this message translates to:
   /// **'Jeddah'**
   String get jeddah;
+
+  /// No description provided for @hrs.
+  ///
+  /// In en, this message translates to:
+  /// **'hrs'**
+  String get hrs;
 
   /// No description provided for @dammam.
   ///

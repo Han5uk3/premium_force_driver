@@ -224,12 +224,20 @@ class _BookingsPageState extends State<BookingsPage>
                 },
                 child: Bookingcard(
                   status: booking.status,
-                  type: booking.rideType,
+                  type: booking.isHourly
+                      ? loc.chauffeur
+                      : booking.pickupLocation.toLowerCase().contains('airport')
+                      ? loc.airportArrival
+                      : booking.dropoffLocation.toLowerCase().contains(
+                          'airport',
+                        )
+                      ? loc.airportDeparture
+                      : loc.privateTransfer,
                   pickup: booking.pickupLocation,
                   dropoff: booking.dropoffLocation,
                   date: dateFormat.format(effectiveDateTime),
                   time: timeFormat.format(effectiveDateTime),
-                  ride: booking.displayName,
+                  ride: booking.displayRideType,
                   brand: booking.displayBrand,
                   passengers: booking.passengerCount,
                   bookingId: booking.id,
@@ -297,10 +305,8 @@ class _BookingsPageState extends State<BookingsPage>
                     if (confirm != true) return;
 
                     // Check for location permissions (foreground & background)
-                    final hasPermissions =
-                        await TrackingService().handleLocationPermissions(
-                          context,
-                        );
+                    final hasPermissions = await TrackingService()
+                        .handleLocationPermissions(context);
                     if (!hasPermissions) return;
 
                     final success = await provider.startTracking(booking.id);
@@ -345,7 +351,9 @@ class _BookingsPageState extends State<BookingsPage>
                     _openMaps(booking);
                   },
                   onPauseTracking: () async {
-                    await TrackingService().pauseTracking(bookingId: booking.id);
+                    await TrackingService().pauseTracking(
+                      bookingId: booking.id,
+                    );
                     if (context.mounted) {
                       setState(() {});
                       AnimatedSnackBar.show(
@@ -356,7 +364,9 @@ class _BookingsPageState extends State<BookingsPage>
                     }
                   },
                   onResumeTracking: () async {
-                    await TrackingService().resumeTracking(bookingId: booking.id);
+                    await TrackingService().resumeTracking(
+                      bookingId: booking.id,
+                    );
                     if (context.mounted) {
                       setState(() {});
                       AnimatedSnackBar.show(

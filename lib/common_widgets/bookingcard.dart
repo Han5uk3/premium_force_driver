@@ -153,34 +153,36 @@ class Bookingcard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: 4),
-                Image.asset(
-                  "assets/icons/pixel_arrow.png",
-                  height: 30,
-                  width: 30,
-                  fit: BoxFit.contain,
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      buildContainerText(false, true, loc),
-                      SizedBox(height: 8),
-                      Text(
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        dropoff,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+                if (!isChauffeur) ...[
+                  const SizedBox(width: 4),
+                  Image.asset(
+                    "assets/icons/pixel_arrow.png",
+                    height: 30,
+                    width: 30,
+                    fit: BoxFit.contain,
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        buildContainerText(false, true, loc),
+                        const SizedBox(height: 8),
+                        Text(
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          dropoff,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
 
@@ -245,7 +247,7 @@ class Bookingcard extends StatelessWidget {
                       ),
                       SizedBox(width: 5),
                       Text(
-                        "$ride - $brand",
+                        ride,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -458,10 +460,7 @@ class Bookingcard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(
-            loc.reject,
-            style: const TextStyle(fontSize: 12),
-          ),
+          child: Text(loc.reject, style: const TextStyle(fontSize: 12)),
         ),
       ),
       const SizedBox(width: 8),
@@ -476,10 +475,7 @@ class Bookingcard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(
-            loc.accept,
-            style: const TextStyle(fontSize: 12),
-          ),
+          child: Text(loc.accept, style: const TextStyle(fontSize: 12)),
         ),
       ),
     ];
@@ -512,10 +508,7 @@ class Bookingcard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(
-            loc.startTracking,
-            style: const TextStyle(fontSize: 12),
-          ),
+          child: Text(loc.startTracking, style: const TextStyle(fontSize: 12)),
         ),
       ),
     ];
@@ -601,8 +594,10 @@ class Bookingcard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child:
-                    Text(loc.stopTracking, style: const TextStyle(fontSize: 12)),
+                child: Text(
+                  loc.stopTracking,
+                  style: const TextStyle(fontSize: 12),
+                ),
               );
             }
 
@@ -616,8 +611,10 @@ class Bookingcard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child:
-                  Text(loc.stopTracking, style: const TextStyle(fontSize: 12)),
+              child: Text(
+                loc.stopTracking,
+                style: const TextStyle(fontSize: 12),
+              ),
             );
           },
         ),
