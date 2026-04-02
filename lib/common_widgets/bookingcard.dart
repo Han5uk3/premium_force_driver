@@ -29,6 +29,8 @@ class Bookingcard extends StatelessWidget {
   final bool isToday;
   final double? dropoffLatitude;
   final double? dropoffLongitude;
+  final double? pickupLatitude;
+  final double? pickupLongitude;
 
   const Bookingcard({
     super.key,
@@ -57,6 +59,8 @@ class Bookingcard extends StatelessWidget {
     this.isToday = true,
     this.dropoffLatitude,
     this.dropoffLongitude,
+    this.pickupLatitude,
+    this.pickupLongitude,
   });
 
   @override
@@ -330,7 +334,8 @@ class Bookingcard extends StatelessWidget {
                         status.toLowerCase() == 'accepted' ||
                         status.toLowerCase() == 'assigned')
                       ..._buildAcceptedActions(loc)
-                    else if (status.toLowerCase() == 'starttracking')
+                    else if (status.toLowerCase() == 'starttracking' ||
+                        status.toLowerCase() == 'started')
                       ...(isChauffeur
                           ? _buildChauffeurTrackingActions(loc)
                           : _buildTrackingActions(loc))
@@ -392,6 +397,7 @@ class Bookingcard extends StatelessWidget {
       case "og":
         return loc.ongoing;
       case "starttracking":
+      case "started":
         return loc.tracking;
       case "q":
       case "Q":
@@ -420,6 +426,7 @@ class Bookingcard extends StatelessWidget {
       case "og":
         return Colors.indigo;
       case "starttracking":
+      case "started":
         return Colors.teal;
       case "paymentpending":
         return Colors.amber;
@@ -443,6 +450,7 @@ class Bookingcard extends StatelessWidget {
             s == 'ac' ||
             s == 'accepted' ||
             s == 'starttracking' ||
+            s == 'started' ||
             s == 'ongoing' ||
             s == 'og');
   }
@@ -575,8 +583,8 @@ class Bookingcard extends StatelessWidget {
                 dropoffLatitude!,
                 dropoffLongitude!,
               );
-              if (distance <= 500) {
-                // 500 meters threshold
+              if (distance <= 100) {
+                // 100 meters threshold
                 canStop = true;
               }
             } else if (dropoffLatitude == null) {
@@ -671,17 +679,62 @@ class Bookingcard extends StatelessWidget {
       ),
       const SizedBox(width: 8),
       Expanded(
-        child: ElevatedButton(
-          onPressed: onStopTracking,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red.shade700,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: Text(loc.stopTracking, style: const TextStyle(fontSize: 12)),
+        child: StreamBuilder<Position>(
+          stream: TrackingService().positionStream,
+          builder: (context, snapshot) {
+            bool canStop = false;
+            if (pickupLatitude != null &&
+                pickupLongitude != null &&
+                snapshot.hasData) {
+              final pos = snapshot.data!;
+              final distance = Geolocator.distanceBetween(
+                pos.latitude,
+                pos.longitude,
+                pickupLatitude!,
+                pickupLongitude!,
+              );
+              if (distance <= 100) {
+                // 100 meters threshold
+                canStop = true;
+              }
+            } else if (pickupLatitude == null) {
+              canStop = true; // fallback
+            }
+
+            if (!canStop) {
+              return ElevatedButton(
+                onPressed: null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey.shade700,
+                  foregroundColor: Colors.white54,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  loc.stopTracking,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              );
+            }
+
+            return ElevatedButton(
+              onPressed: onStopTracking,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                loc.stopTracking,
+                style: const TextStyle(fontSize: 12),
+              ),
+            );
+          },
         ),
       ),
     ];

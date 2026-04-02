@@ -103,7 +103,12 @@ class BookingsProvider extends ChangeNotifier {
   /// Accept a booking by its ID.
   Future<bool> acceptBooking(String bookingId) async {
     try {
-      final token = UserLocalStorage.getToken();
+      final token = await _apiService.ensureValidToken();
+      if (token == null) {
+        _actionMessage = 'Session expired. Please login again.';
+        notifyListeners();
+        return false;
+      }
 
       final booking = _allBookings.firstWhere((b) => b.id == bookingId);
       final response = await _apiService.acceptBooking(
@@ -135,25 +140,22 @@ class BookingsProvider extends ChangeNotifier {
 
   Future<bool> startTracking(String bookingId, {bool skipApi = false}) async {
     try {
-      final startedAt = DateTime.now().toIso8601String();
+      final startedAt = DateTime.now().toUtc().toIso8601String();
       if (!skipApi) {
-        final token = UserLocalStorage.getToken();
+        final token = await _apiService.ensureValidToken();
+        if (token == null) {
+          _actionMessage = 'Session expired. Please login again.';
+          notifyListeners();
+          return false;
+        }
+
         final booking = _allBookings.firstWhere((b) => b.id == bookingId);
         
-        final response = booking.isHourly
-            ? await _apiService.updateHourlyBooking(
-                bookingId: bookingId,
-                token: token,
-                data: {
-                  ...booking.toJson(),
-                  'bookingStatus': 'starttrack',
-                  'startedAt': startedAt,
-                },
-              )
-            : await _apiService.startTrackingBooking(
-                bookingId: bookingId,
-                token: token,
-              );
+        final response = await _apiService.startTrackingBooking(
+          bookingId: bookingId,
+          isHourly: booking.isHourly,
+          token: token,
+        );
 
         if (response['success'] != true) {
           _actionMessage = response['message'] ?? 'Failed to start tracking';
@@ -165,7 +167,7 @@ class BookingsProvider extends ChangeNotifier {
       _actionMessage = 'Tracking started!';
       _updateBookingInList(
         bookingId,
-        'starttracking',
+        'started',
         startedAt: startedAt,
       );
       notifyListeners();
@@ -186,7 +188,7 @@ class BookingsProvider extends ChangeNotifier {
       
       if (booking.isHourly) {
         // Calculate extra hours and payment
-        final stopTime = DateTime.now();
+        final stopTime = DateTime.now().toUtc();
         final int extraHours = await trackingService.stopTracking();
         
         final double discountPercentage = booking.discountPercentage ?? 0;
@@ -203,7 +205,8 @@ class BookingsProvider extends ChangeNotifier {
           status,
           isHourly: true,
           extraData: {
-            ...booking.toJson(),
+            ...booking.toJson()..remove('_id'),
+            'bookingID': bookingId,
             'stoppedAt': stopTime.toIso8601String(),
             'extraHours': extraHours,
             'extraDiscount': extraDiscount,
@@ -231,7 +234,7 @@ class BookingsProvider extends ChangeNotifier {
           _updateBookingInList(
             bookingId,
             'C',
-            stoppedAt: DateTime.now().toIso8601String(),
+            stoppedAt: DateTime.now().toUtc().toIso8601String(),
           );
           _actionMessage = 'Trip completed successfully!';
         }
@@ -250,17 +253,24 @@ class BookingsProvider extends ChangeNotifier {
   /// Generic update status
   Future<bool> updateBookingStatus(String bookingId, String status, {bool isHourly = false, Map<String, dynamic>? extraData}) async {
     try {
-      final token = UserLocalStorage.getToken();
       Map<String, dynamic> response;
-      
       if (isHourly && extraData != null) {
-        // For hourly bookings, use the PUT method as requested for status changes including data
+        final token = await _apiService.ensureValidToken();
+        if (token == null) return false;
+
+        // For hourly bookings, use the PUT method with full data as requested
         response = await _apiService.updateHourlyBooking(
           bookingId: bookingId,
-          data: extraData,
           token: token,
+          data: {
+            ...extraData,
+            'bookingStatus': status,
+          },
         );
       } else {
+        final token = await _apiService.ensureValidToken();
+        if (token == null) return false;
+
         // Use regular PATCH for status updates
         response = await _apiService.updateBookingStatus(
           bookingId: bookingId,
@@ -285,7 +295,12 @@ class BookingsProvider extends ChangeNotifier {
   /// Reject a booking by its ID.
   Future<bool> rejectBooking(String bookingId) async {
     try {
-      final token = UserLocalStorage.getToken();
+      final token = await _apiService.ensureValidToken();
+      if (token == null) {
+        _actionMessage = 'Session expired. Please login again.';
+        notifyListeners();
+        return false;
+      }
 
       final booking = _allBookings.firstWhere((b) => b.id == bookingId);
       final response = await _apiService.rejectBooking(
@@ -319,10 +334,10 @@ class BookingsProvider extends ChangeNotifier {
   Future<bool> completeBooking(String bookingId) async {
     try {
       final driverId = UserLocalStorage.getUserId();
-      final token = UserLocalStorage.getToken();
+      final token = await _apiService.ensureValidToken();
 
-      if (driverId == null) {
-        _actionMessage = 'Driver ID not found';
+      if (driverId == null || token == null) {
+        _actionMessage = 'Session expired or not logged in';
         notifyListeners();
         return false;
       }
@@ -384,7 +399,7 @@ class BookingsProvider extends ChangeNotifier {
     
     _ongoingBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
-      return s == 'og' || s == 'ongoing' || s == 'starttracking' || s == 'stoptracking' || s == 'paymentpending';
+      return s == 'og' || s == 'ongoing' || s == 'starttracking' || s == 'started' || s == 'stopped' || s == 'stoptracking' || s == 'paymentpending';
     }).toList();
     
     _completedBookings = _allBookings.where((b) {

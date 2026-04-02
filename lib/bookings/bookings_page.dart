@@ -245,6 +245,8 @@ class _BookingsPageState extends State<BookingsPage>
                   reviewText: booking.review,
                   isChauffeur: booking.isHourly,
                   isToday: isToday,
+                  pickupLatitude: booking.pickupLatitude,
+                  pickupLongitude: booking.pickupLongitude,
                   dropoffLatitude: booking.dropoffLatitude,
                   dropoffLongitude: booking.dropoffLongitude,
                   onAccept: () async {
@@ -289,11 +291,13 @@ class _BookingsPageState extends State<BookingsPage>
                     await TrackingService().stopTracking();
                     final success = await provider.completeBooking(booking.id);
                     if (success && context.mounted) {
-                      AnimatedSnackBar.show(
-                        context,
-                        provider.actionMessage ?? loc.bookingCompleted,
-                        'S',
-                      );
+                      if (context.mounted) {
+                        AnimatedSnackBar.show(
+                          context,
+                          provider.actionMessage ?? loc.bookingCompleted,
+                          success ? 'S' : 'E',
+                        );
+                      }
                     }
                   },
                   onStartTracking: () async {
@@ -319,12 +323,14 @@ class _BookingsPageState extends State<BookingsPage>
                         bookedHours:
                             booking.estimatedDuration, // hours from booking
                       );
-                      AnimatedSnackBar.show(
-                        context,
-                        provider.actionMessage ?? loc.trackingStarted,
-                        'S',
-                      );
-                      _openMaps(booking);
+                      if (context.mounted) {
+                        AnimatedSnackBar.show(
+                          context,
+                          provider.actionMessage ?? loc.trackingStarted,
+                          'S',
+                        );
+                        _openMaps(booking);
+                      }
                     }
                   },
                   onStopTracking: () async {

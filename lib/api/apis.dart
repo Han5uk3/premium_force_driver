@@ -686,17 +686,28 @@ class ApiService {
   Future<Map<String, dynamic>> updateBookingStatus({
     required String bookingId,
     required String status,
+    Map<String, dynamic> extraData = const {},
     bool isHourly = false,
     String? token,
   }) async {
     try {
-      final path = isHourly ? '/hourly-bookings/$bookingId/status' : '/bookings/$bookingId/status';
-      final response = await _dio.patch(
-        path,
-        data: {'bookingID': bookingId, 'status': status},
-        options: token != null ? _authOptions(token) : null,
-      );
-      return _success(response);
+      if (isHourly) {
+        return await updateHourlyBooking(
+          bookingId: bookingId,
+          token: token,
+          data: {
+            ...extraData,
+            'bookingStatus': status,
+          },
+        );
+      } else {
+        final response = await _dio.patch(
+          '/bookings/$bookingId/status',
+          data: {'bookingID': bookingId, 'status': status},
+          options: token != null ? _authOptions(token) : null,
+        );
+        return _success(response);
+      }
     } catch (e) {
       return _handleError(e);
     }
@@ -728,18 +739,16 @@ class ApiService {
   /// Calls `PUT /api/hourly-bookings/{bookingId}` with timing fields.
   /// [extraHours] is > 0 when the driver ran over the booked hour allocation.
   /// Update hourly booking data using PUT method.
-  /// As requested, this updates fields as status changes.
   Future<Map<String, dynamic>> updateHourlyBooking({
     required String bookingId,
     required Map<String, dynamic> data,
     String? token,
   }) async {
     try {
-      final authToken = token ?? UserLocalStorage.getToken();
+      final authToken = token ?? await ensureValidToken();
       // Ensure the bookingID is in the body if the backend requires it
-      if (!data.containsKey('bookingID')) {
-        data['bookingId'] = bookingId;
-      }
+      data['bookingID'] = bookingId;
+      data['bookingId'] = bookingId;
 
       final response = await _dio.put(
         '/hourly-bookings/$bookingId',

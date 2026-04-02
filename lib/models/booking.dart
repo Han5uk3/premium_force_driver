@@ -382,8 +382,11 @@ class BookingModel {
   /// Convert BookingModel to JSON.
   Map<String, dynamic> toJson() => {
     '_id': id,
+    'bookingID': id,
     'customerId': customerId,
+    'customerID': customerId,
     'driverId': driverId,
+    'driverID': driverId,
     'pickupLocation': pickupLocation,
     'dropoffLocation': dropoffLocation,
     'pickupLatitude': pickupLatitude,
