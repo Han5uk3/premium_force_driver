@@ -248,7 +248,18 @@
   "customerInfo": "تفاصيل العميل",
   "fare": "الأجرة",
   "riyal": "ر.س",
-  "extraHoursCharge": "رسوم الساعات الإضافية"
+  "extraHoursCharge": "رسوم الساعات الإضافية",
+  "locationBackgroundDisclosureTitle": "الوصول إلى الموقع في الخلفية",
+  "locationBackgroundDisclosureMessage": "يقوم تطبيق بريميوم فورس للسائق بجمع بيانات الموقع لتمكين تتبع تقدمك ومشاركة موقعك في الوقت الفعلي مع العميل، حتى عندما يكون التطبيق مغلقاً أو غير مستخدم. يضمن ذلك تجربة استلام ورحلة سلسة.",
+  "allowAllTheTime": "السماح طوال الوقت",
+  "openSettings": "فتح الإعدادات",
+  "enableLocationServices": "تمكين خدمات الموقع",
+  "locationServicesDisabledMessage": "خدمات الموقع معطلة. يرجى تمكينها لبدء التتبع.",
+  "locationPermissionAlwaysRequired": "إذن الموقع في الخلفية مطلوب لتطبيق السائق لتحديث موقعك أثناء تنقلك. يرجى اختيار 'السماح طوال الوقت' في الإعدادات.",
+  "pauseTracking": "إيقاف التتبع مؤقتاً",
+  "resumeTracking": "استئناف التتبع",
+  "trackingPaused": "التتبع متوقف مؤقتاً",
+  "trackingResumed": "تم استئناف التتبع"
 }
 
 

@@ -239,8 +239,6 @@ class _BookingsPageState extends State<BookingsPage>
                   isToday: isToday,
                   dropoffLatitude: booking.dropoffLatitude,
                   dropoffLongitude: booking.dropoffLongitude,
-                  specialRequestText: booking.specialRequestText,
-                  specialRequestAudio: booking.specialRequestAudio,
                   onAccept: () async {
                     final confirm = await _showConfirmationDialog(
                       context,
@@ -297,6 +295,14 @@ class _BookingsPageState extends State<BookingsPage>
                       loc.startTrackingConfirm,
                     );
                     if (confirm != true) return;
+
+                    // Check for location permissions (foreground & background)
+                    final hasPermissions =
+                        await TrackingService().handleLocationPermissions(
+                          context,
+                        );
+                    if (!hasPermissions) return;
+
                     final success = await provider.startTracking(booking.id);
                     if (success && context.mounted) {
                       await TrackingService().startTracking(
@@ -338,6 +344,28 @@ class _BookingsPageState extends State<BookingsPage>
                   onGetDirections: () {
                     _openMaps(booking);
                   },
+                  onPauseTracking: () async {
+                    await TrackingService().pauseTracking(bookingId: booking.id);
+                    if (context.mounted) {
+                      setState(() {});
+                      AnimatedSnackBar.show(
+                        context,
+                        AppLocalizations.of(context)!.trackingPaused,
+                        'S',
+                      );
+                    }
+                  },
+                  onResumeTracking: () async {
+                    await TrackingService().resumeTracking(bookingId: booking.id);
+                    if (context.mounted) {
+                      setState(() {});
+                      AnimatedSnackBar.show(
+                        context,
+                        AppLocalizations.of(context)!.trackingResumed,
+                        'S',
+                      );
+                    }
+                  },
                 ),
               ),
               if (index < bookings.length - 1) const SizedBox(height: 16),
@@ -354,16 +382,21 @@ class _BookingsPageState extends State<BookingsPage>
     final dropoffLat = booking.dropoffLatitude;
     final dropoffLong = booking.dropoffLongitude;
 
+    final currentPos = TrackingService().currentPosition;
+    final origin = currentPos != null
+        ? '${currentPos.latitude},${currentPos.longitude}'
+        : 'Current+Location';
+
     String url;
     if (booking.rideType.toLowerCase().contains('chauffeur') ||
         dropoffLat == 0) {
       // Chauffeur booking has only pickup
       url =
-          "https://www.google.com/maps/dir/?api=1&destination=$pickupLat,$pickupLong";
+          "https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$pickupLat,$pickupLong";
     } else {
-      // Regular booking: Current Location -> Pickup -> Dropoff
+      // Regular booking: Origin (Driver) -> Pickup (Waypoint) -> Dropoff (Destination)
       url =
-          "https://www.google.com/maps/dir/?api=1&destination=$dropoffLat,$dropoffLong&waypoints=$pickupLat,$pickupLong";
+          "https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$dropoffLat,$dropoffLong&waypoints=$pickupLat,$pickupLong";
     }
 
     final uri = Uri.parse(url);

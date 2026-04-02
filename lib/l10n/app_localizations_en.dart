@@ -791,4 +791,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get extraHoursCharge => 'Extra Hours Charge';
+
+  @override
+  String get locationBackgroundDisclosureTitle => 'Background Location Access';
+
+  @override
+  String get locationBackgroundDisclosureMessage =>
+      'Premium Force Driver collects location data to enable tracking your progress and sharing your real-time position with the customer, even when the app is closed or not in use. This ensures a smooth pickup and trip experience.';
+
+  @override
+  String get allowAllTheTime => 'Allow All The Time';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get enableLocationServices => 'Enable Location Services';
+
+  @override
+  String get locationServicesDisabledMessage =>
+      'Location services are disabled. Please enable them to start tracking.';
+
+  @override
+  String get locationPermissionAlwaysRequired =>
+      'Background location permission is required for the driver app to update your position while you are on the move. Please select \'Allow all the time\' in settings.';
+
+  @override
+  String get pauseTracking => 'Pause Tracking';
+
+  @override
+  String get resumeTracking => 'Resume Tracking';
+
+  @override
+  String get trackingPaused => 'Tracking Paused';
+
+  @override
+  String get trackingResumed => 'Tracking Resumed';
 }

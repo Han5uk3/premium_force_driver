@@ -41,12 +41,15 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     final dateFormat = DateFormat('dd MMM, yyyy');
     final timeFormat = DateFormat('h:mm a');
 
-    final displayDateTime = (_currentBooking.pickupdatetime != null && _currentBooking.pickupdatetime!.isNotEmpty)
+    final displayDateTime =
+        (_currentBooking.pickupdatetime != null &&
+            _currentBooking.pickupdatetime!.isNotEmpty)
         ? DateTime.tryParse(_currentBooking.pickupdatetime!)
-        : (_currentBooking.arrival != null && _currentBooking.arrival!.isNotEmpty)
-            ? DateTime.tryParse(_currentBooking.arrival!)
-            : _currentBooking.createdAt;
-    
+        : (_currentBooking.arrival != null &&
+              _currentBooking.arrival!.isNotEmpty)
+        ? DateTime.tryParse(_currentBooking.arrival!)
+        : _currentBooking.createdAt;
+
     final effectiveDateTime = displayDateTime ?? _currentBooking.createdAt;
 
     return Scaffold(
@@ -57,7 +60,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         centerTitle: true,
         title: Text(
           loc.bookingInfo,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
@@ -77,18 +83,97 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             _buildSectionCard(
               child: Column(
                 children: [
-                  _buildDetailRow(loc.service, _currentBooking.rideType, Icons.drive_eta),
+                  _buildDetailRow(
+                    loc.service,
+                    _currentBooking.rideType,
+                    Icons.drive_eta,
+                  ),
                   const Divider(color: Colors.white10, height: 24),
-                  _buildDetailRow(loc.pickup, _currentBooking.pickupLocation, Icons.location_on, color: Colors.green),
+                  _buildDetailRow(
+                    loc.passengers,
+                    _currentBooking.passengerCount.toString(),
+                    Icons.groups_outlined,
+                  ),
+                  const Divider(color: Colors.white10, height: 24),
+                  _buildDetailRow(
+                    loc.pickup,
+                    _currentBooking.pickupLocation,
+                    Icons.location_on,
+                    color: Colors.green,
+                  ),
                   const SizedBox(height: 16),
-                  _buildDetailRow(loc.dropoff, _currentBooking.dropoffLocation, Icons.location_on, color: Colors.red),
+                  _buildDetailRow(
+                    loc.dropoff,
+                    _currentBooking.dropoffLocation,
+                    Icons.location_on,
+                    color: Colors.red,
+                  ),
                   const Divider(color: Colors.white10, height: 24),
                   Row(
                     children: [
-                      Expanded(child: _buildDetailRow(loc.date, dateFormat.format(effectiveDateTime), Icons.calendar_today)),
-                      Expanded(child: _buildDetailRow(loc.time, timeFormat.format(effectiveDateTime), Icons.access_time)),
+                      Expanded(
+                        child: _buildDetailRow(
+                          loc.date,
+                          dateFormat.format(effectiveDateTime),
+                          Icons.calendar_today,
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildDetailRow(
+                          loc.time,
+                          timeFormat.format(effectiveDateTime),
+                          Icons.access_time,
+                        ),
+                      ),
                     ],
                   ),
+                  if ((_currentBooking.specialRequestText != null &&
+                          _currentBooking.specialRequestText!.isNotEmpty) ||
+                      (_currentBooking.specialRequestAudio != null &&
+                          _currentBooking.specialRequestAudio!.isNotEmpty)) ...[
+                    const Divider(color: Colors.white10, height: 24),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.notes,
+                              color: Color(0xFFE4A46B),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              loc.specialRequests,
+                              style: const TextStyle(
+                                color: Color(0xFFE4A46B),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (_currentBooking.specialRequestText != null &&
+                            _currentBooking.specialRequestText!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Text(
+                              _currentBooking.specialRequestText!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        if (_currentBooking.specialRequestAudio != null &&
+                            _currentBooking.specialRequestAudio!.isNotEmpty)
+                          VoicePlayer(
+                            audioUrl: _currentBooking.specialRequestAudio!,
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -102,8 +187,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                   children: [
                     CircleAvatar(
                       radius: 25,
-                      backgroundImage: _currentBooking.customer!.profileImageUrl != null
-                          ? NetworkImage(_currentBooking.customer!.profileImageUrl!)
+                      backgroundImage:
+                          _currentBooking.customer!.profileImageUrl != null
+                          ? NetworkImage(
+                              _currentBooking.customer!.profileImageUrl!,
+                            )
                           : null,
                       child: _currentBooking.customer!.profileImageUrl == null
                           ? const Icon(Icons.person, color: Colors.white54)
@@ -116,63 +204,34 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                         children: [
                           Text(
                             _currentBooking.customer!.username,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             "${_currentBooking.customer!.countryCode} ${_currentBooking.customer!.phoneNumber}",
-                            style: const TextStyle(color: Colors.white70, fontSize: 14),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     IconButton(
-                      onPressed: () => _makePhoneCall(_currentBooking.customer!.countryCode + _currentBooking.customer!.phoneNumber),
+                      onPressed: () => _makePhoneCall(
+                        _currentBooking.customer!.countryCode +
+                            _currentBooking.customer!.phoneNumber,
+                      ),
                       icon: const Icon(Icons.phone, color: Color(0xFFE4A46B)),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
-            ],
-
-            // Payment Summary
-            _buildSectionTitle(loc.paymentSummary),
-            _buildSectionCard(
-              child: Column(
-                children: [
-                  _buildSummaryRow(loc.fare, "${_currentBooking.fare} ${loc.riyal}"),
-                  if (_currentBooking.extraPayment != null && _currentBooking.extraPayment! > 0)
-                    _buildSummaryRow(loc.extraHoursCharge, "${_currentBooking.extraPayment} ${loc.riyal}", isHighlight: true),
-                  const Divider(color: Colors.white10, height: 24),
-                  _buildSummaryRow(loc.total, "${(_currentBooking.fare + (_currentBooking.extraPayment ?? 0)).toStringAsFixed(2)} ${loc.riyal}", isBold: true),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Special Requests
-            if ((_currentBooking.specialRequestText != null && _currentBooking.specialRequestText!.isNotEmpty) ||
-                (_currentBooking.specialRequestAudio != null && _currentBooking.specialRequestAudio!.isNotEmpty)) ...[
-              _buildSectionTitle(loc.specialRequests),
-              _buildSectionCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_currentBooking.specialRequestText != null && _currentBooking.specialRequestText!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Text(
-                          _currentBooking.specialRequestText!,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                      ),
-                    if (_currentBooking.specialRequestAudio != null && _currentBooking.specialRequestAudio!.isNotEmpty)
-                      VoicePlayer(audioUrl: _currentBooking.specialRequestAudio!),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
             ],
 
             // Actions
@@ -188,15 +247,42 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     Color color;
     String text;
     status = status.toLowerCase().trim();
-    
+
     switch (status) {
-      case "p": case "pending": color = Colors.orange; text = loc.pending; break;
-      case "ac": case "accepted": case "assigned": color = Colors.blue; text = loc.assigned; break;
-      case "og": case "ongoing": color = Colors.indigo; text = loc.ongoing; break;
-      case "starttracking": color = Colors.teal; text = loc.tracking; break;
-      case "c": case "completed": color = Colors.green; text = loc.completed; break;
-      case "ca": case "cancelled": case "x": color = Colors.red; text = loc.cancelled; break;
-      default: color = Colors.grey; text = status.toUpperCase();
+      case "p":
+      case "pending":
+        color = Colors.orange;
+        text = loc.pending;
+        break;
+      case "ac":
+      case "accepted":
+      case "assigned":
+        color = Colors.blue;
+        text = loc.assigned;
+        break;
+      case "og":
+      case "ongoing":
+        color = Colors.indigo;
+        text = loc.ongoing;
+        break;
+      case "starttracking":
+        color = Colors.teal;
+        text = loc.tracking;
+        break;
+      case "c":
+      case "completed":
+        color = Colors.green;
+        text = loc.completed;
+        break;
+      case "ca":
+      case "cancelled":
+      case "x":
+        color = Colors.red;
+        text = loc.cancelled;
+        break;
+      default:
+        color = Colors.grey;
+        text = status.toUpperCase();
     }
 
     return Container(
@@ -208,7 +294,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       ),
       child: Text(
         text,
-        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
       ),
     );
   }
@@ -218,7 +308,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title,
-        style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 14),
+        style: const TextStyle(
+          color: Colors.white70,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
       ),
     );
   }
@@ -235,7 +329,12 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, {Color? color}) {
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon, {
+    Color? color,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -245,9 +344,19 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              Text(
+                label,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
               const SizedBox(height: 2),
-              Text(value, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -255,14 +364,32 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isHighlight = false, bool isBold = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool isHighlight = false,
+    bool isBold = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: isHighlight ? const Color(0xFFE4A46B) : Colors.white70, fontSize: 14)),
-          Text(value, style: TextStyle(color: isHighlight ? const Color(0xFFE4A46B) : Colors.white, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: isBold ? 18 : 14)),
+          Text(
+            label,
+            style: TextStyle(
+              color: isHighlight ? const Color(0xFFE4A46B) : Colors.white70,
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: isHighlight ? const Color(0xFFE4A46B) : Colors.white,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              fontSize: isBold ? 18 : 14,
+            ),
+          ),
         ],
       ),
     );
@@ -277,11 +404,19 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         children: [
           Expanded(
             child: _buildActionButton(loc.reject, Colors.red, () async {
-              final confirm = await _showConfirmationDialog(context, loc.rejectBooking, loc.rejectBookingConfirm);
+              final confirm = await _showConfirmationDialog(
+                context,
+                loc.rejectBooking,
+                loc.rejectBookingConfirm,
+              );
               if (confirm != true) return;
               final success = await provider.rejectBooking(_currentBooking.id);
               if (success && mounted) {
-                AnimatedSnackBar.show(context, provider.actionMessage ?? loc.bookingRejected, 'E');
+                AnimatedSnackBar.show(
+                  context,
+                  provider.actionMessage ?? loc.bookingRejected,
+                  'E',
+                );
                 Navigator.pop(context);
               }
             }),
@@ -289,11 +424,19 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           const SizedBox(width: 12),
           Expanded(
             child: _buildActionButton(loc.accept, Colors.green, () async {
-              final confirm = await _showConfirmationDialog(context, loc.acceptBooking, loc.acceptBookingConfirm);
+              final confirm = await _showConfirmationDialog(
+                context,
+                loc.acceptBooking,
+                loc.acceptBookingConfirm,
+              );
               if (confirm != true) return;
               final success = await provider.acceptBooking(_currentBooking.id);
               if (success && mounted) {
-                AnimatedSnackBar.show(context, provider.actionMessage ?? loc.bookingAccepted, 'S');
+                AnimatedSnackBar.show(
+                  context,
+                  provider.actionMessage ?? loc.bookingAccepted,
+                  'S',
+                );
                 _updateBooking(provider.getBookingById(_currentBooking.id));
               }
             }),
@@ -304,8 +447,18 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
 
     if (status == 'ac' || status == 'accepted' || status == 'assigned') {
       return _buildActionButton(loc.startTracking, Colors.blue, () async {
-        final confirm = await _showConfirmationDialog(context, loc.startTracking, loc.startTrackingConfirm);
+        final confirm = await _showConfirmationDialog(
+          context,
+          loc.startTracking,
+          loc.startTrackingConfirm,
+        );
         if (confirm != true) return;
+
+        // Check for location permissions (foreground & background)
+        final hasPermissions =
+            await TrackingService().handleLocationPermissions(context);
+        if (!hasPermissions) return;
+
         final success = await provider.startTracking(_currentBooking.id);
         if (success && mounted) {
           await TrackingService().startTracking(
@@ -315,7 +468,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             isChauffeur: _currentBooking.isHourly,
             bookedHours: _currentBooking.estimatedDuration,
           );
-          AnimatedSnackBar.show(context, provider.actionMessage ?? loc.trackingStarted, 'S');
+          AnimatedSnackBar.show(
+            context,
+            provider.actionMessage ?? loc.trackingStarted,
+            'S',
+          );
           _updateBooking(provider.getBookingById(_currentBooking.id));
           _openMaps();
         }
@@ -325,7 +482,41 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     if (status == 'starttracking') {
       return Column(
         children: [
-          _buildActionButton(loc.getDirections, Colors.orange.shade800, _openMaps, icon: Icons.directions),
+          _buildActionButton(
+            loc.getDirections,
+            Colors.orange.shade800,
+            _openMaps,
+            icon: Icons.directions,
+          ),
+          const SizedBox(height: 12),
+          ListenableBuilder(
+            listenable: TrackingService(),
+            builder: (context, _) {
+              return _buildActionButton(
+                TrackingService().isPaused ? loc.resumeTracking : loc.pauseTracking,
+                TrackingService().isPaused ? Colors.green.shade700 : Colors.orange.shade700,
+                () async {
+                  if (TrackingService().isPaused) {
+                    await TrackingService().resumeTracking(
+                      bookingId: _currentBooking.id,
+                    );
+                  } else {
+                    await TrackingService().pauseTracking(
+                      bookingId: _currentBooking.id,
+                    );
+                  }
+                  if (mounted) {
+                    AnimatedSnackBar.show(
+                      context,
+                      TrackingService().isPaused ? loc.trackingPaused : loc.trackingResumed,
+                      'S',
+                    );
+                  }
+                },
+                icon: TrackingService().isPaused ? Icons.play_arrow : Icons.pause,
+              );
+            },
+          ),
           const SizedBox(height: 12),
           StreamBuilder<Position>(
             stream: TrackingService().positionStream,
@@ -334,59 +525,99 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
               if (_currentBooking.dropoffLatitude != 0 && snapshot.hasData) {
                 final pos = snapshot.data!;
                 final distance = Geolocator.distanceBetween(
-                  pos.latitude, pos.longitude, 
-                  _currentBooking.dropoffLatitude, _currentBooking.dropoffLongitude
+                  pos.latitude,
+                  pos.longitude,
+                  _currentBooking.dropoffLatitude,
+                  _currentBooking.dropoffLongitude,
                 );
                 if (distance <= 500) canStop = true;
-              } else if (_currentBooking.dropoffLatitude == 0 || _currentBooking.isHourly) {
+              } else if (_currentBooking.dropoffLatitude == 0 ||
+                  _currentBooking.isHourly) {
                 canStop = true;
               }
 
               return _buildActionButton(
-                loc.stopTracking, 
-                Colors.red, 
-                canStop ? () async {
-                  final confirm = await _showConfirmationDialog(context, loc.stopTracking, loc.stopTrackingConfirm);
-                  if (confirm != true) return;
-                  if (_currentBooking.isHourly) {
-                     final success = await provider.stopTracking(_currentBooking.id);
-                     if (mounted) {
-                        AnimatedSnackBar.show(context, success ? (provider.actionMessage ?? loc.tripEnded) : loc.trackingStoppedSyncPending, success ? 'S' : 'E');
-                        _updateBooking(provider.getBookingById(_currentBooking.id));
-                     }
-                  } else {
-                    await TrackingService().stopTracking();
-                    final success = await provider.completeBooking(_currentBooking.id);
-                    if (success && mounted) {
-                      AnimatedSnackBar.show(context, provider.actionMessage ?? loc.bookingCompleted, 'S');
-                      _updateBooking(provider.getBookingById(_currentBooking.id));
-                    }
-                  }
-                } : null,
-                icon: Icons.stop_circle
+                loc.stopTracking,
+                Colors.red,
+                canStop
+                    ? () async {
+                        final confirm = await _showConfirmationDialog(
+                          context,
+                          loc.stopTracking,
+                          loc.stopTrackingConfirm,
+                        );
+                        if (confirm != true) return;
+                        if (_currentBooking.isHourly) {
+                          final success = await provider.stopTracking(
+                            _currentBooking.id,
+                          );
+                          if (mounted) {
+                            AnimatedSnackBar.show(
+                              context,
+                              success
+                                  ? (provider.actionMessage ?? loc.tripEnded)
+                                  : loc.trackingStoppedSyncPending,
+                              success ? 'S' : 'E',
+                            );
+                            _updateBooking(
+                              provider.getBookingById(_currentBooking.id),
+                            );
+                          }
+                        } else {
+                          await TrackingService().stopTracking();
+                          final success = await provider.completeBooking(
+                            _currentBooking.id,
+                          );
+                          if (success && mounted) {
+                            AnimatedSnackBar.show(
+                              context,
+                              provider.actionMessage ?? loc.bookingCompleted,
+                              'S',
+                            );
+                            _updateBooking(
+                              provider.getBookingById(_currentBooking.id),
+                            );
+                          }
+                        }
+                      }
+                    : null,
+                icon: Icons.stop_circle,
               );
-            }
+            },
           ),
         ],
       );
     }
 
     if (status == 'og' || status == 'ongoing') {
-       return _buildActionButton(loc.complete, Colors.blue, () async {
-          final confirm = await _showConfirmationDialog(context, loc.completeBooking, loc.completeBookingConfirm);
-          if (confirm != true) return;
-          final success = await provider.completeBooking(_currentBooking.id);
-          if (success && mounted) {
-            AnimatedSnackBar.show(context, provider.actionMessage ?? loc.bookingCompleted, 'S');
-            _updateBooking(provider.getBookingById(_currentBooking.id));
-          }
-       }, icon: Icons.check_circle);
+      return _buildActionButton(loc.complete, Colors.blue, () async {
+        final confirm = await _showConfirmationDialog(
+          context,
+          loc.completeBooking,
+          loc.completeBookingConfirm,
+        );
+        if (confirm != true) return;
+        final success = await provider.completeBooking(_currentBooking.id);
+        if (success && mounted) {
+          AnimatedSnackBar.show(
+            context,
+            provider.actionMessage ?? loc.bookingCompleted,
+            'S',
+          );
+          _updateBooking(provider.getBookingById(_currentBooking.id));
+        }
+      }, icon: Icons.check_circle);
     }
 
     return const SizedBox.shrink();
   }
 
-  Widget _buildActionButton(String label, Color color, VoidCallback? onPressed, {IconData? icon}) {
+  Widget _buildActionButton(
+    String label,
+    Color color,
+    VoidCallback? onPressed, {
+    IconData? icon,
+  }) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -402,28 +633,43 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 8)],
-          Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
   }
 
   void _openMaps() async {
+    final loc = AppLocalizations.of(context)!;
     final pickupLat = _currentBooking.pickupLatitude;
     final pickupLong = _currentBooking.pickupLongitude;
     final dropoffLat = _currentBooking.dropoffLatitude;
     final dropoffLong = _currentBooking.dropoffLongitude;
 
+    final currentPos = TrackingService().currentPosition;
+    final origin = currentPos != null
+        ? '${currentPos.latitude},${currentPos.longitude}'
+        : 'Current+Location';
+
     String url;
     if (_currentBooking.isHourly || dropoffLat == 0) {
-      url = "https://www.google.com/maps/dir/?api=1&destination=$pickupLat,$pickupLong";
+      url =
+          "https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$pickupLat,$pickupLong";
     } else {
-      url = "https://www.google.com/maps/dir/?api=1&destination=$dropoffLat,$dropoffLong&waypoints=$pickupLat,$pickupLong";
+      url =
+          "https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$dropoffLat,$dropoffLong&waypoints=$pickupLat,$pickupLong";
     }
 
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        AnimatedSnackBar.show(context, loc.couldNotLaunchMaps, 'E');
+      }
     }
   }
 
@@ -434,25 +680,39 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     }
   }
 
-  Future<bool?> _showConfirmationDialog(BuildContext context, String title, String content) {
+  Future<bool?> _showConfirmationDialog(
+    BuildContext context,
+    String title,
+    String content,
+  ) {
     return showDialog<bool>(
       context: context,
       builder: (context) {
         final loc = AppLocalizations.of(context)!;
         return AlertDialog(
           backgroundColor: const Color(0xFF1A1A1A),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: Text(title, style: const TextStyle(color: Colors.white)),
           content: Text(content, style: const TextStyle(color: Colors.white70)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(loc.cancel, style: const TextStyle(color: Colors.grey)),
+              child: Text(
+                loc.cancel,
+                style: const TextStyle(color: Colors.grey),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC0C0C0)),
-              child: Text(loc.confirm, style: const TextStyle(color: Colors.black)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFC0C0C0),
+              ),
+              child: Text(
+                loc.confirm,
+                style: const TextStyle(color: Colors.black),
+              ),
             ),
           ],
         );

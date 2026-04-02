@@ -1,7 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
-import 'package:flutter/material.dart';
-import 'voice_player.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 
 class Bookingcard extends StatelessWidget {
@@ -23,13 +22,13 @@ class Bookingcard extends StatelessWidget {
   final VoidCallback? onStartTracking;
   final VoidCallback? onStopTracking;
   final VoidCallback? onGetDirections;
+  final VoidCallback? onPauseTracking;
+  final VoidCallback? onResumeTracking;
   final double? rating;
   final String? reviewText;
   final bool isToday;
   final double? dropoffLatitude;
   final double? dropoffLongitude;
-  final String? specialRequestText;
-  final String? specialRequestAudio;
 
   const Bookingcard({
     super.key,
@@ -51,13 +50,13 @@ class Bookingcard extends StatelessWidget {
     this.onStartTracking,
     this.onStopTracking,
     this.onGetDirections,
+    this.onPauseTracking,
+    this.onResumeTracking,
     this.rating,
     this.reviewText,
     this.isToday = true,
     this.dropoffLatitude,
     this.dropoffLongitude,
-    this.specialRequestText,
-    this.specialRequestAudio,
   });
 
   @override
@@ -258,82 +257,11 @@ class Bookingcard extends StatelessWidget {
                 ],
               ),
             ),
-            Column(
-              children: [
-                Divider(color: Color(0xFF505050), height: 5),
-                SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      loc.passengers,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
+            const SizedBox(height: 8),
 
-                    Text(
-                      "$passengers",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-              ],
-            ),
-
-            // Special Requests Section
-            if ((specialRequestText != null && specialRequestText!.isNotEmpty) || (specialRequestAudio != null && specialRequestAudio!.isNotEmpty)) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.notes, color: Color(0xFFE4A46B), size: 16),
-                        SizedBox(width: 8),
-                        Text(
-                          loc.specialRequests,
-                          style: TextStyle(
-                            color: Color(0xFFE4A46B),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (specialRequestText != null && specialRequestText!.isNotEmpty) ...[
-                      SizedBox(height: 4),
-                      Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          specialRequestText!,
-                          style: TextStyle(color: Colors.white, fontSize: 13),
-                        ),
-                      ),
-                    ],
-                    if (specialRequestAudio != null && specialRequestAudio!.isNotEmpty) ...[
-                      SizedBox(height: 8),
-                      VoicePlayer(audioUrl: specialRequestAudio!),
-                    ],
-                  ],
-                ),
-              ),
-              Divider(color: Color(0xFF505050), height: 5),
-            ],
-            if (rating != null && (status.toLowerCase().trim() == 'completed' || status.toLowerCase().trim() == 'c')) ...[
+            if (rating != null &&
+                (status.toLowerCase().trim() == 'completed' ||
+                    status.toLowerCase().trim() == 'c')) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                 child: Container(
@@ -393,15 +321,19 @@ class Bookingcard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    if (status.toLowerCase() == 'p' || status.toLowerCase() == 'pending')
+                    if (status.toLowerCase() == 'p' ||
+                        status.toLowerCase() == 'pending')
                       ..._buildPendingActions(loc)
-                    else if (status.toLowerCase() == 'ac' || status.toLowerCase() == 'accepted' || status.toLowerCase() == 'assigned')
+                    else if (status.toLowerCase() == 'ac' ||
+                        status.toLowerCase() == 'accepted' ||
+                        status.toLowerCase() == 'assigned')
                       ..._buildAcceptedActions(loc)
                     else if (status.toLowerCase() == 'starttracking')
                       ...(isChauffeur
                           ? _buildChauffeurTrackingActions(loc)
                           : _buildTrackingActions(loc))
-                    else if (status.toLowerCase() == 'og' || status.toLowerCase() == 'ongoing')
+                    else if (status.toLowerCase() == 'og' ||
+                        status.toLowerCase() == 'ongoing')
                       ..._buildOngoingActions(loc),
                   ],
                 ),
@@ -503,33 +435,50 @@ class Bookingcard extends StatelessWidget {
   bool _shouldShowActions() {
     final s = status.toLowerCase().trim();
     return bookingId != null &&
-        (s == 'pending' || s == 'p' || s == 'assigned' || s == 'ac' || s == 'accepted' || s == 'starttracking' || s == 'ongoing' || s == 'og');
+        (s == 'pending' ||
+            s == 'p' ||
+            s == 'assigned' ||
+            s == 'ac' ||
+            s == 'accepted' ||
+            s == 'starttracking' ||
+            s == 'ongoing' ||
+            s == 'og');
   }
 
   List<Widget> _buildPendingActions(AppLocalizations loc) {
     return [
       Expanded(
-        child: ElevatedButton.icon(
+        child: ElevatedButton(
           onPressed: onReject,
-          icon: const Icon(Icons.close, size: 16),
-          label: Text(loc.reject),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red.shade700,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: Text(
+            loc.reject,
+            style: const TextStyle(fontSize: 12),
           ),
         ),
       ),
       const SizedBox(width: 8),
       Expanded(
-        child: ElevatedButton.icon(
+        child: ElevatedButton(
           onPressed: onAccept,
-          icon: const Icon(Icons.check, size: 16),
-          label: Text(loc.accept),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green.shade700,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: Text(
+            loc.accept,
+            style: const TextStyle(fontSize: 12),
           ),
         ),
       ),
@@ -547,20 +496,25 @@ class Bookingcard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white54, fontSize: 13),
             ),
-          )
-        )
+          ),
+        ),
       ];
     }
     return [
       Expanded(
-        child: ElevatedButton.icon(
+        child: ElevatedButton(
           onPressed: onStartTracking,
-          icon: const Icon(Icons.location_searching, size: 16),
-          label: Text(loc.startTracking),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: Text(
+            loc.startTracking,
+            style: const TextStyle(fontSize: 12),
           ),
         ),
       ),
@@ -570,15 +524,46 @@ class Bookingcard extends StatelessWidget {
   List<Widget> _buildTrackingActions(AppLocalizations loc) {
     return [
       Expanded(
-        child: ElevatedButton.icon(
+        child: ElevatedButton(
           onPressed: onGetDirections,
-          icon: const Icon(Icons.directions, size: 16),
-          label: Text(loc.getDirections),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange.shade800,
+            backgroundColor: Colors.blue.shade800,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
+          child: Text(loc.getDirections, style: const TextStyle(fontSize: 12)),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: ListenableBuilder(
+          listenable: TrackingService(),
+          builder: (context, child) {
+            return ElevatedButton(
+              onPressed: TrackingService().isPaused
+                  ? onResumeTracking
+                  : onPauseTracking,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: TrackingService().isPaused
+                    ? Colors.green.shade700
+                    : Colors.orange.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                TrackingService().isPaused
+                    ? loc.resumeTracking
+                    : loc.pauseTracking,
+                style: const TextStyle(fontSize: 12),
+              ),
+            );
+          },
         ),
       ),
       const SizedBox(width: 8),
@@ -587,13 +572,18 @@ class Bookingcard extends StatelessWidget {
           stream: TrackingService().positionStream,
           builder: (context, snapshot) {
             bool canStop = false;
-            if (dropoffLatitude != null && dropoffLongitude != null && snapshot.hasData) {
+            if (dropoffLatitude != null &&
+                dropoffLongitude != null &&
+                snapshot.hasData) {
               final pos = snapshot.data!;
               final distance = Geolocator.distanceBetween(
-                pos.latitude, pos.longitude, 
-                dropoffLatitude!, dropoffLongitude!
+                pos.latitude,
+                pos.longitude,
+                dropoffLatitude!,
+                dropoffLongitude!,
               );
-              if (distance <= 500) { // 500 meters threshold
+              if (distance <= 500) {
+                // 500 meters threshold
                 canStop = true;
               }
             } else if (dropoffLatitude == null) {
@@ -601,29 +591,35 @@ class Bookingcard extends StatelessWidget {
             }
 
             if (!canStop) {
-               return ElevatedButton.icon(
+              return ElevatedButton(
                 onPressed: null,
-                icon: const Icon(Icons.stop_circle, size: 16),
-                label: Text(loc.stopTracking),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade700,
                   foregroundColor: Colors.white54,
                   padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
+                child:
+                    Text(loc.stopTracking, style: const TextStyle(fontSize: 12)),
               );
             }
 
-            return ElevatedButton.icon(
+            return ElevatedButton(
               onPressed: onComplete,
-              icon: const Icon(Icons.stop_circle, size: 16),
-              label: Text(loc.stopTracking),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red.shade700,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
+              child:
+                  Text(loc.stopTracking, style: const TextStyle(fontSize: 12)),
             );
-          }
+          },
         ),
       ),
     ];
@@ -634,28 +630,61 @@ class Bookingcard extends StatelessWidget {
   List<Widget> _buildChauffeurTrackingActions(AppLocalizations loc) {
     return [
       Expanded(
-        child: ElevatedButton.icon(
+        child: ElevatedButton(
           onPressed: onGetDirections,
-          icon: const Icon(Icons.directions, size: 16),
-          label: Text(loc.getDirections),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange.shade800,
+            backgroundColor: Colors.blue.shade800,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
+          child: Text(loc.getDirections, style: const TextStyle(fontSize: 12)),
         ),
       ),
       const SizedBox(width: 8),
       Expanded(
-        child: ElevatedButton.icon(
+        child: ListenableBuilder(
+          listenable: TrackingService(),
+          builder: (context, child) {
+            return ElevatedButton(
+              onPressed: TrackingService().isPaused
+                  ? onResumeTracking
+                  : onPauseTracking,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: TrackingService().isPaused
+                    ? Colors.green.shade700
+                    : Colors.orange.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                TrackingService().isPaused
+                    ? loc.resumeTracking
+                    : loc.pauseTracking,
+                style: const TextStyle(fontSize: 12),
+              ),
+            );
+          },
+        ),
+      ),
+      const SizedBox(width: 8),
+      Expanded(
+        child: ElevatedButton(
           onPressed: onStopTracking,
-          icon: const Icon(Icons.stop_circle, size: 16),
-          label: Text(loc.stopTracking),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red.shade700,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
+          child: Text(loc.stopTracking, style: const TextStyle(fontSize: 12)),
         ),
       ),
     ];
@@ -664,15 +693,17 @@ class Bookingcard extends StatelessWidget {
   List<Widget> _buildOngoingActions(AppLocalizations loc) {
     return [
       Expanded(
-        child: ElevatedButton.icon(
+        child: ElevatedButton(
           onPressed: onComplete,
-          icon: const Icon(Icons.check_circle, size: 16),
-          label: Text(loc.complete),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
+          child: Text(loc.complete, style: const TextStyle(fontSize: 12)),
         ),
       ),
     ];

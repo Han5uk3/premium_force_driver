@@ -1591,6 +1591,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Extra Hours Charge'**
   String get extraHoursCharge;
+
+  /// No description provided for @locationBackgroundDisclosureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background Location Access'**
+  String get locationBackgroundDisclosureTitle;
+
+  /// No description provided for @locationBackgroundDisclosureMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Force Driver collects location data to enable tracking your progress and sharing your real-time position with the customer, even when the app is closed or not in use. This ensures a smooth pickup and trip experience.'**
+  String get locationBackgroundDisclosureMessage;
+
+  /// No description provided for @allowAllTheTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow All The Time'**
+  String get allowAllTheTime;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @enableLocationServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Location Services'**
+  String get enableLocationServices;
+
+  /// No description provided for @locationServicesDisabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Location services are disabled. Please enable them to start tracking.'**
+  String get locationServicesDisabledMessage;
+
+  /// No description provided for @locationPermissionAlwaysRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Background location permission is required for the driver app to update your position while you are on the move. Please select \'Allow all the time\' in settings.'**
+  String get locationPermissionAlwaysRequired;
+
+  /// No description provided for @pauseTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause Tracking'**
+  String get pauseTracking;
+
+  /// No description provided for @resumeTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Tracking'**
+  String get resumeTracking;
+
+  /// No description provided for @trackingPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking Paused'**
+  String get trackingPaused;
+
+  /// No description provided for @trackingResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking Resumed'**
+  String get trackingResumed;
 }
 
 class _AppLocalizationsDelegate

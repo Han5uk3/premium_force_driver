@@ -18,7 +18,17 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    if (e.toString().contains('duplicate-app')) {
+      debugPrint('⚠️ Firebase already initialized, skipping...');
+    } else {
+      rethrow;
+    }
+  }
   await UserLocalStorage.init();
 
   // Initialise push notifications

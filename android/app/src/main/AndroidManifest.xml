@@ -41,5 +41,16 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- For launching web links (google maps) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- For launching phone calls -->
+        <intent>
+          <action android:name="android.intent.action.DIAL" />
+          <data android:scheme="tel" />
+        </intent>
     </queries>
 </manifest>

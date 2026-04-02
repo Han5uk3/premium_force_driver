@@ -130,7 +130,13 @@ class BookingModel {
     int toolToInt(dynamic value) {
       if (value == null) return 0;
       if (value is num) return value.toInt();
-      if (value is String) return int.tryParse(value) ?? 0;
+      if (value is String) {
+        // Handle cases like "3.0" by parsing as double first if it has a decimal point
+        if (value.contains('.')) {
+          return double.tryParse(value)?.toInt() ?? 0;
+        }
+        return int.tryParse(value) ?? 0;
+      }
       return 0;
     }
 
@@ -187,7 +193,7 @@ class BookingModel {
       actualDuration: json['actualDuration'] != null ? toolToInt(json['actualDuration']) : null,
       rideType: json['category']?.toString() ?? json['rideType']?.toString() ?? 'Standard',
       vehicleType: carData?.displayName ?? json['carName']?.toString() ?? json['vehicleType']?.toString() ?? json['carClass']?.toString() ?? 'Standard',
-      passengerCount: toolToInt(json['passengerCount'] ?? json['passsenrgersCount']),
+      passengerCount: (toolToInt(json['passengerCount'] ?? json['passengersCount'] ?? json['passengers'] ?? json['passenger'] ?? json['numberOfPassengers'] ?? json['noOfPassengers'] ?? json['passCount'])).clamp(1, 100),
       rating: (json['rating'] is Map)
           ? toDouble(json['rating']['rate'] ?? json['rating']['rating'])
           : (json['rating'] != null ? toDouble(json['rating']) : null),

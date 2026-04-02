@@ -778,4 +778,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get extraHoursCharge => 'رسوم الساعات الإضافية';
+
+  @override
+  String get locationBackgroundDisclosureTitle =>
+      'الوصول إلى الموقع في الخلفية';
+
+  @override
+  String get locationBackgroundDisclosureMessage =>
+      'يقوم تطبيق بريميوم فورس للسائق بجمع بيانات الموقع لتمكين تتبع تقدمك ومشاركة موقعك في الوقت الفعلي مع العميل، حتى عندما يكون التطبيق مغلقاً أو غير مستخدم. يضمن ذلك تجربة استلام ورحلة سلسة.';
+
+  @override
+  String get allowAllTheTime => 'السماح طوال الوقت';
+
+  @override
+  String get openSettings => 'فتح الإعدادات';
+
+  @override
+  String get enableLocationServices => 'تمكين خدمات الموقع';
+
+  @override
+  String get locationServicesDisabledMessage =>
+      'خدمات الموقع معطلة. يرجى تمكينها لبدء التتبع.';
+
+  @override
+  String get locationPermissionAlwaysRequired =>
+      'إذن الموقع في الخلفية مطلوب لتطبيق السائق لتحديث موقعك أثناء تنقلك. يرجى اختيار \'السماح طوال الوقت\' في الإعدادات.';
+
+  @override
+  String get pauseTracking => 'إيقاف التتبع مؤقتاً';
+
+  @override
+  String get resumeTracking => 'استئناف التتبع';
+
+  @override
+  String get trackingPaused => 'التتبع متوقف مؤقتاً';
+
+  @override
+  String get trackingResumed => 'تم استئناف التتبع';
 }
