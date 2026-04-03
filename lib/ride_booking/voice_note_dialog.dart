@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import 'dart:async';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 
@@ -15,15 +12,11 @@ class VoiceNoteDialog extends StatefulWidget {
 }
 
 class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
-  final AudioRecorder _audioRecorder = AudioRecorder();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
-  bool _isRecording = false;
   bool _isPlaying = false;
   String? _audioPath;
 
-  Timer? _timer;
-  int _recordDuration = 0;
   Duration _audioDuration = Duration.zero;
   Duration _audioPosition = Duration.zero;
 
@@ -59,19 +52,8 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _audioRecorder.dispose();
     _audioPlayer.dispose();
     super.dispose();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      if (mounted) {
-        setState(() => _recordDuration++);
-      }
-    });
   }
 
   String _formatDuration(int seconds) {
@@ -79,43 +61,6 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
     final mins = twoDigits(seconds ~/ 60);
     final secs = twoDigits(seconds % 60);
     return "$mins:$secs";
-  }
-
-  Future<void> _startRecording() async {
-    try {
-      if (await _audioRecorder.hasPermission()) {
-        final dir = await getApplicationDocumentsDirectory();
-        final filePath =
-            '${dir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
-
-        await _audioRecorder.start(
-          const RecordConfig(encoder: AudioEncoder.aacLc),
-          path: filePath,
-        );
-
-        setState(() {
-          _isRecording = true;
-          _audioPath = null;
-          _recordDuration = 0;
-        });
-        _startTimer();
-      }
-    } catch (e) {
-      debugPrint('Error starting record: $e');
-    }
-  }
-
-  Future<void> _stopRecording() async {
-    try {
-      final path = await _audioRecorder.stop();
-      _timer?.cancel();
-      setState(() {
-        _isRecording = false;
-        _audioPath = path;
-      });
-    } catch (e) {
-      debugPrint('Error stopping record: $e');
-    }
   }
 
   Future<void> _playPauseAudio() async {
@@ -126,24 +71,6 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
     } else {
       await _audioPlayer.play(DeviceFileSource(_audioPath!));
     }
-  }
-
-  Future<void> _deleteRecording() async {
-    if (_audioPath != null) {
-      final file = File(_audioPath!);
-      if (await file.exists()) {
-        await file.delete();
-      }
-    }
-    setState(() {
-      _audioPath = null;
-      _isPlaying = false;
-      _recordDuration = 0;
-      _audioDuration = Duration.zero;
-      _audioPosition = Duration.zero;
-    });
-    await _audioPlayer.stop();
-    if (mounted) Navigator.pop(context, 'DELETED');
   }
 
   @override
@@ -230,75 +157,21 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
                       ),
                     ),
                     Text(
-                      _audioDuration.inMilliseconds > 0
-                          ? _formatDuration(_audioPosition.inSeconds)
-                          : _formatDuration(_recordDuration),
+                      _formatDuration(_audioPosition.inSeconds),
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 13,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: _deleteRecording,
-                      child: const Icon(
-                        Icons.delete_outline,
-                        color: Color(0xFFCF6679),
-                        size: 24,
-                      ),
-                    ),
-                  ] else if (_isRecording) ...[
-                    const SizedBox(width: 12),
-                    const Icon(Icons.mic, color: Color(0xFFCF6679), size: 16),
-                    const SizedBox(width: 8),
-                    Text(
-                      _formatDuration(_recordDuration),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: _stopRecording,
-                      child: Container(
-                        height: 36,
-                        width: 36,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFC0C0C0),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.stop,
-                          color: Colors.black,
-                          size: 20,
-                        ),
-                      ),
-                    ),
                   ] else ...[
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(left: 8.0),
-                        child: Text(
-                          AppLocalizations.of(context)!.recordVoiceNote,
-                          style: TextStyle(color: Colors.white60, fontSize: 14),
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _startRecording,
-                      child: Container(
-                        height: 36,
-                        width: 36,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFC0C0C0),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.mic,
-                          color: Colors.black,
-                          size: 20,
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Center(
+                          child: Text(
+                            "No audio file to play",
+                            style: TextStyle(color: Colors.white60, fontSize: 14),
+                          ),
                         ),
                       ),
                     ),
@@ -306,27 +179,24 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
                 ],
               ),
             ),
-
             const SizedBox(height: 32),
-
-            if (_audioPath != null)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context, _audioPath);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC0C0C0),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  AppLocalizations.of(context)!.saveVoiceNote,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFC0C0C0),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              child: const Text(
+                "Close",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
       ),

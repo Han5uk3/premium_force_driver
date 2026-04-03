@@ -440,36 +440,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     );
   }
 
-  Widget _buildSummaryRow(
-    String label,
-    String value, {
-    bool isHighlight = false,
-    bool isBold = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: isHighlight ? const Color(0xFFE4A46B) : Colors.white70,
-              fontSize: 14,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: isHighlight ? const Color(0xFFE4A46B) : Colors.white,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              fontSize: isBold ? 18 : 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+ 
+  
 
   Widget _buildActions(BuildContext context, AppLocalizations loc) {
     final status = _currentBooking.status.toLowerCase().trim();

@@ -185,19 +185,47 @@ class BookingsProvider extends ChangeNotifier {
       final booking = _allBookings.firstWhere((b) => b.id == bookingId);
       final TrackingService trackingService = TrackingService();
       bool success = false;
+      final stopTime = DateTime.now().toUtc();
       
       if (booking.isHourly) {
         // Calculate extra hours and payment
-        final stopTime = DateTime.now().toUtc();
         final int extraHours = await trackingService.stopTracking();
         
         final double discountPercentage = booking.discountPercentage ?? 0;
         final double extraDiscount = (discountPercentage > 0) ? discountPercentage : 0;
         
-        // Use a dummy hourly rate for extra hours (TODO: Fetch from API later)
-        const double dummyHourlyRate = 10;
-        final double extraPayment = extraHours * dummyHourlyRate;
-        
+        // Fetch the hourly rate for extra hours (using 999 as the special hour value)
+        double hourlyRate = 10.0; // Default fallback
+        try {
+          final carId = booking.originalIds?.carID;
+          const int sentinelHour = 999;
+          final rateResponse = await _apiService.getHourlyRate(
+            vehicleId: carId,
+          );
+          if (rateResponse['success'] == true) {
+            final data = rateResponse['data'];
+            if (data is Map && data.containsKey('pricing')) {
+              final List? pricing = data['pricing'] as List?;
+              if (pricing != null) {
+                // Find pricing entry for extra hours (sentinel 999)
+                final extraHourEntry = pricing.firstWhere(
+                  (element) => element['hour'] == sentinelHour,
+                  orElse: () => null,
+                );
+                if (extraHourEntry != null) {
+                  hourlyRate = (extraHourEntry['price'] ?? 10.0).toDouble();
+                } else if (pricing.isNotEmpty) {
+                    // Fallback to first available rate if 999 is missing
+                    hourlyRate = (pricing.first['price'] ?? 10.0).toDouble();
+                }
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Error fetching hourly rate: $e');
+        }
+
+        final double extraPayment = extraHours * hourlyRate;
         final status = extraHours > 0 ? 'paymentpending' : 'C';
 
         success = await updateBookingStatus(
@@ -234,7 +262,7 @@ class BookingsProvider extends ChangeNotifier {
           _updateBookingInList(
             bookingId,
             'C',
-            stoppedAt: DateTime.now().toUtc().toIso8601String(),
+            stoppedAt: stopTime.toIso8601String(),
           );
           _actionMessage = 'Trip completed successfully!';
         }

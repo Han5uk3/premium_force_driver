@@ -240,15 +240,6 @@ class _SignUpPageState extends State<SignUpPage>
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_profileImage == null) {
-      AnimatedSnackBar.show(
-        context,
-        AppLocalizations.of(context)!.pleaseAddAProfilePicture,
-        'E',
-      );
-      return;
-    }
-
     if (_locationController.text.isEmpty) {
       AnimatedSnackBar.show(
         context,

@@ -235,7 +235,7 @@ class ApiService {
         'countryCode': countryCode,
         'phoneNumber': phoneNumber,
         'role': role,
-        'location': ?location,
+        'location': location,
         if (lat != null) 'lat': lat.toString(),
         if (long != null) 'long': long.toString(),
         if (specialId != null && specialId.isNotEmpty) 'specialId': specialId,
@@ -429,10 +429,10 @@ class ApiService {
         'email': email,
         'countryCode': countryCode,
         'phoneNumber': phoneNumber,
-        'location': ?location,
+        'location': location,
         if (lat != null) 'lat': lat.toString(),
         if (long != null) 'long': long.toString(),
-        'licenseNumber': ?licenseNumber,
+        'licenseNumber': licenseNumber,
         if (licenseExpiry != null)
           'licenseExpiry': licenseExpiry.toIso8601String(),
       };
@@ -821,6 +821,30 @@ class ApiService {
       final response = await _dio.get(
         '/bookings/earnings/monthly?year=$year',
         options: token != null ? _authOptions(token) : null,
+      );
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  /// Fetch hourly rate for a specific vehicle and hour count.
+  ///
+  /// Calls `GET /api/hourly-routes/city-to-city/filter`.
+  /// Used to determine extra hour price by passing `hour = 999`.
+  /// Fetch all hourly rates for a specific vehicle.
+  /// Calls `GET /api/hourly-routes/vehicle/{vehicleId}`.
+  Future<Map<String, dynamic>> getHourlyRate({
+    required String? vehicleId,
+    String? token,
+  }) async {
+    try {
+      if (vehicleId == null) return {'success': false, 'message': 'Vehicle ID is required'};
+      
+      final authToken = token ?? await ensureValidToken();
+      final response = await _dio.get(
+        '/hourly-routes/vehicle/$vehicleId',
+        options: authToken != null ? _authOptions(authToken) : null,
       );
       return _success(response);
     } catch (e) {

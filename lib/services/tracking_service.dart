@@ -20,6 +20,7 @@ class TrackingService with ChangeNotifier {
         databaseURL:
             'https://premium-force-default-rtdb.asia-southeast1.firebasedatabase.app',
       );
+      
   final ApiService _apiService = ApiService();
 
   Stream<Position> get positionStream => _positionStreamController.stream;
