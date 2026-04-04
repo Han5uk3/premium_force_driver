@@ -164,7 +164,10 @@ class ApiService {
       if (result['success'] == true) {
         final newAccessToken = result['accessToken'] as String?;
         final newRefreshToken = result['refreshToken'] as String?;
-        final expiresIn = result['expiresIn'] as int?;
+        final rawExpiresIn = result['expiresIn'];
+        final expiresIn = rawExpiresIn != null
+            ? int.tryParse(rawExpiresIn.toString())
+            : null;
 
         if (newAccessToken != null) {
           await UserLocalStorage.saveTokens(

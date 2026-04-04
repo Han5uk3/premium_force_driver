@@ -295,8 +295,13 @@ class AuthProvider extends ChangeNotifier {
             (result['accessToken'] ?? tokens?['accessToken'] ?? result['token']) as String?;
         final refreshToken =
             (result['refreshToken'] ?? tokens?['refreshToken']) as String?;
-        final expiresIn = 
-            (result['expiresIn'] ?? tokens?['expiresIn'] ?? result['expires_in'] ?? tokens?['expires_in']) as int?;
+        final rawExpiresIn = result['expiresIn'] ??
+            tokens?['expiresIn'] ??
+            result['expires_in'] ??
+            tokens?['expires_in'];
+        final expiresIn = rawExpiresIn != null
+            ? int.tryParse(rawExpiresIn.toString())
+            : null;
 
         if (accessToken != null && refreshToken != null) {
           await UserLocalStorage.saveTokens(
