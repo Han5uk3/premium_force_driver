@@ -36,7 +36,7 @@ class PremiumTextField extends StatelessWidget {
     this.suffixIcon,
     this.isPhoneNumber = false,
     this.validator,
-    this.fontsize = 16,
+    this.fontsize = 14,
     this.enabled = true,
     this.onTap,
     this.readOnly = false,
@@ -167,7 +167,7 @@ class PremiumTextField extends StatelessWidget {
                   fieldState.errorText!,
                   style: const TextStyle(
                     color: Color(0xFFCF6679),
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w400,
                   ),
                 ),

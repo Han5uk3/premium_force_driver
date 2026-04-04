@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
+import 'package:premium_force_driver/common_widgets/premiumloader.dart';
 
 class LocationPickerPage extends StatefulWidget {
   final double? initialLat;
@@ -325,13 +326,13 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                             focusNode: _searchFocusNode,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 15,
+                              fontSize: 13,
                             ),
                             decoration: InputDecoration(
                               hintText: AppLocalizations.of(context)!.searchForALocation,
                               hintStyle: TextStyle(
                                 color: Colors.white.withAlpha(120),
-                                fontSize: 15,
+                                fontSize: 13,
                               ),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(
@@ -384,13 +385,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                         ),
                       ),
                       child: const Center(
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFFC0C0C0),
-                          ),
+                        child: PremiumLoader(
+                          size: 20,
                         ),
                       ),
                     ),
@@ -438,7 +434,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                               _searchResults[index]['address'],
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 13,
+                                fontSize: 11,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -510,7 +506,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                                 AppLocalizations.of(context)!.selectedLocation,
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -521,7 +517,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                             _selectedAddress,
                             style: TextStyle(
                               color: Colors.white.withAlpha(180),
-                              fontSize: 13,
+                              fontSize: 11,
                               height: 1.4,
                             ),
                             maxLines: 2,
@@ -549,13 +545,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       if (_isLoading)
-                                        const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Color(0xFFC0C0C0),
-                                          ),
+                                        const PremiumLoader(
+                                          size: 18,
                                         )
                                       else
                                         ShaderMask(
@@ -581,7 +572,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                                             : AppLocalizations.of(context)!.useCurrentLocation,
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 15,
+                                          fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -638,7 +629,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                                 AppLocalizations.of(context)!.confirmLocation,
                                 style: TextStyle(
                                   color: Colors.black,
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
@@ -673,7 +664,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
           title: Text(
             AppLocalizations.of(context)!.selectLocation,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.white,
               letterSpacing: 0.5,

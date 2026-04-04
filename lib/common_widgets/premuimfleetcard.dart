@@ -84,7 +84,7 @@ class Premuimfleetcard extends StatelessWidget {
                         children: [
                           Text(
                             "$brand $name",
-                            style: TextStyle(fontSize: 15, color: Colors.white),
+                            style: TextStyle(fontSize: 13, color: Colors.white),
                           ),
                           Row(
                             spacing: 5,
@@ -98,7 +98,7 @@ class Premuimfleetcard extends StatelessWidget {
                               Text(
                                 "${loc.passenger}: $passengerCount",
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   color: Colors.white54,
                                 ),
                               ),

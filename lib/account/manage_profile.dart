@@ -111,7 +111,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                     loc.chooseProfilePicture,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -207,7 +207,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
             label,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -414,7 +414,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                             AppLocalizations.of(context)!.tapToAddPhoto,
                             style: TextStyle(
                               color: Colors.white.withAlpha(100),
-                              fontSize: 12,
+                              fontSize: 10,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
@@ -429,7 +429,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                           hintText: AppLocalizations.of(
                             context,
                           )!.enterYourFullName,
-                          fontsize: 15,
+                          fontsize: 13,
                           keyboardType: TextInputType.name,
                           needTitle: true,
                           obscureText: false,
@@ -471,7 +471,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                           title: AppLocalizations.of(context)!.phoneNumber,
                           controller: _phoneController,
                           hintText: "",
-                          fontsize: 15,
+                          fontsize: 13,
                           needTitle: true,
                           obscureText: false,
                           enabled: false,
@@ -497,36 +497,35 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                         const SizedBox(height: 20),
 
                         // Email field
-                        PremiumTextField(
-                          title: AppLocalizations.of(context)!.emailAddress,
-                          controller: _emailController,
-                          hintText: AppLocalizations.of(
-                            context,
-                          )!.enterYourEmailAddress,
-                          fontsize: 15,
-                          keyboardType: TextInputType.emailAddress,
-                          needTitle: true,
-                          obscureText: false,
-                          enabled: false,
-                          readOnly: true,
-                          prefixIcon: ShaderMask(
-                            shaderCallback: (Rect bounds) {
-                              return const LinearGradient(
-                                colors: [
-                                  Color(0xFF404040),
-                                  Color(0xFFC0C0C0),
-                                  Color(0xFF808080),
-                                ],
-                              ).createShader(bounds);
-                            },
-                            child: const Icon(
-                              Icons.email_outlined,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-
+                        // PremiumTextField(
+                        //   title: AppLocalizations.of(context)!.emailAddress,
+                        //   controller: _emailController,
+                        //   hintText: AppLocalizations.of(
+                        //     context,
+                        //   )!.enterYourEmailAddress,
+                        //   fontsize: 13,
+                        //   keyboardType: TextInputType.emailAddress,
+                        //   needTitle: true,
+                        //   obscureText: false,
+                        //   enabled: false,
+                        //   readOnly: true,
+                        //   prefixIcon: ShaderMask(
+                        //     shaderCallback: (Rect bounds) {
+                        //       return const LinearGradient(
+                        //         colors: [
+                        //           Color(0xFF404040),
+                        //           Color(0xFFC0C0C0),
+                        //           Color(0xFF808080),
+                        //         ],
+                        //       ).createShader(bounds);
+                        //     },
+                        //     child: const Icon(
+                        //       Icons.email_outlined,
+                        //       color: Colors.white,
+                        //       size: 20,
+                        //     ),
+                        //   ),
+                        // ),
                         const SizedBox(height: 20),
 
                         // Location field (tap to open location picker)
@@ -535,13 +534,12 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                         const SizedBox(height: 36),
 
                         // Save Changes button
-                        PremiumButton(
-                          showLoader: _isLoading,
-                          fontsize: 18,
-                          text: "Save Changes",
-                          onTap: _isLoading ? () {} : _handleUpdateProfile,
-                        ),
-
+                        // PremiumButton(
+                        //   showLoader: _isLoading,
+                        //   fontsize: 16,
+                        //   text: "Save Changes",
+                        //   onTap: _isLoading ? () {} : _handleUpdateProfile,
+                        // ),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -587,7 +585,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
           title: Text(
             AppLocalizations.of(context)!.manageProfile,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               color: Colors.white,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,

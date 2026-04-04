@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/models/user.dart';
 import 'package:premium_force_driver/models/driver.dart';
 import 'package:premium_force_driver/models/booking.dart';
+import 'package:premium_force_driver/models/review.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 
 /// Centralised API service for the Premium Force app.
@@ -32,6 +33,7 @@ class ApiService {
   factory ApiService() => _instance;
 
   late final Dio _dio;
+  Future<String?>? _refreshFuture;
 
   ApiService._internal() {
     _dio = Dio(
@@ -40,6 +42,56 @@ class ApiService {
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         headers: {'Accept': 'application/json'},
+      ),
+    );
+
+    // ── Global Interceptor for Auth + Token Refresh ──────
+    _dio.interceptors.add(
+      QueuedInterceptorsWrapper(
+        onRequest: (options, handler) async {
+          // Skip for auth endpoints if they don't need the header
+          final path = options.path;
+          if (path.contains('send-otp') ||
+              path.contains('verify-otp') ||
+              path.contains('refresh-token') ||
+              path.contains('auth/google')) {
+            return handler.next(options);
+          }
+
+          final token = UserLocalStorage.getToken();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+        onError: (e, handler) async {
+          // If we get a 401 Unauthorized, try to refresh the token
+          if (e.response?.statusCode == 401) {
+            debugPrint('🌐 API │ 401 detected on ${e.requestOptions.path}');
+            
+            // Avoid infinite loop if refresh itself fails with 401
+            if (e.requestOptions.path.contains('refresh-token')) {
+              return handler.next(e);
+            }
+
+            try {
+              final newToken = await ensureValidToken();
+              if (newToken != null) {
+                debugPrint('🌐 API │ Token refreshed successfully, retrying original request...');
+                
+                // Update header and retry
+                final options = e.requestOptions;
+                options.headers['Authorization'] = 'Bearer $newToken';
+                
+                final response = await _dio.fetch(options);
+                return handler.resolve(response);
+              }
+            } catch (retryError) {
+              debugPrint('🌐 API │ Global retry failed: $retryError');
+            }
+          }
+          return handler.next(e);
+        },
       ),
     );
 
@@ -69,20 +121,44 @@ class ApiService {
   /// Returns the current (potentially refreshed) access token.
   /// Returns null if token refresh fails.
   Future<String?> ensureValidToken() async {
-    // If token is not expiring soon, use it as-is
-    if (!UserLocalStorage.isTokenExpiredOrExpiring()) {
-      return UserLocalStorage.getToken();
+    // 1. If another refresh task is already running, wait for its result.
+    if (_refreshFuture != null) {
+      debugPrint('🔄 Token Service │ Waiting for existing refresh task...');
+      try {
+        return await _refreshFuture;
+      } catch (_) {
+        return null;
+      }
     }
 
-    // Token is expiring or expired, try to refresh
+    // 2. If token is still valid (not expiring soon), return it immediately.
+    if (!UserLocalStorage.isTokenExpiredOrExpiring()) {
+      final token = UserLocalStorage.getToken();
+      if (token != null && token.isNotEmpty) {
+        return token;
+      }
+    }
+
+    // 3. Otherwise, start a new refresh task and cache its future.
+    _refreshFuture = _refreshInternal();
+    try {
+      final newToken = await _refreshFuture;
+      return newToken;
+    } finally {
+      _refreshFuture = null; // Clear so subsequent calls can run if needed.
+    }
+  }
+
+  /// Internal implementation of token refresh.
+  Future<String?> _refreshInternal() async {
     final refreshToken = UserLocalStorage.getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
-      debugPrint('❌ Cannot refresh token: no refresh token stored');
+      debugPrint('❌ Token Service │ Cannot refresh: no refresh token stored');
       return null;
     }
 
     try {
-      debugPrint('🔄 Auto-refreshing access token...');
+      debugPrint('🔄 Token Service │ Auto-refreshing access token...');
       final result = await refreshAccessToken(refreshToken: refreshToken);
 
       if (result['success'] == true) {
@@ -94,17 +170,17 @@ class ApiService {
           await UserLocalStorage.saveTokens(
             accessToken: newAccessToken,
             refreshToken: newRefreshToken ?? refreshToken,
-            expiryDurationSeconds: expiresIn ?? 3600,
+            expiryDurationSeconds: expiresIn,
           );
-          debugPrint('✅ Access token refreshed successfully');
+          debugPrint('✅ Token Service │ Access token refreshed successfully');
           return newAccessToken;
         }
       }
 
-      debugPrint('❌ Failed to refresh token: ${result['message']}');
+      debugPrint('❌ Token Service │ Failed to refresh token: ${result['message']}');
       return null;
     } catch (e) {
-      debugPrint('❌ Token refresh error: $e');
+      debugPrint('❌ Token Service │ Error: $e');
       return null;
     }
   }
@@ -171,8 +247,13 @@ class ApiService {
   }) async {
     try {
       final response = await _dio.post(
-        '/drivers/refresh-token',
+        'drivers/refresh-token',
         data: {'refreshToken': refreshToken},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $refreshToken',
+          },
+        ),
       );
       return _success(response);
     } catch (e) {
@@ -792,20 +873,60 @@ class ApiService {
   Future<Map<String, dynamic>> completeBooking({
     required String bookingId,
     bool isHourly = false,
-    String? driverId, // kept for backward compatibility if needed elsewhere
+    String? driverId,
     String? token,
   }) async {
+    final path = isHourly
+        ? 'drivers/complete-trip/HourlyBooking'
+        : 'drivers/complete-trip';
+
+    final data = {
+      'bookingID': bookingId,
+      'bookingId': bookingId,
+      if (driverId != null) 'driverID': driverId,
+      if (driverId != null) 'driverId': driverId,
+    };
+
     try {
-      final path = isHourly
-          ? '/drivers/complete-trip/HourlyBooking'
-          : '/drivers/complete-trip/';
       final response = await _dio.post(
         path,
-        data: {'bookingID': bookingId},
+        data: data,
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
     } catch (e) {
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        
+        // Retry for 401 Unauthorized
+        if (statusCode == 401) {
+          debugPrint('🔄 completeBooking │ 401 detected, attempting token refresh retry...');
+          final newToken = await ensureValidToken();
+          if (newToken != null) {
+            try {
+              final retryResponse = await _dio.post(
+                path,
+                data: data,
+                options: _authOptions(newToken),
+              );
+              return _success(retryResponse);
+            } catch (retryError) {
+              return _handleError(retryError);
+            }
+          }
+        }
+        
+        // Fallback for 404 Not Found on regular bookings
+        if (statusCode == 404 && !isHourly) {
+          debugPrint('🔄 completeBooking │ 404 detected on regular trip, falling back to status update...');
+          return await updateBookingStatus(
+            bookingId: bookingId,
+            status: 'C', // Completed
+            isHourly: false,
+            token: token,
+          );
+        }
+      }
       return _handleError(e);
     }
   }
@@ -874,6 +995,42 @@ class ApiService {
       return _success(response);
     } catch (e) {
       return _handleError(e);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Reviews
+  // ---------------------------------------------------------------------------
+
+  /// Submit a review for a booking.
+  ///
+  /// Format:
+  /// {
+  /// Fetch all reviews.
+  ///
+  /// Calls `GET /api/reviews`.
+  Future<List<ReviewModel>> getAllReviews({String? token}) async {
+    try {
+      final response = await _dio.get(
+        '/reviews',
+        options: token != null ? _authOptions(token) : null,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          final reviewList = data['data'] as List?;
+          if (reviewList != null) {
+            return reviewList
+                .map((r) => ReviewModel.fromJson(r as Map<String, dynamic>))
+                .toList();
+          }
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('getAllReviews error: $e');
+      return [];
     }
   }
 

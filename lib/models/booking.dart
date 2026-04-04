@@ -247,7 +247,10 @@ class BookingModel {
           );
 
     return BookingModel(
-      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      id: json['_id']?.toString() ??
+          json['id']?.toString() ??
+          json['bookingID']?.toString() ??
+          '',
       customerId:
           customerData?.uid ??
           json['customerID']?.toString() ??

@@ -94,7 +94,7 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
                   AppLocalizations.of(context)!.voiceNote,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -160,7 +160,7 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
                       _formatDuration(_audioPosition.inSeconds),
                       style: const TextStyle(
                         color: Colors.white60,
-                        fontSize: 13,
+                        fontSize: 11,
                       ),
                     ),
                   ] else ...[
@@ -170,7 +170,7 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
                         child: Center(
                           child: Text(
                             "No audio file to play",
-                            style: TextStyle(color: Colors.white60, fontSize: 14),
+                            style: TextStyle(color: Colors.white60, fontSize: 12),
                           ),
                         ),
                       ),
@@ -194,7 +194,7 @@ class _VoiceNoteDialogState extends State<VoiceNoteDialog> {
               ),
               child: const Text(
                 "Close",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ),
           ],

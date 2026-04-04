@@ -624,6 +624,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retry => 'Retry';
 
   @override
+  String get startRide => 'Start Ride';
+
+  @override
+  String get pauseRide => 'Pause Ride';
+
+  @override
+  String get endRide => 'End Ride';
+
+  @override
+  String get resumeRide => 'Resume Ride';
+
+  @override
+  String get directions => 'Directions';
+
+  @override
   String get couldNotLaunchMaps => 'Could not launch maps';
 
   @override
@@ -738,7 +753,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewed => 'Reviewed';
 
   @override
+  String get rideStoppedSyncPending => 'Ride stopped, sync pending';
+
+  @override
+  String get ridePaused => 'Ride paused';
+
+  @override
+  String get rideResumed => 'Ride resumed';
+
+  @override
+  String get endRideConfirm => 'Are you sure you want to end this ride?';
+
+  @override
+  String get startRideConfirm => 'Are you sure you want to start this ride?';
+
+  @override
+  String get rideStarted => 'Ride started';
+
+  @override
   String get tracking => 'Tracking';
+
+  @override
+  String get startRideAvailableOnDate =>
+      'Start Ride will be available on booking date';
 
   @override
   String get startTrackingAvailableOnDate =>

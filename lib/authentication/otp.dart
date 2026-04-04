@@ -102,7 +102,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
             title: Text(
               "Enter OTP",
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
@@ -124,7 +124,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       width: 55,
       height: 55,
       textStyle: const TextStyle(
-        fontSize: 22,
+        fontSize: 20,
         color: Colors.white,
         fontWeight: FontWeight.w600,
       ),
@@ -166,7 +166,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     TextSpan(
                       text: 'OTP has been sent to ',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w400,
                         color: Colors.white,
                       ),
@@ -174,7 +174,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                     TextSpan(
                       text: '${widget.countryCode} ${widget.phoneNumber}',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
@@ -217,7 +217,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                       Text(
                         "Didn't receive the code? ",
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: Colors.white.withAlpha(180),
                         ),
                       ),
@@ -240,7 +240,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                               ? 'Resend OTP'
                               : 'Resend in ${_formatCountdown(authProvider.resendCountdown)}',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: canResend
                                 ? const Color(0xFFD4D4D4)
@@ -258,7 +258,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
               // Verify Button
               PremiumButton(
                 showLoader: _isVerifying,
-                fontsize: 18,
+                fontsize: 16,
                 text: "Verify",
                 onTap: _isVerifying ? () {} : _handleVerify,
               ),

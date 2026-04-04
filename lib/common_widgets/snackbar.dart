@@ -152,7 +152,7 @@ class AnimatedSnackBarState extends State<AnimatedSnackBar>
                           style: TextStyle(
                             color: getSnackbarType(),
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                            fontSize: 12,
                           ),
                         ),
                       ),

@@ -618,6 +618,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get retry => 'إعادة المحاولة';
 
   @override
+  String get startRide => 'بدء الرحلة';
+
+  @override
+  String get pauseRide => 'إيقاف الرحلة مؤقتاً';
+
+  @override
+  String get endRide => 'إنهاء الرحلة';
+
+  @override
+  String get resumeRide => 'استئناف الرحلة';
+
+  @override
+  String get directions => 'الاتجاهات';
+
+  @override
   String get couldNotLaunchMaps => 'تعذر فتح الخرائط';
 
   @override
@@ -728,7 +743,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reviewed => 'تم التقييم';
 
   @override
+  String get rideStoppedSyncPending => 'تم إيقاف الرحلة، جاري المزامنة';
+
+  @override
+  String get ridePaused => 'Ride paused';
+
+  @override
+  String get rideResumed => 'Ride resumed';
+
+  @override
+  String get endRideConfirm => 'هل أنت متأكد أنك تريد إنهاء هذه الرحلة؟';
+
+  @override
+  String get startRideConfirm => 'هل أنت متأكد أنك تريد بدء هذه الرحلة؟';
+
+  @override
+  String get rideStarted => 'تم بدء الرحلة';
+
+  @override
   String get tracking => 'تتبع';
+
+  @override
+  String get startRideAvailableOnDate =>
+      'سيكون بدء الرحلة متاحًا في تاريخ الحجز';
 
   @override
   String get startTrackingAvailableOnDate => 'بدء التتبع متاح في تاريخ الحجز';

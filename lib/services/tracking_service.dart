@@ -4,7 +4,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
-import 'package:premium_force_driver/api/apis.dart';
 
 class TrackingService with ChangeNotifier {
   static final TrackingService _instance = TrackingService._internal();
@@ -21,7 +20,6 @@ class TrackingService with ChangeNotifier {
             'https://premium-force-default-rtdb.asia-southeast1.firebasedatabase.app',
       );
       
-  final ApiService _apiService = ApiService();
 
   Stream<Position> get positionStream => _positionStreamController.stream;
 

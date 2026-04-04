@@ -188,7 +188,7 @@ class _MenuIconState extends State<MenuIcon>
                                   overflow: TextOverflow.clip,
                                   style: const TextStyle(
                                     color: Colors.black,
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),

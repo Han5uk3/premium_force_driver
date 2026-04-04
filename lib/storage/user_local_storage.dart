@@ -113,21 +113,17 @@ class UserLocalStorage {
   static Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
-    int?
-    expiryDurationSeconds, // How long token is valid (usually 3600 = 1 hour)
+    int? expiryDurationSeconds, // usually 3600 = 1 hour
   }) async {
     await _box.put(_tokenKey, accessToken);
     await _box.put(_refreshTokenKey, refreshToken);
 
-    // Store expiry time (current time + duration, or 1 hour default)
-    final expiryMs = DateTime.now()
-        .add(Duration(seconds: expiryDurationSeconds ?? 3600))
-        .millisecondsSinceEpoch;
+    // Default to 1 hour if no duration provided
+    final seconds = expiryDurationSeconds ?? 3600;
+    final expiryMs = DateTime.now().add(Duration(seconds: seconds)).millisecondsSinceEpoch;
     await _box.put(_tokenExpiryKey, expiryMs);
 
-    debugPrint(
-      '💾 Tokens saved (expires in ${expiryDurationSeconds ?? 3600}s)',
-    );
+    debugPrint('💾 Tokens saved (expires in ${seconds}s)');
   }
 
   /// Check if access token is expired or about to expire (within 5 minutes).

@@ -50,13 +50,13 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
             AppLocalizations.of(context)!.driverNotRegistered,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
           content: Text(
             AppLocalizations.of(context)!.noDriverRegistered,
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
           actions: [
             TextButton(
@@ -124,7 +124,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                               AppLocalizations.of(context)!.signIn,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 28,
+                                fontSize: 26,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 1.2,
                               ),
@@ -187,7 +187,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                           hintText: AppLocalizations.of(
                             context,
                           )!.enterMobileNumber,
-                          fontsize: 16,
+                          fontsize: 14,
 
                           keyboardType: TextInputType.phone,
                           needTitle: true,
@@ -203,11 +203,11 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                   backgroundColor: const Color(0xFF111111),
                                   textStyle: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                   ),
                                   searchTextStyle: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                   ),
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(30),
@@ -270,7 +270,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                     '+$_selectedCountryCode',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontSize: 16,
+                                      fontSize: 14,
                                     ),
                                   ),
                                   const Icon(
@@ -313,7 +313,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                 text: TextSpan(
                                   style: TextStyle(
                                     color: Color(0xFFB0B0B0),
-                                    fontSize: 13,
+                                    fontSize: 11,
                                     height: 1.4,
                                   ),
                                   children: [
@@ -323,7 +323,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       )!.byClickingContinue,
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                         decoration: TextDecoration.none,
                                       ),
@@ -333,7 +333,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                           " ${AppLocalizations.of(context)!.termsAndConditions} ",
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         decoration: TextDecoration.none,
                                       ),
@@ -342,7 +342,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       text: AppLocalizations.of(context)!.and,
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                         decoration: TextDecoration.none,
                                       ),
@@ -352,7 +352,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                           " ${AppLocalizations.of(context)!.privacyPolicy} ",
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         decoration: TextDecoration.none,
                                       ),
@@ -366,7 +366,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                         SizedBox(height: 25),
                         PremiumButton(
                           showLoader: _isLoading,
-                          fontsize: 18,
+                          fontsize: 16,
                           text: AppLocalizations.of(context)!.continueText,
                           onTap: () async {
                             if (_formKey.currentState!.validate() &&
@@ -446,7 +446,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                         //         'OR',
                         //         style: TextStyle(
                         //           color: Colors.white.withAlpha(150),
-                        //           fontSize: 14,
+                        //           fontSize: 12,
                         //           fontWeight: FontWeight.w500,
                         //           letterSpacing: 1.5,
                         //         ),

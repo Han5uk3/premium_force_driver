@@ -98,7 +98,7 @@ class Bookingcard extends StatelessWidget {
                           Text(
                             loc.service,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 10,
                               fontWeight: FontWeight.w500,
                               color: Colors.white,
                             ),
@@ -107,7 +107,7 @@ class Bookingcard extends StatelessWidget {
                           Text(
                             type,
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
@@ -117,7 +117,7 @@ class Bookingcard extends StatelessWidget {
                     : Text(
                         type,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -149,7 +149,7 @@ class Bookingcard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         pickup,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -178,7 +178,7 @@ class Bookingcard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           dropoff,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
@@ -213,7 +213,7 @@ class Bookingcard extends StatelessWidget {
                       Text(
                         date,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -233,7 +233,7 @@ class Bookingcard extends StatelessWidget {
                       Text(
                         time,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -253,7 +253,7 @@ class Bookingcard extends StatelessWidget {
                       Text(
                         ride,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -263,7 +263,7 @@ class Bookingcard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
 
             if (rating != null &&
                 (status.toLowerCase().trim() == 'completed' ||
@@ -288,7 +288,7 @@ class Bookingcard extends StatelessWidget {
                             style: TextStyle(
                               color: Colors.amber,
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 10,
                             ),
                           ),
                           Row(
@@ -310,7 +310,7 @@ class Bookingcard extends StatelessWidget {
                           reviewText!,
                           style: const TextStyle(
                             color: Colors.white70,
-                            fontSize: 12,
+                            fontSize: 10,
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -322,28 +322,25 @@ class Bookingcard extends StatelessWidget {
             ],
             // Action buttons based on status
             if (!isFromReviewAndConfirm && _shouldShowActions())
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (status.toLowerCase() == 'p' ||
-                        status.toLowerCase() == 'pending')
-                      ..._buildPendingActions(loc)
-                    else if (status.toLowerCase() == 'ac' ||
-                        status.toLowerCase() == 'accepted' ||
-                        status.toLowerCase() == 'assigned')
-                      ..._buildAcceptedActions(loc)
-                    else if (status.toLowerCase() == 'starttracking' ||
-                        status.toLowerCase() == 'started')
-                      ...(isChauffeur
-                          ? _buildChauffeurTrackingActions(loc)
-                          : _buildTrackingActions(loc))
-                    else if (status.toLowerCase() == 'og' ||
-                        status.toLowerCase() == 'ongoing')
-                      ..._buildOngoingActions(loc),
-                  ],
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  if (status.toLowerCase() == 'p' ||
+                      status.toLowerCase() == 'pending')
+                    ..._buildPendingActions(loc)
+                  else if (status.toLowerCase() == 'ac' ||
+                      status.toLowerCase() == 'accepted' ||
+                      status.toLowerCase() == 'assigned')
+                    ..._buildAcceptedActions(loc)
+                  else if (status.toLowerCase() == 'starttracking' ||
+                      status.toLowerCase() == 'started')
+                    ...(isChauffeur
+                        ? _buildChauffeurTrackingActions(loc)
+                        : _buildTrackingActions(loc))
+                  else if (status.toLowerCase() == 'og' ||
+                      status.toLowerCase() == 'ongoing')
+                    ..._buildOngoingActions(loc),
+                ],
               ),
           ],
         ),
@@ -365,7 +362,7 @@ class Bookingcard extends StatelessWidget {
                   : loc.dropoff
             : getStatusText(status, loc),
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 8,
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
@@ -468,7 +465,7 @@ class Bookingcard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(loc.reject, style: const TextStyle(fontSize: 12)),
+          child: Text(loc.reject, style: const TextStyle(fontSize: 10)),
         ),
       ),
       const SizedBox(width: 8),
@@ -483,7 +480,7 @@ class Bookingcard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(loc.accept, style: const TextStyle(fontSize: 12)),
+          child: Text(loc.accept, style: const TextStyle(fontSize: 10)),
         ),
       ),
     ];
@@ -493,12 +490,11 @@ class Bookingcard extends StatelessWidget {
     if (!isToday) {
       return [
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Center(
             child: Text(
-              loc.startTrackingAvailableOnDate,
+              loc.startRideAvailableOnDate,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54, fontSize: 13),
+              style: TextStyle(color: Colors.white54, fontSize: 11),
             ),
           ),
         ),
@@ -511,12 +507,12 @@ class Bookingcard extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.only(bottom: 8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(loc.startTracking, style: const TextStyle(fontSize: 12)),
+          child: Text(loc.startRide, style: const TextStyle(fontSize: 10)),
         ),
       ),
     ];
@@ -535,7 +531,7 @@ class Bookingcard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(loc.getDirections, style: const TextStyle(fontSize: 12)),
+          child: Text(loc.directions, style: const TextStyle(fontSize: 10)),
         ),
       ),
       const SizedBox(width: 8),
@@ -558,10 +554,8 @@ class Bookingcard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                TrackingService().isPaused
-                    ? loc.resumeTracking
-                    : loc.pauseTracking,
-                style: const TextStyle(fontSize: 12),
+                TrackingService().isPaused ? loc.resumeRide : loc.pauseRide,
+                style: const TextStyle(fontSize: 10),
               ),
             );
           },
@@ -602,10 +596,7 @@ class Bookingcard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(
-                  loc.stopTracking,
-                  style: const TextStyle(fontSize: 12),
-                ),
+                child: Text(loc.endRide, style: const TextStyle(fontSize: 10)),
               );
             }
 
@@ -619,10 +610,7 @@ class Bookingcard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
-                loc.stopTracking,
-                style: const TextStyle(fontSize: 12),
-              ),
+              child: Text(loc.endRide, style: const TextStyle(fontSize: 10)),
             );
           },
         ),
@@ -645,7 +633,7 @@ class Bookingcard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(loc.getDirections, style: const TextStyle(fontSize: 12)),
+          child: Text(loc.getDirections, style: const TextStyle(fontSize: 10)),
         ),
       ),
       const SizedBox(width: 8),
@@ -668,10 +656,8 @@ class Bookingcard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                TrackingService().isPaused
-                    ? loc.resumeTracking
-                    : loc.pauseTracking,
-                style: const TextStyle(fontSize: 12),
+                TrackingService().isPaused ? loc.resumeRide : loc.pauseRide,
+                style: const TextStyle(fontSize: 10),
               ),
             );
           },
@@ -712,10 +698,7 @@ class Bookingcard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(
-                  loc.stopTracking,
-                  style: const TextStyle(fontSize: 12),
-                ),
+                child: Text(loc.endRide, style: const TextStyle(fontSize: 10)),
               );
             }
 
@@ -729,10 +712,7 @@ class Bookingcard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
-                loc.stopTracking,
-                style: const TextStyle(fontSize: 12),
-              ),
+              child: Text(loc.endRide, style: const TextStyle(fontSize: 10)),
             );
           },
         ),
@@ -753,7 +733,7 @@ class Bookingcard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(loc.complete, style: const TextStyle(fontSize: 12)),
+          child: Text(loc.complete, style: const TextStyle(fontSize: 10)),
         ),
       ),
     ];

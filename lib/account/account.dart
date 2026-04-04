@@ -6,7 +6,7 @@ import 'package:premium_force_driver/authentication/login.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
-import 'package:premium_force_driver/storage/user_local_storage.dart';
+
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
 import 'package:provider/provider.dart';
 
@@ -18,10 +18,11 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  bool notificationActive = UserLocalStorage.getNotificationStatus();
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final authProvider = context.watch<AuthProvider>();
+    debugPrint("Driver UID: ${authProvider.driver?.uid}");
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -59,22 +60,7 @@ class _AccountPageState extends State<AccountPage> {
                   svgPath: "",
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => const NotificationScreen(),
-                  //   ),
-                  // );
-                },
-                child: profileTile(
-                  loc: loc,
-                  isNotification: true,
-                  title: loc.notifications,
-                  icon: Icons.notifications,
-                ),
-              ),
+
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -103,18 +89,6 @@ class _AccountPageState extends State<AccountPage> {
                   icon: Icons.logout,
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  _showDeleteAccountBottomSheet(context, loc);
-                },
-                child: profileTile(
-                  loc: loc,
-                  isDelete: true,
-                  title: loc.deleteAccount,
-                  icon: Icons.delete,
-                  isLast: true,
-                ),
-              ),
             ],
           ),
         ),
@@ -139,7 +113,7 @@ class _AccountPageState extends State<AccountPage> {
             loc.account,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 20,
+              fontSize: 18,
               color: Colors.white,
               letterSpacing: 0.5,
             ),
@@ -158,7 +132,7 @@ class _AccountPageState extends State<AccountPage> {
     bool isSvg = false,
     bool isDelete = false,
     bool isLogout = false,
-    bool isNotification = false,
+
     bool isLast = false,
     String? svgPath,
   }) {
@@ -188,81 +162,24 @@ class _AccountPageState extends State<AccountPage> {
               child: Icon(icon, color: Colors.white),
             ),
       trailing: !(isDelete || isLogout)
-          ? isNotification
-                ? GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        notificationActive = !notificationActive;
-                      });
-                      UserLocalStorage.saveNotificationStatus(
-                        notificationActive,
-                      );
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 70,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.black),
-                      ),
-                      child: Stack(
-                        children: [
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
-                            left: notificationActive ? 35.0 : 0.0,
-                            right: notificationActive ? 0.0 : 35.0,
-                            top: 0,
-                            bottom: 0,
-                            child: Container(
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: notificationActive
-                                    ? const Color(0xFFC0C0C0)
-                                    : Colors.grey,
-                                borderRadius: BorderRadius.circular(4),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withAlpha(80),
-                                    blurRadius: 2,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                notificationActive ? loc.on : loc.off,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : ShaderMask(
-                    shaderCallback: (Rect bounds) {
-                      return const LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Color(0xFF404040),
-                          Color(0xFFC0C0C0),
-                          Color(0xFF808080),
-                        ],
-                      ).createShader(bounds);
-                    },
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  )
+          ? ShaderMask(
+              shaderCallback: (Rect bounds) {
+                return const LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Color(0xFF404040),
+                    Color(0xFFC0C0C0),
+                    Color(0xFF808080),
+                  ],
+                ).createShader(bounds);
+              },
+              child: const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 16,
+              ),
+            )
           : null,
       title: Text(title, style: TextStyle(color: Colors.white)),
     );
@@ -313,7 +230,7 @@ class _AccountPageState extends State<AccountPage> {
                         loc.logout,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
+                          fontSize: 18,
                         ),
                       ),
                     ),
@@ -331,7 +248,7 @@ class _AccountPageState extends State<AccountPage> {
                 child: Text(
                   loc.logoutConfirm,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
               Padding(
@@ -339,7 +256,7 @@ class _AccountPageState extends State<AccountPage> {
                 child: Text(
                   loc.loginAgainMessage,
                   textAlign: TextAlign.start,
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
               const SizedBox(height: 80),
@@ -362,7 +279,7 @@ class _AccountPageState extends State<AccountPage> {
                             loc.cancel,
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 16,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -387,133 +304,10 @@ class _AccountPageState extends State<AccountPage> {
                           }
                         },
                         text: loc.logout,
-                        fontsize: 16,
+                        fontsize: 14,
                         showLoader: false,
                       ),
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 24),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showDeleteAccountBottomSheet(
-    BuildContext context,
-    AppLocalizations loc,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext sheetContext) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF303030),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 24,
-                  bottom: 12,
-                  left: 24,
-                  right: 24,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        loc.deleteAccount,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(sheetContext),
-                      child: Icon(Icons.close, color: Colors.white, size: 24),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(color: Colors.white, thickness: 1),
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  loc.deleteAccountConfirm,
-                  textAlign: TextAlign.start,
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  loc.deleteAccountMessage,
-                  textAlign: TextAlign.start,
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-              const SizedBox(height: 80),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(sheetContext),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.grey.shade600),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            loc.cancel,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Expanded(
-                    //   child: PremiumButton(
-                    //     text: loc.deleteAccount,
-                    //     onTap: () async {
-                    //       final authProvider = context.read<AuthProvider>();
-                    //       Navigator.pop(sheetContext); // Close bottom sheet
-                    //       await authProvider.deleteAccount();
-                    //       if (context.mounted) {
-                    //         Navigator.pushAndRemoveUntil(
-                    //           context,
-                    //           SmoothNavigation.route(
-                    //             const PremiumForceLoginPage(),
-                    //           ),
-                    //           (route) => false,
-                    //         );
-                    //       }
-                    //     },
-                    //     fontsize: 16,
-                    //     showLoader: false,
-                    //   ),
-                    // ),
                   ],
                 ),
               ),

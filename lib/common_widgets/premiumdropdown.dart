@@ -45,7 +45,7 @@ class _PremiumDropDownState extends State<PremiumDropDown> {
         if (widget.title.isNotEmpty) ...[
           Text(
             widget.title,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
           const SizedBox(height: 8),
         ],
@@ -74,7 +74,7 @@ class _PremiumDropDownState extends State<PremiumDropDown> {
               ), // white icon
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 14,
               ), // white texts
               onChanged: (String? newValue) {
                 setState(() {

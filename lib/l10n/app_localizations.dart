@@ -1280,6 +1280,36 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get retry;
 
+  /// No description provided for @startRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Ride'**
+  String get startRide;
+
+  /// No description provided for @pauseRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause Ride'**
+  String get pauseRide;
+
+  /// No description provided for @endRide.
+  ///
+  /// In en, this message translates to:
+  /// **'End Ride'**
+  String get endRide;
+
+  /// No description provided for @resumeRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Ride'**
+  String get resumeRide;
+
+  /// No description provided for @directions.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions'**
+  String get directions;
+
   /// No description provided for @couldNotLaunchMaps.
   ///
   /// In en, this message translates to:
@@ -1490,11 +1520,53 @@ abstract class AppLocalizations {
   /// **'Reviewed'**
   String get reviewed;
 
+  /// No description provided for @rideStoppedSyncPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride stopped, sync pending'**
+  String get rideStoppedSyncPending;
+
+  /// No description provided for @ridePaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride paused'**
+  String get ridePaused;
+
+  /// No description provided for @rideResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride resumed'**
+  String get rideResumed;
+
+  /// No description provided for @endRideConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to end this ride?'**
+  String get endRideConfirm;
+
+  /// No description provided for @startRideConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to start this ride?'**
+  String get startRideConfirm;
+
+  /// No description provided for @rideStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride started'**
+  String get rideStarted;
+
   /// No description provided for @tracking.
   ///
   /// In en, this message translates to:
   /// **'Tracking'**
   String get tracking;
+
+  /// No description provided for @startRideAvailableOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Ride will be available on booking date'**
+  String get startRideAvailableOnDate;
 
   /// No description provided for @startTrackingAvailableOnDate.
   ///

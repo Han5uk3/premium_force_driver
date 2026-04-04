@@ -289,17 +289,20 @@ class AuthProvider extends ChangeNotifier {
         // --- Save tokens ---
         final data = result['data'] as Map<String, dynamic>?;
         final tokens =
-            (result['tokens'] ?? data?['tokens']) as Map<String, dynamic>?;
+            (result['tokens'] ?? data?['tokens'] ?? result) as Map<String, dynamic>?;
 
         final accessToken =
-            (result['accessToken'] ?? tokens?['accessToken']) as String?;
+            (result['accessToken'] ?? tokens?['accessToken'] ?? result['token']) as String?;
         final refreshToken =
             (result['refreshToken'] ?? tokens?['refreshToken']) as String?;
+        final expiresIn = 
+            (result['expiresIn'] ?? tokens?['expiresIn'] ?? result['expires_in'] ?? tokens?['expires_in']) as int?;
 
         if (accessToken != null && refreshToken != null) {
           await UserLocalStorage.saveTokens(
             accessToken: accessToken,
             refreshToken: refreshToken,
+            expiryDurationSeconds: expiresIn,
           );
         } else if (accessToken != null) {
           await UserLocalStorage.saveToken(accessToken);

@@ -118,7 +118,7 @@ class _SignUpPageState extends State<SignUpPage>
                     loc.chooseProfilePicture,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -214,7 +214,7 @@ class _SignUpPageState extends State<SignUpPage>
             label,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -446,7 +446,7 @@ class _SignUpPageState extends State<SignUpPage>
                             AppLocalizations.of(context)!.tapToAddPhoto,
                             style: TextStyle(
                               color: Colors.white.withAlpha(100),
-                              fontSize: 12,
+                              fontSize: 10,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
@@ -461,7 +461,7 @@ class _SignUpPageState extends State<SignUpPage>
                           hintText: AppLocalizations.of(
                             context,
                           )!.enterYourFullName,
-                          fontsize: 15,
+                          fontsize: 13,
                           keyboardType: TextInputType.name,
                           needTitle: true,
                           obscureText: false,
@@ -503,7 +503,7 @@ class _SignUpPageState extends State<SignUpPage>
                           title: AppLocalizations.of(context)!.phoneNumber,
                           controller: _phoneController,
                           hintText: widget.phoneNumber,
-                          fontsize: 15,
+                          fontsize: 13,
                           needTitle: true,
                           obscureText: false,
                           enabled: false,
@@ -535,7 +535,7 @@ class _SignUpPageState extends State<SignUpPage>
                           hintText: AppLocalizations.of(
                             context,
                           )!.enterYourEmailAddress,
-                          fontsize: 15,
+                          fontsize: 13,
                           keyboardType: TextInputType.emailAddress,
                           needTitle: true,
                           obscureText: false,
@@ -588,7 +588,7 @@ class _SignUpPageState extends State<SignUpPage>
                           hintText: AppLocalizations.of(
                             context,
                           )!.enterSpecialIdIFAvailable,
-                          fontsize: 15,
+                          fontsize: 13,
                           needTitle: true,
                           obscureText: false,
                           prefixIcon: ShaderMask(
@@ -614,7 +614,7 @@ class _SignUpPageState extends State<SignUpPage>
                         // Sign Up button
                         PremiumButton(
                           showLoader: _isLoading,
-                          fontsize: 18,
+                          fontsize: 16,
                           text: AppLocalizations.of(context)!.createAccount,
                           onTap: _isLoading ? () {} : _handleSignUp,
                         ),
@@ -644,7 +644,7 @@ class _SignUpPageState extends State<SignUpPage>
           AppLocalizations.of(context)!.location,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -687,7 +687,7 @@ class _SignUpPageState extends State<SignUpPage>
                       color: _locationController.text.isEmpty
                           ? Colors.white.withAlpha(180)
                           : Colors.white,
-                      fontSize: 15,
+                      fontSize: 13,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -734,7 +734,7 @@ class _SignUpPageState extends State<SignUpPage>
           title: Text(
             AppLocalizations.of(context)!.createAccount,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               color: Colors.white,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,

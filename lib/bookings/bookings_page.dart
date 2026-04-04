@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'booking_details_page.dart';
+import 'package:premium_force_driver/common_widgets/premiumloader.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -134,11 +135,22 @@ class _BookingsPageState extends State<BookingsPage>
     List<dynamic> bookings,
     AppLocalizations loc,
   ) {
+    return RefreshIndicator(
+      onRefresh: () => provider.refreshBookings(),
+      backgroundColor: Colors.grey.shade800,
+      color: Colors.white,
+      child: _buildBookingsContent(provider, bookings, loc),
+    );
+  }
+
+  Widget _buildBookingsContent(
+    BookingsProvider provider,
+    List<dynamic> bookings,
+    AppLocalizations loc,
+  ) {
     if (provider.status == BookingStatus.loading) {
-      return Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade400),
-        ),
+      return const Center(
+        child: PremiumLoader(size: 40),
       );
     }
 
@@ -151,13 +163,13 @@ class _BookingsPageState extends State<BookingsPage>
             const SizedBox(height: 16),
             Text(
               loc.errorLoadingBookings,
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: Colors.white, fontSize: 14),
             ),
             const SizedBox(height: 8),
             Text(
               provider.errorMessage ?? loc.pleaseTryAgain,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -172,19 +184,21 @@ class _BookingsPageState extends State<BookingsPage>
     }
 
     if (bookings.isEmpty) {
-      return _EmptyBookingState(
-        icon: Icons.bookmark_outline,
-        message: _getEmptyMessage(_tabController.index, loc),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+          _EmptyBookingState(
+            icon: Icons.bookmark_outline,
+            message: _getEmptyMessage(_tabController.index, loc),
+          ),
+        ],
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () => provider.refreshBookings(),
-      backgroundColor: Colors.grey.shade800,
-      color: Colors.white,
-      child: ListView.builder(
+    return ListView.builder(
         padding: const EdgeInsets.all(16),
-        physics: const BouncingScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: bookings.length,
         itemBuilder: (context, index) {
           final booking = bookings[index];
@@ -303,8 +317,8 @@ class _BookingsPageState extends State<BookingsPage>
                   onStartTracking: () async {
                     final confirm = await _showConfirmationDialog(
                       context,
-                      loc.startTracking,
-                      loc.startTrackingConfirm,
+                      loc.startRide,
+                      loc.startRideConfirm,
                     );
                     if (confirm != true) return;
 
@@ -326,7 +340,7 @@ class _BookingsPageState extends State<BookingsPage>
                       if (context.mounted) {
                         AnimatedSnackBar.show(
                           context,
-                          provider.actionMessage ?? loc.trackingStarted,
+                          provider.actionMessage ?? loc.rideStarted,
                           'S',
                         );
                         _openMaps(booking);
@@ -336,8 +350,8 @@ class _BookingsPageState extends State<BookingsPage>
                   onStopTracking: () async {
                     final confirm = await _showConfirmationDialog(
                       context,
-                      loc.stopTracking,
-                      loc.stopTrackingConfirm,
+                      loc.endRide,
+                      loc.endRideConfirm,
                     );
                     if (confirm != true) return;
 
@@ -348,7 +362,7 @@ class _BookingsPageState extends State<BookingsPage>
                         success
                             ? (provider.actionMessage ?? loc.tripEnded)
                             : (provider.actionMessage ??
-                                  loc.trackingStoppedSyncPending),
+                                  loc.rideStoppedSyncPending),
                         success ? 'S' : 'E',
                       );
                     }
@@ -364,7 +378,7 @@ class _BookingsPageState extends State<BookingsPage>
                       setState(() {});
                       AnimatedSnackBar.show(
                         context,
-                        AppLocalizations.of(context)!.trackingPaused,
+                        AppLocalizations.of(context)!.ridePaused,
                         'S',
                       );
                     }
@@ -377,7 +391,7 @@ class _BookingsPageState extends State<BookingsPage>
                       setState(() {});
                       AnimatedSnackBar.show(
                         context,
-                        AppLocalizations.of(context)!.trackingResumed,
+                        AppLocalizations.of(context)!.rideResumed,
                         'S',
                       );
                     }
@@ -388,8 +402,7 @@ class _BookingsPageState extends State<BookingsPage>
             ],
           );
         },
-      ),
-    );
+      );
   }
 
   void _openMaps(dynamic booking) async {
@@ -461,7 +474,7 @@ class _BookingsPageState extends State<BookingsPage>
             loc.bookings,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 20,
+              fontSize: 18,
               color: Colors.white,
               letterSpacing: 0.5,
             ),
@@ -579,7 +592,7 @@ class _GradientTab extends AnimatedWidget implements PreferredSizeWidget {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 color: Colors.grey.shade500,
                 fontWeight: FontWeight.normal,
               ),
@@ -595,7 +608,7 @@ class _GradientTab extends AnimatedWidget implements PreferredSizeWidget {
               child: Text(
                 text,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: Colors.grey.shade800,
                   fontWeight: FontWeight.bold,
                 ),
@@ -661,7 +674,7 @@ class _EmptyBookingState extends StatelessWidget {
                 message,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   color: Colors.white60,
                   height: 1.6,
                   fontWeight: FontWeight.w400,

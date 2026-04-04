@@ -174,7 +174,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               style: const TextStyle(
                                 color: Color(0xFFE4A46B),
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                                fontSize: 10,
                               ),
                             ),
                           ],
@@ -188,7 +188,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               _currentBooking.specialRequestText!,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 14,
+                                fontSize: 12,
                               ),
                             ),
                           ),
@@ -283,7 +283,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 14,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -291,7 +291,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             "${_currentBooking.customer!.countryCode} ${_currentBooking.customer!.phoneNumber}",
                             style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 14,
+                              fontSize: 12,
                             ),
                           ),
                         ],
@@ -309,6 +309,65 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
               ),
               const SizedBox(height: 20),
             ],
+
+            // Customer Review
+            Consumer<BookingsProvider>(
+              builder: (context, provider, _) {
+                final review = provider.bookingReviews[_currentBooking.id];
+                if (review == null) return const SizedBox.shrink();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildSectionTitle(loc.customerInfo + " Review"), // Assuming "Review" is clear enough if l10n is missing for it
+                    _buildSectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ...List.generate(5, (index) {
+                                return Icon(
+                                  index < review.rate ? Icons.star : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 18,
+                                );
+                              }),
+                              const SizedBox(width: 8),
+                              Text(
+                                review.rate.toString(),
+                                style: const TextStyle(
+                                  color: Colors.amber,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            review.reviewText,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            dateFormat.format(review.createdAt),
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                );
+              },
+            ),
 
             // Actions
             _buildActions(context, loc),
@@ -373,7 +432,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.bold,
-          fontSize: 13,
+          fontSize: 11,
         ),
       ),
     );
@@ -387,7 +446,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         style: const TextStyle(
           color: Colors.white70,
           fontWeight: FontWeight.w600,
-          fontSize: 14,
+          fontSize: 12,
         ),
       ),
     );
@@ -422,14 +481,14 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             children: [
               Text(
                 label,
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: const TextStyle(color: Colors.white54, fontSize: 10),
               ),
               const SizedBox(height: 2),
               Text(
                 value,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -494,11 +553,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     }
 
     if (status == 'ac' || status == 'accepted' || status == 'assigned') {
-      return _buildActionButton(loc.startTracking, Colors.blue, () async {
+      return _buildActionButton(loc.startRide, Colors.blue, () async {
         final confirm = await _showConfirmationDialog(
           context,
-          loc.startTracking,
-          loc.startTrackingConfirm,
+          loc.startRide,
+          loc.startRideConfirm,
         );
         if (confirm != true) return;
 
@@ -518,7 +577,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           );
           AnimatedSnackBar.show(
             context,
-            provider.actionMessage ?? loc.trackingStarted,
+            provider.actionMessage ?? loc.rideStarted,
             'S',
           );
           _updateBooking(provider.getBookingById(_currentBooking.id));
@@ -531,7 +590,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       return Column(
         children: [
           _buildActionButton(
-            loc.getDirections,
+            loc.directions,
             Colors.orange.shade800,
             _openMaps,
             icon: Icons.directions,
@@ -542,8 +601,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             builder: (context, _) {
               return _buildActionButton(
                 TrackingService().isPaused
-                    ? loc.resumeTracking
-                    : loc.pauseTracking,
+                    ? loc.resumeRide
+                    : loc.pauseRide,
                 TrackingService().isPaused
                     ? Colors.green.shade700
                     : Colors.orange.shade700,
@@ -561,8 +620,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     AnimatedSnackBar.show(
                       context,
                       TrackingService().isPaused
-                          ? loc.trackingPaused
-                          : loc.trackingResumed,
+                          ? loc.ridePaused
+                          : loc.rideResumed,
                       'S',
                     );
                   }
@@ -577,66 +636,50 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           StreamBuilder<Position>(
             stream: TrackingService().positionStream,
             builder: (context, snapshot) {
-              bool canStop = false;
-              if (_currentBooking.dropoffLatitude != 0 && snapshot.hasData) {
-                final pos = snapshot.data!;
-                final distance = Geolocator.distanceBetween(
-                  pos.latitude,
-                  pos.longitude,
-                  _currentBooking.dropoffLatitude,
-                  _currentBooking.dropoffLongitude,
-                );
-                if (distance <= 500) canStop = true;
-              } else if (_currentBooking.dropoffLatitude == 0 ||
-                  _currentBooking.isHourly) {
-                canStop = true;
-              }
 
               return _buildActionButton(
-                loc.stopTracking,
+                loc.endRide,
                 Colors.red,
-                canStop
-                    ? () async {
-                        final confirm = await _showConfirmationDialog(
-                          context,
-                          loc.stopTracking,
-                          loc.stopTrackingConfirm,
-                        );
-                        if (confirm != true) return;
-                        if (_currentBooking.isHourly) {
-                          final success = await provider.stopTracking(
-                            _currentBooking.id,
-                          );
-                          if (mounted) {
-                            AnimatedSnackBar.show(
-                              context,
-                              success
-                                  ? (provider.actionMessage ?? loc.tripEnded)
-                                  : loc.trackingStoppedSyncPending,
-                              success ? 'S' : 'E',
-                            );
-                            _updateBooking(
-                              provider.getBookingById(_currentBooking.id),
-                            );
-                          }
-                        } else {
-                          await TrackingService().stopTracking();
-                          final success = await provider.completeBooking(
-                            _currentBooking.id,
-                          );
-                          if (success && mounted) {
-                            AnimatedSnackBar.show(
-                              context,
-                              provider.actionMessage ?? loc.bookingCompleted,
-                              'S',
-                            );
-                            _updateBooking(
-                              provider.getBookingById(_currentBooking.id),
-                            );
-                          }
-                        }
-                      }
-                    : null,
+                () async {
+                  final confirm = await _showConfirmationDialog(
+                    context,
+                    loc.endRide,
+                    loc.endRideConfirm,
+                  );
+                  if (confirm != true) return;
+                  if (_currentBooking.isHourly) {
+                    final success = await provider.stopTracking(
+                      _currentBooking.id,
+                    );
+                    if (mounted) {
+                      AnimatedSnackBar.show(
+                        context,
+                        success
+                            ? (provider.actionMessage ?? loc.tripEnded)
+                            : loc.rideStoppedSyncPending,
+                        success ? 'S' : 'E',
+                      );
+                      _updateBooking(
+                        provider.getBookingById(_currentBooking.id),
+                      );
+                    }
+                  } else {
+                    await TrackingService().stopTracking();
+                    final success = await provider.completeBooking(
+                      _currentBooking.id,
+                    );
+                    if (success && mounted) {
+                      AnimatedSnackBar.show(
+                        context,
+                        provider.actionMessage ?? loc.bookingCompleted,
+                        'S',
+                      );
+                      _updateBooking(
+                        provider.getBookingById(_currentBooking.id),
+                      );
+                    }
+                  }
+                },
                 icon: Icons.stop_circle,
               );
             },
@@ -691,7 +734,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 8)],
           Text(
             label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),

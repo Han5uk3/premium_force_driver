@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/models/booking.dart';
+import 'package:premium_force_driver/models/review.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
 
@@ -24,6 +25,9 @@ class BookingsProvider extends ChangeNotifier {
 
   List<BookingModel> _completedBookings = [];
   List<BookingModel> get completedBookings => _completedBookings;
+
+  Map<String, ReviewModel> _bookingReviews = {};
+  Map<String, ReviewModel> get bookingReviews => _bookingReviews;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -76,6 +80,9 @@ class BookingsProvider extends ChangeNotifier {
       // Filter bookings by status
       _filterBookingsByStatus();
 
+      // Fetch reviews to link them to bookings
+      await fetchReviews();
+
       _status = BookingStatus.loaded;
       notifyListeners();
     } catch (e) {
@@ -122,6 +129,9 @@ class BookingsProvider extends ChangeNotifier {
 
         // Update the booking in the list
         _updateBookingInList(bookingId, 'AC');
+        
+        // Refresh from backend to ensure full sync
+        await fetchBookings();
 
         notifyListeners();
         return true;
@@ -162,14 +172,35 @@ class BookingsProvider extends ChangeNotifier {
           notifyListeners();
           return false;
         }
+
+        // If API returns the updated booking, use it
+        final bookingData = response['booking'] ?? response['data'];
+        if (bookingData != null && bookingData is Map<String, dynamic>) {
+          final updatedBooking = BookingModel.fromJson(bookingData);
+          final index = _allBookings.indexWhere((b) => b.id == bookingId);
+          if (index != -1) {
+            _allBookings[index] = updatedBooking;
+            _filterBookingsByStatus();
+            
+            // Refresh from backend to ensure all lists are synced
+            await fetchBookings();
+            
+            notifyListeners();
+            return true;
+          }
+        }
       }
       
       _actionMessage = 'Tracking started!';
       _updateBookingInList(
         bookingId,
-        'started',
+        'starttracking', // Match backend status
         startedAt: startedAt,
       );
+      
+      // Refresh from backend for consistency
+      await fetchBookings();
+      
       notifyListeners();
       return true;
     } catch (e) {
@@ -181,92 +212,15 @@ class BookingsProvider extends ChangeNotifier {
   }
 
   Future<bool> stopTracking(String bookingId) async {
+    debugPrint('🛑 Stopping Tracking for Booking: ID = $bookingId');
     try {
-      final booking = _allBookings.firstWhere((b) => b.id == bookingId);
       final TrackingService trackingService = TrackingService();
-      bool success = false;
-      final stopTime = DateTime.now().toUtc();
       
-      if (booking.isHourly) {
-        // Calculate extra hours and payment
-        final int extraHours = await trackingService.stopTracking();
-        
-        final double discountPercentage = booking.discountPercentage ?? 0;
-        final double extraDiscount = (discountPercentage > 0) ? discountPercentage : 0;
-        
-        // Fetch the hourly rate for extra hours (using 999 as the special hour value)
-        double hourlyRate = 10.0; // Default fallback
-        try {
-          final carId = booking.originalIds?.carID;
-          const int sentinelHour = 999;
-          final rateResponse = await _apiService.getHourlyRate(
-            vehicleId: carId,
-          );
-          if (rateResponse['success'] == true) {
-            final data = rateResponse['data'];
-            if (data is Map && data.containsKey('pricing')) {
-              final List? pricing = data['pricing'] as List?;
-              if (pricing != null) {
-                // Find pricing entry for extra hours (sentinel 999)
-                final extraHourEntry = pricing.firstWhere(
-                  (element) => element['hour'] == sentinelHour,
-                  orElse: () => null,
-                );
-                if (extraHourEntry != null) {
-                  hourlyRate = (extraHourEntry['price'] ?? 10.0).toDouble();
-                } else if (pricing.isNotEmpty) {
-                    // Fallback to first available rate if 999 is missing
-                    hourlyRate = (pricing.first['price'] ?? 10.0).toDouble();
-                }
-              }
-            }
-          }
-        } catch (e) {
-          debugPrint('Error fetching hourly rate: $e');
-        }
+      // Stop local/firebase tracking
+      await trackingService.stopTracking();
 
-        final double extraPayment = extraHours * hourlyRate;
-        final status = extraHours > 0 ? 'paymentpending' : 'C';
-
-        success = await updateBookingStatus(
-          bookingId,
-          status,
-          isHourly: true,
-          extraData: {
-            ...booking.toJson()..remove('_id'),
-            'bookingID': bookingId,
-            'stoppedAt': stopTime.toIso8601String(),
-            'extraHours': extraHours,
-            'extraDiscount': extraDiscount,
-            'extraPayment': extraPayment,
-            'extraPaymentCompleted': false,
-            'bookingStatus': status,
-          },
-        );
-
-        if (success) {
-          _updateBookingInList(
-            bookingId,
-            status,
-            extraHours: extraHours,
-            stoppedAt: stopTime.toIso8601String(),
-          );
-          _actionMessage = extraHours > 0 ? 'Extra hours detected. Payment pending.' : 'Trip completed successfully!';
-        }
-      } else {
-        // Regular booking handling
-        await trackingService.stopTracking();
-        success = await completeBooking(bookingId);
-        
-        if (success) {
-          _updateBookingInList(
-            bookingId,
-            'C',
-            stoppedAt: stopTime.toIso8601String(),
-          );
-          _actionMessage = 'Trip completed successfully!';
-        }
-      }
+      // Call the completion API (handles extra hours, status, etc.)
+      bool success = await completeBooking(bookingId);
       
       notifyListeners();
       return success;
@@ -342,6 +296,9 @@ class BookingsProvider extends ChangeNotifier {
 
         // Remove booking from list or move to cancelled
         _updateBookingInList(bookingId, 'CA');
+        
+        // Refresh from backend
+        await fetchBookings();
 
         notifyListeners();
         return true;
@@ -360,12 +317,12 @@ class BookingsProvider extends ChangeNotifier {
 
   /// Complete a booking (mark trip as finished).
   Future<bool> completeBooking(String bookingId) async {
+    debugPrint('🎯 Completing Booking: ID = $bookingId');
     try {
-      final driverId = UserLocalStorage.getUserId();
       final token = await _apiService.ensureValidToken();
 
-      if (driverId == null || token == null) {
-        _actionMessage = 'Session expired or not logged in';
+      if (token == null) {
+        _actionMessage = 'Session expired. Please login again.';
         notifyListeners();
         return false;
       }
@@ -374,15 +331,30 @@ class BookingsProvider extends ChangeNotifier {
       final response = await _apiService.completeBooking(
         bookingId: bookingId,
         isHourly: booking.isHourly,
-        driverId: driverId,
+        driverId: booking.driverId,
         token: token,
       );
 
       if (response['success'] == true) {
         _actionMessage = 'Booking completed successfully!';
 
-        // Update the booking status
-        _updateBookingInList(bookingId, 'C');
+        // The API returns the updated booking data in the response
+        final bookingData = response['booking'] ?? response['data'];
+        if (bookingData != null && bookingData is Map<String, dynamic>) {
+          final updatedBooking = BookingModel.fromJson(bookingData);
+          
+          if (updatedBooking.status == 'paymentpending') {
+            _actionMessage = 'Extra hours detected. Payment pending.';
+          }
+
+          final index = _allBookings.indexWhere((b) => b.id == bookingId);
+          if (index != -1) {
+            _allBookings[index] = updatedBooking;
+            _filterBookingsByStatus();
+          }
+        }
+        // Always fetch from backend after completion to ensure statuses are correct
+        await fetchBookings();
 
         notifyListeners();
         return true;
@@ -396,6 +368,24 @@ class BookingsProvider extends ChangeNotifier {
       _actionMessage = 'Error completing booking: $e';
       notifyListeners();
       return false;
+    }
+  }
+
+  /// Fetch all reviews and Map them by booking ID.
+  Future<void> fetchReviews() async {
+    try {
+      final token = UserLocalStorage.getToken();
+      final reviews = await _apiService.getAllReviews(token: token);
+
+      _bookingReviews = {};
+      for (var review in reviews) {
+        if (review.bookingID != null) {
+          _bookingReviews[review.bookingID!.id] = review;
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Fetch Reviews error: $e');
     }
   }
 
