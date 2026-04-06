@@ -1010,7 +1010,7 @@ class ApiService {
   }) async {
     try {
       final response = await _dio.put(
-        '/drivers/$driverId/fcm-token',
+        '/drivers/$driverId/driver/fcm-token',
         data: {'fcmToken': fcmToken},
         options: token != null ? _authOptions(token) : null,
       );
