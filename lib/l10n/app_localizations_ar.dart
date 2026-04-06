@@ -746,10 +746,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rideStoppedSyncPending => 'تم إيقاف الرحلة، جاري المزامنة';
 
   @override
-  String get ridePaused => 'Ride paused';
+  String get ridePaused => 'تم إيقاف الرحلة';
 
   @override
-  String get rideResumed => 'Ride resumed';
+  String get rideResumed => 'تم استئناف الرحلة';
 
   @override
   String get endRideConfirm => 'هل أنت متأكد أنك تريد إنهاء هذه الرحلة؟';
