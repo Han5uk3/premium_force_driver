@@ -21,21 +21,21 @@ class ReviewModel {
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     return ReviewModel(
-      id: json['_id'] ?? '',
-      driverID: json['driverID'] != null && json['driverID'] is Map<String, dynamic>
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      driverID: json['driverID'] is Map<String, dynamic>
           ? ReviewDriverInfo.fromJson(json['driverID'])
           : null,
-      bookingID: json['bookingID'] != null && json['bookingID'] is Map<String, dynamic>
+      bookingID: json['bookingID'] is Map<String, dynamic>
           ? ReviewBookingInfo.fromJson(json['bookingID'])
           : null,
-      reviewText: json['reviewText'] ?? '',
+      reviewText: json['reviewText']?.toString() ?? '',
       rate: (json['rate'] ?? 0).toDouble(),
       isActive: json['isActive'] ?? false,
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt']) ?? DateTime.now()
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.tryParse(json['updatedAt']) ?? DateTime.now()
+          ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }
@@ -54,9 +54,9 @@ class ReviewDriverInfo {
 
   factory ReviewDriverInfo.fromJson(Map<String, dynamic> json) {
     return ReviewDriverInfo(
-      id: json['_id'] ?? '',
-      driverName: json['driverName'] ?? '',
-      phoneNumber: json['phoneNumber'] ?? '',
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      driverName: json['driverName']?.toString() ?? '',
+      phoneNumber: json['phoneNumber']?.toString() ?? '',
     );
   }
 }
@@ -80,13 +80,13 @@ class ReviewBookingInfo {
 
   factory ReviewBookingInfo.fromJson(Map<String, dynamic> json) {
     return ReviewBookingInfo(
-      id: json['_id'] ?? '',
-      pickupAddress: json['pickupAddress'] ?? '',
-      dropOffAddress: json['dropOffAddress'] ?? '',
-      carmodel: json['carmodel'] ?? '',
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      pickupAddress: json['pickupAddress']?.toString() ?? '',
+      dropOffAddress: json['dropOffAddress']?.toString() ?? '',
+      carmodel: json['carmodel']?.toString() ?? '',
       charge: (json['charge'] ?? 0).toDouble(),
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt']) ?? DateTime.now()
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }

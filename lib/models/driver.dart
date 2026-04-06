@@ -84,20 +84,18 @@ class DriverModel {
   /// - Location can be a string or nested object with lat/long
   factory DriverModel.fromJson(Map<String, dynamic> json) {
     // ── Name extraction ────────────────────────────────────
-    String firstName = json['firstName'] as String? ?? '';
-    String lastName = json['lastName'] as String? ?? '';
+    String firstName = json['firstName']?.toString() ?? '';
+    String lastName = json['lastName']?.toString() ?? '';
 
     if (firstName.isEmpty && lastName.isEmpty) {
       final name =
-          (json['driverName'] ?? json['username'] ?? json['name'] ?? '')
-              as String;
+          (json['driverName'] ?? json['username'] ?? json['name'] ?? '').toString();
       final parts = name.trim().split(' ');
       firstName = parts.isNotEmpty ? parts[0] : '';
       lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
     } else if (firstName.isEmpty) {
       final name =
-          (json['driverName'] ?? json['username'] ?? json['name'] ?? '')
-              as String;
+          (json['driverName'] ?? json['username'] ?? json['name'] ?? '').toString();
       firstName = name;
     }
 
@@ -155,12 +153,12 @@ class DriverModel {
     }
 
     return DriverModel(
-      uid: (json['_id'] ?? json['id'] ?? json['uid'] ?? '') as String,
+      uid: (json['_id'] ?? json['id'] ?? json['uid'] ?? '').toString(),
       firstName: firstName,
       lastName: lastName,
-      email: json['email'] as String? ?? '',
-      countryCode: (json['countryCode'] ?? '+966') as String,
-      phoneNumber: json['phoneNumber'] as String? ?? '',
+      email: json['email']?.toString() ?? '',
+      countryCode: (json['countryCode'] ?? '+966').toString(),
+      phoneNumber: json['phoneNumber']?.toString() ?? '',
       location: locationStr,
       lat: lat,
       long: lng,
@@ -179,12 +177,12 @@ class DriverModel {
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is DateTime
                 ? json['createdAt'] as DateTime
-                : DateTime.parse(json['createdAt'] as String))
+                : DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
           : DateTime.now(),
       updatedAt: json['updatedAt'] != null
           ? (json['updatedAt'] is DateTime
                 ? json['updatedAt'] as DateTime
-                : DateTime.parse(json['updatedAt'] as String))
+                : DateTime.tryParse(json['updatedAt'].toString()))
           : null,
     );
   }

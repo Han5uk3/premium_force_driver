@@ -652,22 +652,33 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        List<BookingModel> bookings = [];
+        List<dynamic> rawList = [];
 
-        if (data is Map<String, dynamic> && (data.containsKey('bookings') || data.containsKey('data'))) {
-          final bookingsList = (data['bookings'] ?? data['data']) as List?;
-          if (bookingsList != null) {
-            bookings = bookingsList
-                .map((b) => BookingModel.fromJson(b as Map<String, dynamic>))
-                .toList();
+        if (data is Map<String, dynamic>) {
+          // Check common keys for list data
+          final possibleKeys = ['bookings', 'data', 'result', 'results'];
+          for (var key in possibleKeys) {
+            if (data.containsKey(key) && data[key] is List) {
+              rawList = data[key];
+              break;
+            }
           }
+          // If no key found but it's a map, maybe the map itself is the object (not likely for 'all')
         } else if (data is List) {
-          bookings = data
-              .map((b) => BookingModel.fromJson(b as Map<String, dynamic>))
-              .toList();
+          rawList = data;
         }
 
-        return bookings;
+        return rawList.map((b) {
+          try {
+            if (b is Map<String, dynamic>) {
+              return BookingModel.fromJson(b);
+            }
+            return null;
+          } catch (e) {
+            debugPrint('⚠️ Model Error │ Failed to parse regular booking: $e');
+            return null;
+          }
+        }).whereType<BookingModel>().toList();
       }
       return [];
     } catch (e) {
@@ -691,27 +702,31 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        List<BookingModel> bookings = [];
+        List<dynamic> rawList = [];
 
-        if (data is Map<String, dynamic> &&
-            (data.containsKey('bookings') || data.containsKey('data'))) {
-          final bookingsList = (data['bookings'] ?? data['data']) as List?;
-          if (bookingsList != null) {
-            bookings =
-                bookingsList
-                    .map(
-                      (b) => BookingModel.fromJson(b as Map<String, dynamic>),
-                    )
-                    .toList();
+        if (data is Map<String, dynamic>) {
+          final possibleKeys = ['bookings', 'data', 'result', 'results'];
+          for (var key in possibleKeys) {
+            if (data.containsKey(key) && data[key] is List) {
+              rawList = data[key];
+              break;
+            }
           }
         } else if (data is List) {
-          bookings =
-              data
-                  .map((b) => BookingModel.fromJson(b as Map<String, dynamic>))
-                  .toList();
+          rawList = data;
         }
 
-        return bookings;
+        return rawList.map((b) {
+          try {
+            if (b is Map<String, dynamic>) {
+              return BookingModel.fromJson(b);
+            }
+            return null;
+          } catch (e) {
+            debugPrint('⚠️ Model Error │ Failed to parse hourly booking: $e');
+            return null;
+          }
+        }).whereType<BookingModel>().toList();
       }
       return [];
     } catch (e) {
@@ -886,8 +901,8 @@ class ApiService {
     final data = {
       'bookingID': bookingId,
       'bookingId': bookingId,
-      if (driverId != null) 'driverID': driverId,
-      if (driverId != null) 'driverId': driverId,
+      'driverID': ?driverId,
+      'driverId': ?driverId,
     };
 
     try {

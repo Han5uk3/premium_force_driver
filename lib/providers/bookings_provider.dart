@@ -410,20 +410,33 @@ class BookingsProvider extends ChangeNotifier {
       return dateB.compareTo(dateA);
     });
 
+    // 1. Upcoming: Assigned/Accepted (AC) and New (Pending)
     _upcomingBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
-      return s == 'p' || s == 'pending' || s == 'ac' || s == 'assigned' || s == 'accepted';
+      return s == 'ac' || s == 'assigned' || s == 'accepted' || s == 'confirmed' || s == 'p' || s == 'pending';
     }).toList();
     
-    _ongoingBookings = _allBookings.where((b) {
-      final s = b.status.toLowerCase().trim();
-      return s == 'og' || s == 'ongoing' || s == 'starttracking' || s == 'started' || s == 'stopped' || s == 'stoptracking' || s == 'paymentpending';
-    }).toList();
-    
+    // 2. Completed: Completed (C), Reviewed
     _completedBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
-      return s == 'c' || s == 'completed' || s == 'ca' || s == 'cancelled' || s == 'reviewed';
+      return s == 'c' || s == 'completed' || s == 'reviewed';
     }).toList();
+
+    // 3. Ongoing: All other statuses EXCEPT Pending (P) and Completed (C) and Cancelled (CA)
+    // The user said "all other", but we hide pending (P).
+    _ongoingBookings = _allBookings.where((b) {
+      final s = b.status.toLowerCase().trim();
+      if (s == 'p' || s == 'pending') return false; // Hide pending
+      if (s == 'ac' || s == 'assigned' || s == 'accepted' || s == 'confirmed') return false; // Already in Upcoming
+      if (s == 'c' || s == 'completed' || s == 'reviewed') return false; // Already in Completed
+      if (s == 'ca' || s == 'cancelled' || s == 'x') return false; // We don't show cancelled in Ongoing usually
+      return true; // Everything else (ongoing, started, starttracking, stoptracking, paymentpending, etc.)
+    }).toList();
+
+    debugPrint('📊 FILTERED: UI Counts: '
+        'Upcoming: ${_upcomingBookings.length}, '
+        'Ongoing: ${_ongoingBookings.length}, '
+        'Completed: ${_completedBookings.length}');
   }
 
   /// Update a booking in the local list after an action.

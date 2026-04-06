@@ -9,6 +9,8 @@ import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/common_widgets/voice_player.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final BookingModel booking;
@@ -91,9 +93,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             'airport',
                           )
                         ? loc.airportArrival
-                        : _currentBooking.dropoffLocation
-                              .toLowerCase()
-                              .contains('airport')
+                        : (_currentBooking.dropoffLocation?.toLowerCase().contains('airport') ?? false)
                         ? loc.airportDeparture
                         : loc.privateTransfer,
                     Icons.drive_eta,
@@ -129,7 +129,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     const SizedBox(height: 16),
                     _buildDetailRow(
                       loc.dropoff,
-                      _currentBooking.dropoffLocation,
+                      _currentBooking.dropoffLocation ?? '',
                       Icons.location_on,
                       color: Colors.red,
                     ),
@@ -204,6 +204,64 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
               ),
             ),
             const SizedBox(height: 20),
+
+            // Car Image and Name
+            if (_currentBooking.car?.carImage != null) ...[
+              _buildSectionTitle(loc.preferredModel),
+              _buildSectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        color: Colors.black,
+                        width: double.infinity,
+                        child: AspectRatio(
+                          aspectRatio: 1.7,
+                          child: CachedNetworkImage(
+                            imageUrl: _currentBooking.car!.carImage!,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) {
+                              return Shimmer.fromColors(
+                                baseColor: Colors.white.withAlpha(5),
+                                highlightColor: Colors.white.withAlpha(15),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              );
+                            },
+                            errorWidget: (context, url, error) => const Icon(
+                              Icons.directions_car,
+                              size: 50,
+                              color: Colors.white24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _currentBooking.displayBrand +
+                          " " +
+                          _currentBooking.displayName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
 
             // Passenger Info (New)
             if ((_currentBooking.passengerNames != null &&
@@ -319,7 +377,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildSectionTitle(loc.customerInfo + " Review"), // Assuming "Review" is clear enough if l10n is missing for it
+                    _buildSectionTitle("${loc.customerInfo} Review"), // Assuming "Review" is clear enough if l10n is missing for it
                     _buildSectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

@@ -248,7 +248,7 @@ class _BookingsPageState extends State<BookingsPage>
                       ? loc.airportDeparture
                       : loc.privateTransfer,
                   pickup: booking.pickupLocation,
-                  dropoff: booking.dropoffLocation,
+                  dropoff: booking.dropoffLocation ?? '',
                   date: dateFormat.format(effectiveDateTime),
                   time: timeFormat.format(effectiveDateTime),
                   ride: booking.displayRideType,

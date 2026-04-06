@@ -2,9 +2,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/common_widgets/premiumloader.dart';
-import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/common_widgets/textfield.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
@@ -26,9 +24,9 @@ class _ManageProfilePageState extends State<ManageProfilePage>
   final TextEditingController _phoneController = TextEditingController();
 
   File? _profileImage;
-  double? _latitude;
-  double? _longitude;
-  bool _isLoading = false;
+  double? latitude;
+  double? longitude;
+  final bool _isLoading = false;
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
 
@@ -61,8 +59,8 @@ class _ManageProfilePageState extends State<ManageProfilePage>
       _emailController.text = user.email;
       _phoneController.text = '${user.countryCode} ${user.phoneNumber}';
       _locationController.text = user.location ?? '';
-      _latitude = user.lat;
-      _longitude = user.long;
+      latitude = user.lat;
+      longitude = user.long;
     }
   }
 
@@ -216,50 +214,50 @@ class _ManageProfilePageState extends State<ManageProfilePage>
     );
   }
 
-  Future<void> _handleUpdateProfile() async {
-    if (!_formKey.currentState!.validate()) return;
+  // Future<void> _handleUpdateProfile() async {
+  //   if (!_formKey.currentState!.validate()) return;
 
-    final user = Provider.of<AuthProvider>(context, listen: false).driver;
-    if (user == null) return;
+  //   final user = Provider.of<AuthProvider>(context, listen: false).driver;
+  //   if (user == null) return;
 
-    setState(() => _isLoading = true);
+  //   setState(() => _isLoading = true);
 
-    final nameParts = _nameController.text.trim().split(' ');
-    final firstName = nameParts.first;
-    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+  //   final nameParts = _nameController.text.trim().split(' ');
+  //   final firstName = nameParts.first;
+  //   final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-    final success = await Provider.of<AuthProvider>(context, listen: false)
-        .updateDriverProfile(
-          firstName: firstName,
-          lastName: lastName,
-          email: _emailController.text.trim(),
-          location: _locationController.text.trim(),
-          lat: _latitude,
-          long: _longitude,
-          profileImage: _profileImage,
-        );
+  //   final success = await Provider.of<AuthProvider>(context, listen: false)
+  //       .updateDriverProfile(
+  //         firstName: firstName,
+  //         lastName: lastName,
+  //         email: _emailController.text.trim(),
+  //         location: _locationController.text.trim(),
+  //         lat:_latitude,
+  //         long: longitude,
+  //         profileImage: _profileImage,
+  //       );
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+  //   if (!mounted) return;
+  //   setState(() => _isLoading = false);
 
-    if (success) {
-      AnimatedSnackBar.show(
-        context,
-        AppLocalizations.of(context)!.profileUpdatedSuccessfully,
-        'S',
-      );
+  //   if (success) {
+  //     AnimatedSnackBar.show(
+  //       context,
+  //       AppLocalizations.of(context)!.profileUpdatedSuccessfully,
+  //       'S',
+  //     );
 
-      if (!mounted) return;
-      Navigator.pop(context);
-    } else {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      AnimatedSnackBar.show(
-        context,
-        authProvider.errorMessage ?? 'Update failed',
-        'E',
-      );
-    }
-  }
+  //     if (!mounted) return;
+  //     Navigator.pop(context);
+  //   } else {
+  //     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  //     AnimatedSnackBar.show(
+  //       context,
+  //       authProvider.errorMessage ?? 'Update failed',
+  //       'E',
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
