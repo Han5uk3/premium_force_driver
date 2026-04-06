@@ -305,7 +305,9 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                         // Profile Picture
                         Center(
                           child: GestureDetector(
-                            onTap: _pickImage,
+                            onTap: () {},
+
+                            //  _pickImage,
                             child: Stack(
                               children: [
                                 // Gradient border
@@ -372,56 +374,57 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                                   ),
                                 ),
                                 // Camera edit icon
-                                Positioned(
-                                  bottom: 2,
-                                  right: 2,
-                                  child: Container(
-                                    width: 34,
-                                    height: 34,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF404040),
-                                          Color(0xFFC0C0C0),
-                                          Color(0xFF808080),
-                                        ],
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withAlpha(100),
-                                          blurRadius: 6,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt_rounded,
-                                      color: Colors.black,
-                                      size: 18,
-                                    ),
-                                  ),
-                                ),
+                                // Positioned(
+                                //   bottom: 2,
+                                //   right: 2,
+                                //   child: Container(
+                                //     width: 34,
+                                //     height: 34,
+                                //     decoration: BoxDecoration(
+                                //       shape: BoxShape.circle,
+                                //       gradient: const LinearGradient(
+                                //         colors: [
+                                //           Color(0xFF404040),
+                                //           Color(0xFFC0C0C0),
+                                //           Color(0xFF808080),
+                                //         ],
+                                //       ),
+                                //       boxShadow: [
+                                //         BoxShadow(
+                                //           color: Colors.black.withAlpha(100),
+                                //           blurRadius: 6,
+                                //           offset: const Offset(0, 2),
+                                //         ),
+                                //       ],
+                                //     ),
+                                //     child: const Icon(
+                                //       Icons.camera_alt_rounded,
+                                //       color: Colors.black,
+                                //       size: 18,
+                                //     ),
+                                //   ),
+                                // ),
                               ],
                             ),
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Center(
-                          child: Text(
-                            AppLocalizations.of(context)!.tapToAddPhoto,
-                            style: TextStyle(
-                              color: Colors.white.withAlpha(100),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
 
+                        // Center(
+                        //   child: Text(
+                        //     AppLocalizations.of(context)!.tapToAddPhoto,
+                        //     style: TextStyle(
+                        //       color: Colors.white.withAlpha(100),
+                        //       fontSize: 10,
+                        //       fontWeight: FontWeight.w400,
+                        //     ),
+                        //   ),
+                        // ),
                         const SizedBox(height: 28),
 
                         // Name field
                         PremiumTextField(
+                          readOnly: true,
                           title: AppLocalizations.of(context)!.fullName,
                           controller: _nameController,
                           hintText: AppLocalizations.of(

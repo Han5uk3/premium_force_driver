@@ -198,6 +198,8 @@
   "startRide": "بدء الرحلة",
   "pauseRide": "إيقاف الرحلة مؤقتاً",
   "endRide": "إنهاء الرحلة",
+  "ridePaused": "تم إيقاف الرحلة",
+  "rideResumed": "تم استئناف الرحلة",
   "resumeRide": "استئناف الرحلة",
   "rideStoppedSyncPending": "تم إيقاف الرحلة، جاري المزامنة",
   "endRideConfirm": "هل أنت متأكد أنك تريد إنهاء هذه الرحلة؟",

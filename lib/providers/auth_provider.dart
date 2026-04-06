@@ -95,7 +95,10 @@ class AuthProvider extends ChangeNotifier {
   ///
   /// Calls `GET /api/drivers/:id`. Returns the [DriverModel] on success,
   /// or `null` if the driver was not found or a network error occurred.
-  Future<DriverModel?> fetchDriver({String? driverId}) async {
+  Future<DriverModel?> fetchDriver({
+    String? driverId,
+    bool forceTokenRefresh = false,
+  }) async {
     final id = driverId ?? UserLocalStorage.getUserId();
     if (id == null || id.isEmpty) {
       debugPrint('⚠️ Cannot fetch driver: no driverId stored');
@@ -103,7 +106,7 @@ class AuthProvider extends ChangeNotifier {
     }
 
     // Use ensureValidToken to handle auto-refresh if needed
-    final token = await _api.ensureValidToken();
+    final token = await _api.ensureValidToken(forceRefresh: forceTokenRefresh);
     if (token == null) {
       debugPrint('⚠️ Cannot fetch driver: no valid token available');
       return null;
@@ -162,12 +165,19 @@ class AuthProvider extends ChangeNotifier {
           }
         }
 
-        // 2. Refresh from backend in the background (or foreground)
-        final fetchedDriver = await fetchDriver(driverId: storedDriverId);
+        // 2. Refresh from backend (forcing token refresh as app just opened)
+        final fetchedDriver = await fetchDriver(
+          driverId: storedDriverId,
+          forceTokenRefresh: true,
+        );
 
         if (fetchedDriver != null) {
           _driver = fetchedDriver;
           _status = AuthStatus.authenticated;
+          
+          // Sync FCM token with backend after successful auth check if user is logged in
+          unawaited(NotificationService.instance.syncTokenWithBackend());
+          
           debugPrint('✅ Session refreshed from backend: ${fetchedDriver.fullName}');
         } else {
           // If fetch fails but we have cached data and a token, stay authenticated
@@ -338,6 +348,9 @@ class AuthProvider extends ChangeNotifier {
           debugPrint(
             '✅ Driver logged in: ${_driver!.fullName} (ID: ${_driver!.uid})',
           );
+          
+          // Sync FCM token with backend after successful login
+          unawaited(NotificationService.instance.syncTokenWithBackend());
         } else {
           // No driver data found (should not happen for registered drivers)
           _errorMessage = 'Failed to fetch driver data';
@@ -442,6 +455,10 @@ class AuthProvider extends ChangeNotifier {
         }
 
         _status = AuthStatus.authenticated;
+        
+        // Sync FCM token with backend after successful registration
+        unawaited(NotificationService.instance.syncTokenWithBackend());
+        
         notifyListeners();
       } else {
         _status = AuthStatus.failure;

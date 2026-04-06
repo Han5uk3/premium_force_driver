@@ -1,6 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:premium_force_driver/splashscreen/splashscreen.dart';
+
 import 'package:provider/provider.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/providers/user_provider.dart';
@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:premium_force_driver/firebase_options.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
+import 'package:premium_force_driver/debug/fcm_debug_page.dart';
 
 /// Global navigator key – allows navigating from outside a widget tree
 /// (e.g. when the user taps a push notification).
@@ -87,9 +88,7 @@ class _MainAppState extends State<MainApp> {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
-        home:
-            //  const Home(),
-            const SplashScreen(),
+        home: const FcmDebugPage(),
       ),
     );
   }

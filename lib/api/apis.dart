@@ -120,7 +120,7 @@ class ApiService {
   /// Call this before making authenticated API requests.
   /// Returns the current (potentially refreshed) access token.
   /// Returns null if token refresh fails.
-  Future<String?> ensureValidToken() async {
+  Future<String?> ensureValidToken({bool forceRefresh = false}) async {
     // 1. If another refresh task is already running, wait for its result.
     if (_refreshFuture != null) {
       debugPrint('🔄 Token Service │ Waiting for existing refresh task...');
@@ -131,8 +131,8 @@ class ApiService {
       }
     }
 
-    // 2. If token is still valid (not expiring soon), return it immediately.
-    if (!UserLocalStorage.isTokenExpiredOrExpiring()) {
+    // 2. If token is still valid (not expiring soon) and no forceRefresh requested, return it.
+    if (!forceRefresh && !UserLocalStorage.isTokenExpiredOrExpiring()) {
       final token = UserLocalStorage.getToken();
       if (token != null && token.isNotEmpty) {
         return token;
@@ -901,8 +901,8 @@ class ApiService {
     final data = {
       'bookingID': bookingId,
       'bookingId': bookingId,
-      'driverID': ?driverId,
-      'driverId': ?driverId,
+      if (driverId != null) 'driverID': driverId,
+      if (driverId != null) 'driverId': driverId,
     };
 
     try {
@@ -999,14 +999,18 @@ class ApiService {
   ///
   /// Call this after login / signup once you have both a valid user id and an
   /// FCM token.
-  Future<Map<String, dynamic>> registerFcmToken({
-    required String userId,
+  /// Register or update the [fcmToken] for the driver identified by [driverId].
+  ///
+  /// Call this after login / signup once you have both a valid driver id and an
+  /// FCM token.
+  Future<Map<String, dynamic>> updateFcmToken({
+    required String driverId,
     required String fcmToken,
     String? token,
   }) async {
     try {
-      final response = await _dio.post(
-        '/users/$userId/fcm-token',
+      final response = await _dio.put(
+        '/drivers/$driverId/fcm-token',
         data: {'fcmToken': fcmToken},
         options: token != null ? _authOptions(token) : null,
       );

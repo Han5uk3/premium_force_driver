@@ -93,7 +93,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             'airport',
                           )
                         ? loc.airportArrival
-                        : (_currentBooking.dropoffLocation?.toLowerCase().contains('airport') ?? false)
+                        : (_currentBooking.dropoffLocation
+                                  ?.toLowerCase()
+                                  .contains('airport') ??
+                              false)
                         ? loc.airportDeparture
                         : loc.privateTransfer,
                     Icons.drive_eta,
@@ -247,9 +250,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      _currentBooking.displayBrand +
-                          " " +
-                          _currentBooking.displayName,
+                      "${_currentBooking.displayBrand} ${_currentBooking.displayName}",
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
@@ -377,7 +378,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildSectionTitle("${loc.customerInfo} Review"), // Assuming "Review" is clear enough if l10n is missing for it
+                    _buildSectionTitle(
+                      "${loc.customerInfo} Review",
+                    ), // Assuming "Review" is clear enough if l10n is missing for it
                     _buildSectionCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,7 +389,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             children: [
                               ...List.generate(5, (index) {
                                 return Icon(
-                                  index < review.rate ? Icons.star : Icons.star_border,
+                                  index < review.rate
+                                      ? Icons.star
+                                      : Icons.star_border,
                                   color: Colors.amber,
                                   size: 18,
                                 );
@@ -557,9 +562,6 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     );
   }
 
- 
-  
-
   Widget _buildActions(BuildContext context, AppLocalizations loc) {
     final status = _currentBooking.status.toLowerCase().trim();
     final provider = context.read<BookingsProvider>();
@@ -658,9 +660,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             listenable: TrackingService(),
             builder: (context, _) {
               return _buildActionButton(
-                TrackingService().isPaused
-                    ? loc.resumeRide
-                    : loc.pauseRide,
+                TrackingService().isPaused ? loc.resumeRide : loc.pauseRide,
                 TrackingService().isPaused
                     ? Colors.green.shade700
                     : Colors.orange.shade700,
@@ -694,52 +694,42 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           StreamBuilder<Position>(
             stream: TrackingService().positionStream,
             builder: (context, snapshot) {
-
-              return _buildActionButton(
-                loc.endRide,
-                Colors.red,
-                () async {
-                  final confirm = await _showConfirmationDialog(
-                    context,
-                    loc.endRide,
-                    loc.endRideConfirm,
+              return _buildActionButton(loc.endRide, Colors.red, () async {
+                final confirm = await _showConfirmationDialog(
+                  context,
+                  loc.endRide,
+                  loc.endRideConfirm,
+                );
+                if (confirm != true) return;
+                if (_currentBooking.isHourly) {
+                  final success = await provider.stopTracking(
+                    _currentBooking.id,
                   );
-                  if (confirm != true) return;
-                  if (_currentBooking.isHourly) {
-                    final success = await provider.stopTracking(
-                      _currentBooking.id,
+                  if (mounted) {
+                    AnimatedSnackBar.show(
+                      context,
+                      success
+                          ? (provider.actionMessage ?? loc.tripEnded)
+                          : loc.rideStoppedSyncPending,
+                      success ? 'S' : 'E',
                     );
-                    if (mounted) {
-                      AnimatedSnackBar.show(
-                        context,
-                        success
-                            ? (provider.actionMessage ?? loc.tripEnded)
-                            : loc.rideStoppedSyncPending,
-                        success ? 'S' : 'E',
-                      );
-                      _updateBooking(
-                        provider.getBookingById(_currentBooking.id),
-                      );
-                    }
-                  } else {
-                    await TrackingService().stopTracking();
-                    final success = await provider.completeBooking(
-                      _currentBooking.id,
-                    );
-                    if (success && mounted) {
-                      AnimatedSnackBar.show(
-                        context,
-                        provider.actionMessage ?? loc.bookingCompleted,
-                        'S',
-                      );
-                      _updateBooking(
-                        provider.getBookingById(_currentBooking.id),
-                      );
-                    }
+                    _updateBooking(provider.getBookingById(_currentBooking.id));
                   }
-                },
-                icon: Icons.stop_circle,
-              );
+                } else {
+                  await TrackingService().stopTracking();
+                  final success = await provider.completeBooking(
+                    _currentBooking.id,
+                  );
+                  if (success && mounted) {
+                    AnimatedSnackBar.show(
+                      context,
+                      provider.actionMessage ?? loc.bookingCompleted,
+                      'S',
+                    );
+                    _updateBooking(provider.getBookingById(_currentBooking.id));
+                  }
+                }
+              }, icon: Icons.stop_circle);
             },
           ),
         ],

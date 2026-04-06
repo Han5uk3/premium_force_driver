@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'booking_details_page.dart';
-import 'package:premium_force_driver/common_widgets/premiumloader.dart';
+import 'package:premium_force_driver/common_widgets/booking_shimmer.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -149,9 +149,7 @@ class _BookingsPageState extends State<BookingsPage>
     AppLocalizations loc,
   ) {
     if (provider.status == BookingStatus.loading) {
-      return const Center(
-        child: PremiumLoader(size: 40),
-      );
+      return const BookingShimmer();
     }
 
     if (provider.status == BookingStatus.failure) {

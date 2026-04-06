@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
+import 'package:premium_force_driver/api/apis.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Top-level background handler (must be a top-level / static function)
@@ -100,6 +101,7 @@ class NotificationService {
       debugPrint('🔔 FCM │ Token refreshed');
       _fcmToken = newToken;
       await UserLocalStorage.saveFcmToken(newToken);
+      await _updateTokenOnBackend(newToken);
       onTokenRefresh?.call(newToken);
     });
   }
@@ -232,6 +234,7 @@ class NotificationService {
       // Persist immediately so the rest of the app can read it via Hive
       if (_fcmToken != null) {
         await UserLocalStorage.saveFcmToken(_fcmToken!);
+        await _updateTokenOnBackend(_fcmToken!);
       }
     } on FirebaseException catch (e) {
       if (e.code == 'apns-token-not-set') {
@@ -255,6 +258,15 @@ class NotificationService {
     return _fcmToken;
   }
 
+  /// Explicitly sync the current token with the backend.
+  /// Call this after login or signup to ensure the backend has the latest token.
+  Future<void> syncTokenWithBackend() async {
+    final token = await getToken();
+    if (token != null) {
+      await _updateTokenOnBackend(token);
+    }
+  }
+
   /// Deletes the FCM token (call on logout so this device stops receiving
   /// notifications for the previous user).
   Future<void> deleteToken() async {
@@ -265,6 +277,31 @@ class NotificationService {
       debugPrint('🔔 FCM │ Token deleted');
     } catch (e) {
       debugPrint('🔔 FCM │ Token delete error: $e');
+    }
+  }
+  /// Synchronise the local FCM token with the backend if the user is logged in.
+  Future<void> _updateTokenOnBackend(String fcmToken) async {
+    final driverId = UserLocalStorage.getUserId();
+    final authToken = UserLocalStorage.getToken();
+
+    if (driverId != null && driverId.isNotEmpty) {
+      debugPrint('🔔 FCM │ Syncing token with backend for driver: $driverId');
+      try {
+        final response = await ApiService().updateFcmToken(
+          driverId: driverId,
+          fcmToken: fcmToken,
+          token: authToken,
+        );
+        if (response['success'] == true) {
+          debugPrint('✅ FCM │ Token synced with backend');
+        } else {
+          debugPrint('⚠️ FCM │ Token sync failed: ${response['message']}');
+        }
+      } catch (e) {
+        debugPrint('❌ FCM │ Token sync error: $e');
+      }
+    } else {
+      debugPrint('🔔 FCM │ Driver not logged in, skipping backend sync');
     }
   }
 }

@@ -302,7 +302,7 @@ class StandardBookingModel extends BookingModel {
     pickupLocation: pickupLocation,
     pickupLatitude: pickupLatitude,
     pickupLongitude: pickupLongitude,
-    dropoffLocation: dropoffLocation ?? dropoffLocation!,
+    dropoffLocation: dropoffLocation ?? this.dropoffLocation!,
     dropoffLatitude: dropoffLatitude,
     dropoffLongitude: dropoffLongitude,
     fare: fare,
