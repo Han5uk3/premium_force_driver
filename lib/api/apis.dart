@@ -1004,13 +1004,13 @@ class ApiService {
   /// Call this after login / signup once you have both a valid driver id and an
   /// FCM token.
   Future<Map<String, dynamic>> updateFcmToken({
-    required String driverId,
+    required String userid,
     required String fcmToken,
     String? token,
   }) async {
     try {
       final response = await _dio.put(
-        '/drivers/$driverId/driver/fcm-token',
+        '/drivers/$userid/driver/fcm-token',
         data: {'fcmToken': fcmToken},
         options: token != null ? _authOptions(token) : null,
       );

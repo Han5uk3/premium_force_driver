@@ -281,14 +281,14 @@ class NotificationService {
   }
   /// Synchronise the local FCM token with the backend if the user is logged in.
   Future<void> _updateTokenOnBackend(String fcmToken) async {
-    final driverId = UserLocalStorage.getUserId();
+    final uid = UserLocalStorage.getUserId();
     final authToken = UserLocalStorage.getToken();
 
-    if (driverId != null && driverId.isNotEmpty) {
-      debugPrint('🔔 FCM │ Syncing token with backend for driver: $driverId');
+    if (uid != null && uid.isNotEmpty) {
+      debugPrint('🔔 FCM │ Syncing token with backend for user: $uid');
       try {
         final response = await ApiService().updateFcmToken(
-          driverId: driverId,
+          userid: uid,
           fcmToken: fcmToken,
           token: authToken,
         );
@@ -301,7 +301,7 @@ class NotificationService {
         debugPrint('❌ FCM │ Token sync error: $e');
       }
     } else {
-      debugPrint('🔔 FCM │ Driver not logged in, skipping backend sync');
+      debugPrint('🔔 FCM │ User not logged in, skipping backend sync');
     }
   }
 }
