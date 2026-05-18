@@ -19,7 +19,9 @@ class _SplashScreenState extends State<SplashScreen> {
     // Defer so the widget tree finishes building before AuthProvider
     // calls notifyListeners().
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _navigateAfterSplash();
+      if (mounted) {
+        _navigateAfterSplash();
+      }
     });
   }
 

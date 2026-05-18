@@ -1760,80 +1760,167 @@ abstract class AppLocalizations {
   /// **'Tracking Resumed'**
   String get trackingResumed;
 
-  /// Greeting prefix.
+  /// No description provided for @hello.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello,'**
   String get hello;
 
-  /// Select vehicle to take out text.
+  /// No description provided for @selectVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Vehicle to Take Out'**
   String get selectVehicle;
 
-  /// No fleets available for takeout text.
+  /// No description provided for @noVehiclesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No fleets available for takeout.'**
   String get noVehiclesAvailable;
 
-  /// License plate label.
+  /// No description provided for @licensePlate.
+  ///
+  /// In en, this message translates to:
+  /// **'License Plate'**
   String get licensePlate;
 
-  /// Pickup vehicle label.
+  /// No description provided for @pickupVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup Vehicle'**
   String get pickupVehicle;
 
-  /// Confirm take out header.
+  /// No description provided for @confirmTakeOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Take Out'**
   String get confirmTakeOut;
 
-  /// Confirm take out message prefix.
+  /// No description provided for @confirmTakeOutMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to take out '**
   String get confirmTakeOutMessage;
 
-  /// Return vehicle button label.
+  /// No description provided for @returnVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Return Vehicle'**
   String get returnVehicle;
 
-  /// Confirm return header.
+  /// No description provided for @confirmReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Return'**
   String get confirmReturn;
 
-  /// Confirm return message.
+  /// No description provided for @confirmReturnMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to return your active vehicle?'**
   String get confirmReturnMessage;
 
-  /// Active & Online status switch.
+  /// No description provided for @activeAndOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Active & Online'**
   String get activeAndOnline;
 
-  /// Offline status switch.
+  /// No description provided for @offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
   String get offline;
 
-  /// No vehicle taken out fallback.
+  /// No description provided for @noVehicleTakenOut.
+  ///
+  /// In en, this message translates to:
+  /// **'No vehicle taken out yet today.'**
   String get noVehicleTakenOut;
 
-  /// Booking summary section title.
+  /// No description provided for @bookingSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking Summary'**
   String get bookingSummary;
 
-  /// Active Ride tracker section title.
+  /// No description provided for @activeRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Ride Tracker'**
   String get activeRide;
 
-  /// No active tracked ride label.
+  /// No description provided for @noActiveRide.
+  ///
+  /// In en, this message translates to:
+  /// **'No active tracked ride'**
   String get noActiveRide;
 
-  /// Tip for active ride tracker.
+  /// No description provided for @activeRideTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking a booking in Bookings tab to navigate here.'**
   String get activeRideTip;
 
-  /// Vehicle pickup success snackbar.
+  /// No description provided for @vehiclePickupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle picked up successfully!'**
   String get vehiclePickupSuccess;
 
-  /// Vehicle return success snackbar.
+  /// No description provided for @vehicleReturnSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle returned successfully!'**
   String get vehicleReturnSuccess;
 
-  /// Active status snackbar.
+  /// No description provided for @statusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: Active and Online'**
   String get statusActive;
 
-  /// Offline status snackbar.
+  /// No description provided for @statusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: Offline'**
   String get statusOffline;
 
-  /// Failed to update status snackbar error.
+  /// No description provided for @failedToUpdateStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update status'**
   String get failedToUpdateStatus;
 
-  /// Active vehicle label fallback.
+  /// No description provided for @activeVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Vehicle'**
   String get activeVehicle;
 
-  /// Failed to pick up vehicle snackbar error.
+  /// No description provided for @failedToPickUpVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to pick up vehicle'**
   String get failedToPickUpVehicle;
 
-  /// Failed to return vehicle snackbar error.
+  /// No description provided for @failedToReturnVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to return vehicle'**
   String get failedToReturnVehicle;
+
+  /// No description provided for @licenseNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'License Number'**
+  String get licenseNumber;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
 }
 
 class _AppLocalizationsDelegate

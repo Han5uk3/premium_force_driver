@@ -129,15 +129,33 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                 letterSpacing: 1.2,
                               ),
                             ),
-                            CircleAvatar(
-                              radius: 16,
-                              child: Material(
-                                borderRadius: BorderRadius.circular(100),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(100),
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF404040),
+                                    Color(0xFFC0C0C0),
+                                    Color(0xFF808080),
+                                  ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withAlpha(80),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.all(1.5),
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFF1E1E1E),
+                                ),
+                                padding: const EdgeInsets.all(1.5),
+                                child: ClipOval(
                                   child: InkWell(
-                                    splashColor: Colors.grey.withAlpha(200),
-                                    borderRadius: BorderRadius.circular(100),
                                     onTap: () {
                                       bool isCurrentlyEnglish =
                                           Localizations.localeOf(
@@ -151,14 +169,18 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                         ),
                                       );
                                     },
-                                    child: SvgPicture.asset(
-                                      Localizations.localeOf(
-                                                context,
-                                              ).languageCode ==
-                                              'en'
-                                          ? 'assets/flags/en.svg'
-                                          : 'assets/flags/ar.svg',
-                                      fit: BoxFit.fill,
+                                    child: SizedBox(
+                                      width: 28,
+                                      height: 28,
+                                      child: SvgPicture.asset(
+                                        Localizations.localeOf(
+                                                  context,
+                                                ).languageCode ==
+                                                'en'
+                                            ? 'assets/flags/en.svg'
+                                            : 'assets/flags/ar.svg',
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   ),
                                 ),

@@ -896,7 +896,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmReturn => 'تأكيد الإرجاع';
 
   @override
-  String get confirmReturnMessage => 'هل أنت متأكد أنك تريد إرجاع مركبتك النشطة؟';
+  String get confirmReturnMessage =>
+      'هل أنت متأكد أنك تريد إرجاع مركبتك النشطة؟';
 
   @override
   String get activeAndOnline => 'نشط ومتصل';
@@ -917,7 +918,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noActiveRide => 'لا توجد رحلة نشطة حالياً';
 
   @override
-  String get activeRideTip => 'ابدأ بتتبع حجز في علامة تبويب الحجوزات لتظهر هنا.';
+  String get activeRideTip =>
+      'ابدأ بتتبع حجز في علامة تبويب الحجوزات لتظهر هنا.';
 
   @override
   String get vehiclePickupSuccess => 'تم استلام المركبة بنجاح!';
@@ -942,4 +944,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get failedToReturnVehicle => 'فشل إرجاع المركبة';
+
+  @override
+  String get licenseNumber => 'رقم الرخصة';
+
+  @override
+  String get language => 'اللغة';
 }

@@ -62,10 +62,18 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   Locale _locale = const Locale('en');
 
+  @override
+  void initState() {
+    super.initState();
+    final langCode = UserLocalStorage.getLanguage();
+    _locale = Locale(langCode);
+  }
+
   void setLocale(Locale locale) {
     setState(() {
       _locale = locale;
     });
+    UserLocalStorage.saveLanguage(locale.languageCode);
   }
 
   @override

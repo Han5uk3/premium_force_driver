@@ -36,6 +36,7 @@ class UserLocalStorage {
   static const String _fcmTokenKey = 'fcm_token';
   static const String _notificationStatusKey = 'notification_status';
   static const String _driverProfileKey = 'driver_profile';
+  static const String _languageKey = 'app_language';
 
   static late Box<dynamic> _box;
 
@@ -203,5 +204,19 @@ class UserLocalStorage {
   /// Retrieve the notification status, defaults to true.
   static bool getNotificationStatus() {
     return _box.get(_notificationStatusKey, defaultValue: true) as bool;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Language Preference
+  // ---------------------------------------------------------------------------
+
+  /// Persist the selected language code.
+  static Future<void> saveLanguage(String languageCode) async {
+    await _box.put(_languageKey, languageCode);
+  }
+
+  /// Retrieve the stored language code, defaults to 'en'.
+  static String getLanguage() {
+    return _box.get(_languageKey, defaultValue: 'en') as String;
   }
 }

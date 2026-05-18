@@ -34,7 +34,7 @@
   "suv": "دفع رباعي",
   "convertible": "مكشوفة",
   "coupe": "كوبيه",
-  "sports": "رياضية", 
+  "sports": "رياضية",
   "premium": "مميز",
   "standard": "قياسي",
   "economy": "اقتصادي",
@@ -170,7 +170,7 @@
   "cancel": "إلغاء",
   "loginAgainMessage": "سيتعين عليك تسجيل الدخول مرة أخرى في المرة القادمة التي تفتح فيها التطبيق.",
   "deleteAccountConfirm": "هل أنت متأكد من حذف حسابك؟",
-  "deleteAccountMessage": "لا يمكن التراجع عن هذا الإجراء وسيتم مسح جميع بياناتك.",  
+  "deleteAccountMessage": "لا يمكن التراجع عن هذا الإجراء وسيتم مسح جميع بياناتك.",
   "noUpcomingBookings": "لا توجد حجوزات قادمة",
   "noOngoingBookings": "لا توجد حجوزات جارية",
   "noCompletedBookings": "لا توجد حجوزات مكتملة",
@@ -301,7 +301,7 @@
   "failedToUpdateStatus": "فشل تحديث الحالة",
   "activeVehicle": "المركبة النشطة",
   "failedToPickUpVehicle": "فشل استلام المركبة",
-  "failedToReturnVehicle": "فشل إرجاع المركبة"
+  "failedToReturnVehicle": "فشل إرجاع المركبة",
+  "licenseNumber": "رقم الرخصة",
+  "language": "اللغة"
 }
-
-

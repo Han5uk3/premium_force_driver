@@ -6,6 +6,7 @@ import 'package:premium_force_driver/authentication/login.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
+import 'package:premium_force_driver/main.dart';
 
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
 import 'package:provider/provider.dart';
@@ -78,6 +79,76 @@ class _AccountPageState extends State<AccountPage> {
                   svgPath: "assets/icons/terms_and_conditions.svg",
                 ),
               ),
+              profileTile(
+                loc: loc,
+                title: loc.language,
+                icon: Icons.language,
+                trailingOverride: Container(
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          MainApp.setLocale(context, const Locale('en'));
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Localizations.localeOf(context).languageCode == 'en'
+                                ? Colors.white
+                                : Colors.black,
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'English',
+                            style: TextStyle(
+                              color: Localizations.localeOf(context).languageCode == 'en'
+                                  ? Colors.black
+                                  : Colors.white54,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          MainApp.setLocale(context, const Locale('ar'));
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Localizations.localeOf(context).languageCode == 'ar'
+                                ? Colors.white
+                                : Colors.black,
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'العربية',
+                            style: TextStyle(
+                              color: Localizations.localeOf(context).languageCode == 'ar'
+                                  ? Colors.black
+                                  : Colors.white54,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               GestureDetector(
                 onTap: () {
                   _showLogoutBottomSheet(context, loc);
@@ -132,9 +203,9 @@ class _AccountPageState extends State<AccountPage> {
     bool isSvg = false,
     bool isDelete = false,
     bool isLogout = false,
-
     bool isLast = false,
     String? svgPath,
+    Widget? trailingOverride,
   }) {
     return ListTile(
       shape: Border(
@@ -161,26 +232,28 @@ class _AccountPageState extends State<AccountPage> {
               },
               child: Icon(icon, color: Colors.white),
             ),
-      trailing: !(isDelete || isLogout)
-          ? ShaderMask(
-              shaderCallback: (Rect bounds) {
-                return const LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    Color(0xFF404040),
-                    Color(0xFFC0C0C0),
-                    Color(0xFF808080),
-                  ],
-                ).createShader(bounds);
-              },
-              child: const Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white,
-                size: 16,
-              ),
-            )
-          : null,
+      trailing:
+          trailingOverride ??
+          (!(isDelete || isLogout)
+              ? ShaderMask(
+                  shaderCallback: (Rect bounds) {
+                    return const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xFF404040),
+                        Color(0xFFC0C0C0),
+                        Color(0xFF808080),
+                      ],
+                    ).createShader(bounds);
+                  },
+                  child: const Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                )
+              : null),
       title: Text(title, style: TextStyle(color: Colors.white)),
     );
   }

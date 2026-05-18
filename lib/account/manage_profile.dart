@@ -22,6 +22,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _licenseController = TextEditingController();
 
   File? _profileImage;
   double? latitude;
@@ -58,6 +59,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
       _nameController.text = user.fullName;
       _emailController.text = user.email;
       _phoneController.text = '${user.countryCode} ${user.phoneNumber}';
+      _licenseController.text = user.licenseNumber ?? '';
       _locationController.text = user.location ?? '';
       latitude = user.lat;
       longitude = user.long;
@@ -70,6 +72,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
     _emailController.dispose();
     _locationController.dispose();
     _phoneController.dispose();
+    _licenseController.dispose();
     _animController.dispose();
     super.dispose();
   }
@@ -266,7 +269,9 @@ class _ManageProfilePageState extends State<ManageProfilePage>
     // If user data is missing, try to fetch it
     if (user == null && !_isLoading) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Provider.of<AuthProvider>(context, listen: false).fetchDriver();
+        if (mounted) {
+          Provider.of<AuthProvider>(context, listen: false).fetchDriver();
+        }
       });
     }
 
@@ -489,6 +494,36 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                             },
                             child: const Icon(
                               Icons.phone_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // License number (display only)
+                        PremiumTextField(
+                          title: AppLocalizations.of(context)!.licenseNumber,
+                          controller: _licenseController,
+                          hintText: "",
+                          fontsize: 13,
+                          needTitle: true,
+                          obscureText: false,
+                          enabled: false,
+                          readOnly: true,
+                          prefixIcon: ShaderMask(
+                            shaderCallback: (Rect bounds) {
+                              return const LinearGradient(
+                                colors: [
+                                  Color(0xFF404040),
+                                  Color(0xFFC0C0C0),
+                                  Color(0xFF808080),
+                                ],
+                              ).createShader(bounds);
+                            },
+                            child: const Icon(
+                              Icons.badge_outlined,
                               color: Colors.white,
                               size: 20,
                             ),

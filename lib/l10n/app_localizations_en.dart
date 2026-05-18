@@ -908,7 +908,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmReturn => 'Confirm Return';
 
   @override
-  String get confirmReturnMessage => 'Are you sure you want to return your active vehicle?';
+  String get confirmReturnMessage =>
+      'Are you sure you want to return your active vehicle?';
 
   @override
   String get activeAndOnline => 'Active & Online';
@@ -929,7 +930,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noActiveRide => 'No active tracked ride';
 
   @override
-  String get activeRideTip => 'Start tracking a booking in Bookings tab to navigate here.';
+  String get activeRideTip =>
+      'Start tracking a booking in Bookings tab to navigate here.';
 
   @override
   String get vehiclePickupSuccess => 'Vehicle picked up successfully!';
@@ -954,4 +956,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedToReturnVehicle => 'Failed to return vehicle';
+
+  @override
+  String get licenseNumber => 'License Number';
+
+  @override
+  String get language => 'Language';
 }

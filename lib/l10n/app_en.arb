@@ -301,5 +301,7 @@
   "failedToUpdateStatus": "Failed to update status",
   "activeVehicle": "Active Vehicle",
   "failedToPickUpVehicle": "Failed to pick up vehicle",
-  "failedToReturnVehicle": "Failed to return vehicle"
+  "failedToReturnVehicle": "Failed to return vehicle",
+  "licenseNumber": "License Number",
+  "language": "Language"
 }
