@@ -867,4 +867,79 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trackingResumed => 'تم استئناف التتبع';
+
+  @override
+  String get hello => 'مرحباً،';
+
+  @override
+  String get selectVehicle => 'اختر مركبة لاستلامها';
+
+  @override
+  String get noVehiclesAvailable => 'لا توجد مركبات متاحة للاستلام.';
+
+  @override
+  String get licensePlate => 'لوحة الترخيص';
+
+  @override
+  String get pickupVehicle => 'استلام المركبة';
+
+  @override
+  String get confirmTakeOut => 'تأكيد الاستلام';
+
+  @override
+  String get confirmTakeOutMessage => 'هل أنت متأكد أنك تريد استلام ';
+
+  @override
+  String get returnVehicle => 'إرجاع المركبة';
+
+  @override
+  String get confirmReturn => 'تأكيد الإرجاع';
+
+  @override
+  String get confirmReturnMessage => 'هل أنت متأكد أنك تريد إرجاع مركبتك النشطة؟';
+
+  @override
+  String get activeAndOnline => 'نشط ومتصل';
+
+  @override
+  String get offline => 'غير متصل';
+
+  @override
+  String get noVehicleTakenOut => 'لم يتم استلام أي مركبة اليوم.';
+
+  @override
+  String get bookingSummary => 'ملخص الحجز';
+
+  @override
+  String get activeRide => 'تتبع الرحلة النشطة';
+
+  @override
+  String get noActiveRide => 'لا توجد رحلة نشطة حالياً';
+
+  @override
+  String get activeRideTip => 'ابدأ بتتبع حجز في علامة تبويب الحجوزات لتظهر هنا.';
+
+  @override
+  String get vehiclePickupSuccess => 'تم استلام المركبة بنجاح!';
+
+  @override
+  String get vehicleReturnSuccess => 'تم إرجاع المركبة بنجاح!';
+
+  @override
+  String get statusActive => 'الحالة: نشط ومتصل';
+
+  @override
+  String get statusOffline => 'الحالة: غير متصل';
+
+  @override
+  String get failedToUpdateStatus => 'فشل تحديث الحالة';
+
+  @override
+  String get activeVehicle => 'المركبة النشطة';
+
+  @override
+  String get failedToPickUpVehicle => 'فشل استلام المركبة';
+
+  @override
+  String get failedToReturnVehicle => 'فشل إرجاع المركبة';
 }

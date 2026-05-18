@@ -879,4 +879,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackingResumed => 'Tracking Resumed';
+
+  @override
+  String get hello => 'Hello,';
+
+  @override
+  String get selectVehicle => 'Select Vehicle to Take Out';
+
+  @override
+  String get noVehiclesAvailable => 'No fleets available for takeout.';
+
+  @override
+  String get licensePlate => 'License Plate';
+
+  @override
+  String get pickupVehicle => 'Pickup Vehicle';
+
+  @override
+  String get confirmTakeOut => 'Confirm Take Out';
+
+  @override
+  String get confirmTakeOutMessage => 'Are you sure you want to take out ';
+
+  @override
+  String get returnVehicle => 'Return Vehicle';
+
+  @override
+  String get confirmReturn => 'Confirm Return';
+
+  @override
+  String get confirmReturnMessage => 'Are you sure you want to return your active vehicle?';
+
+  @override
+  String get activeAndOnline => 'Active & Online';
+
+  @override
+  String get offline => 'Offline';
+
+  @override
+  String get noVehicleTakenOut => 'No vehicle taken out yet today.';
+
+  @override
+  String get bookingSummary => 'Booking Summary';
+
+  @override
+  String get activeRide => 'Active Ride Tracker';
+
+  @override
+  String get noActiveRide => 'No active tracked ride';
+
+  @override
+  String get activeRideTip => 'Start tracking a booking in Bookings tab to navigate here.';
+
+  @override
+  String get vehiclePickupSuccess => 'Vehicle picked up successfully!';
+
+  @override
+  String get vehicleReturnSuccess => 'Vehicle returned successfully!';
+
+  @override
+  String get statusActive => 'Status: Active and Online';
+
+  @override
+  String get statusOffline => 'Status: Offline';
+
+  @override
+  String get failedToUpdateStatus => 'Failed to update status';
+
+  @override
+  String get activeVehicle => 'Active Vehicle';
+
+  @override
+  String get failedToPickUpVehicle => 'Failed to pick up vehicle';
+
+  @override
+  String get failedToReturnVehicle => 'Failed to return vehicle';
 }

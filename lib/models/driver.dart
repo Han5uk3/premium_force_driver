@@ -39,6 +39,12 @@ class DriverModel {
   final int completedRides;
   final double totalEarnings;
 
+  // New fields for status & active vehicle
+  final bool isBusy;
+  final bool isWorkstarted;
+  final bool hasActiveVehicle;
+  final ActiveVehicleModel? activeVehicle;
+
   // Timestamps
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -65,6 +71,10 @@ class DriverModel {
     this.rating = 0.0,
     this.completedRides = 0,
     this.totalEarnings = 0.0,
+    this.isBusy = false,
+    this.isWorkstarted = false,
+    this.hasActiveVehicle = false,
+    this.activeVehicle,
     required this.createdAt,
     this.updatedAt,
   });
@@ -152,6 +162,15 @@ class DriverModel {
       assignedCarId = carRaw['_id'] ?? carRaw['id'];
     }
 
+    // ── Active Vehicle Parsing ─────────────────────────────
+    final isBusyVal = (json['isBusy'] as bool?) ?? false;
+    final isWorkstartedVal = (json['isWorkstarted'] as bool?) ?? false;
+    final hasActiveVehicleVal = (json['hasActiveVehicle'] as bool?) ?? false;
+    ActiveVehicleModel? activeVehicleVal;
+    if (json['activeVehicle'] is Map<String, dynamic>) {
+      activeVehicleVal = ActiveVehicleModel.fromJson(json['activeVehicle']);
+    }
+
     return DriverModel(
       uid: (json['_id'] ?? json['id'] ?? json['uid'] ?? '').toString(),
       firstName: firstName,
@@ -174,6 +193,10 @@ class DriverModel {
       rating: ((json['rating'] as num?)?.toDouble()) ?? 0.0,
       completedRides: (json['completedRides'] as int?) ?? 0,
       totalEarnings: ((json['totalEarnings'] as num?)?.toDouble()) ?? 0.0,
+      isBusy: isBusyVal,
+      isWorkstarted: isWorkstartedVal,
+      hasActiveVehicle: hasActiveVehicleVal,
+      activeVehicle: activeVehicleVal,
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] is DateTime
                 ? json['createdAt'] as DateTime
@@ -211,6 +234,10 @@ class DriverModel {
       'rating': rating,
       'completedRides': completedRides,
       'totalEarnings': totalEarnings,
+      'isBusy': isBusy,
+      'isWorkstarted': isWorkstarted,
+      'hasActiveVehicle': hasActiveVehicle,
+      'activeVehicle': activeVehicle?.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -242,6 +269,10 @@ class DriverModel {
     double? rating,
     int? completedRides,
     double? totalEarnings,
+    bool? isBusy,
+    bool? isWorkstarted,
+    bool? hasActiveVehicle,
+    ActiveVehicleModel? activeVehicle,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -267,6 +298,10 @@ class DriverModel {
       rating: rating ?? this.rating,
       completedRides: completedRides ?? this.completedRides,
       totalEarnings: totalEarnings ?? this.totalEarnings,
+      isBusy: isBusy ?? this.isBusy,
+      isWorkstarted: isWorkstarted ?? this.isWorkstarted,
+      hasActiveVehicle: hasActiveVehicle ?? this.hasActiveVehicle,
+      activeVehicle: activeVehicle ?? this.activeVehicle,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -301,6 +336,10 @@ class DriverModel {
         other.rating == rating &&
         other.completedRides == completedRides &&
         other.totalEarnings == totalEarnings &&
+        other.isBusy == isBusy &&
+        other.isWorkstarted == isWorkstarted &&
+        other.hasActiveVehicle == hasActiveVehicle &&
+        other.activeVehicle == activeVehicle &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
@@ -329,6 +368,10 @@ class DriverModel {
       rating,
       completedRides,
       totalEarnings,
+      isBusy,
+      isWorkstarted,
+      hasActiveVehicle,
+      activeVehicle,
       createdAt,
       updatedAt,
     ]);
@@ -341,8 +384,117 @@ class DriverModel {
         'fullName: $fullName, '
         'phoneNumber: $phoneNumber, '
         'isActive: $isActive, '
+        'isWorkstarted: $isWorkstarted, '
+        'hasActiveVehicle: $hasActiveVehicle, '
         'rating: $rating, '
         'completedRides: $completedRides'
         ')';
+  }
+}
+
+class ActiveVehicleModel {
+  final String id;
+  final String carLicenseNumber;
+  final bool isBusyCar;
+  final bool isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final String? activeHistoryId;
+  final String? driverId;
+  final DateTime? lastTakenOutAt;
+  final DateTime? lastReturnAt;
+  final ActiveCarDetails? car;
+
+  ActiveVehicleModel({
+    required this.id,
+    required this.carLicenseNumber,
+    required this.isBusyCar,
+    required this.isActive,
+    this.createdAt,
+    this.updatedAt,
+    this.activeHistoryId,
+    this.driverId,
+    this.lastTakenOutAt,
+    this.lastReturnAt,
+    this.car,
+  });
+
+  factory ActiveVehicleModel.fromJson(Map<String, dynamic> json) {
+    final carRaw = json['carID'] ?? json['car'];
+    final carData = carRaw is Map<String, dynamic> ? ActiveCarDetails.fromJson(carRaw) : null;
+
+    return ActiveVehicleModel(
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      carLicenseNumber: json['carLicenseNumber']?.toString() ?? '',
+      isBusyCar: (json['isBusyCar'] as bool?) ?? false,
+      isActive: (json['isActive'] as bool?) ?? true,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null,
+      activeHistoryId: (json['activeHistoryID'] ?? json['activeHistoryId'])?.toString(),
+      driverId: (json['driverID'] ?? json['driverId'])?.toString(),
+      lastTakenOutAt: json['lastTakenOutAt'] != null ? DateTime.tryParse(json['lastTakenOutAt'].toString()) : null,
+      lastReturnAt: json['lastReturnAt'] != null ? DateTime.tryParse(json['lastReturnAt'].toString()) : null,
+      car: carData,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'carLicenseNumber': carLicenseNumber,
+      'isBusyCar': isBusyCar,
+      'isActive': isActive,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+      'activeHistoryID': activeHistoryId,
+      'driverID': driverId,
+      'lastTakenOutAt': lastTakenOutAt?.toIso8601String(),
+      'lastReturnAt': lastReturnAt?.toIso8601String(),
+      'carID': car?.toJson(),
+    };
+  }
+}
+
+class ActiveCarDetails {
+  final String id;
+  final String carName;
+  final String model;
+  final int numberOfPassengers;
+  final String? carImageUrl;
+
+  ActiveCarDetails({
+    required this.id,
+    required this.carName,
+    required this.model,
+    required this.numberOfPassengers,
+    this.carImageUrl,
+  });
+
+  factory ActiveCarDetails.fromJson(Map<String, dynamic> json) {
+    String? imageUrl;
+    final imageRaw = json['carImage'];
+    if (imageRaw is String) {
+      imageUrl = imageRaw;
+    } else if (imageRaw is Map<String, dynamic>) {
+      imageUrl = imageRaw['url'] as String?;
+    }
+
+    return ActiveCarDetails(
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      carName: json['carName']?.toString() ?? '',
+      model: json['model']?.toString() ?? '',
+      numberOfPassengers: (json['numberOfPassengers'] as int?) ?? 0,
+      carImageUrl: imageUrl,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'carName': carName,
+      'model': model,
+      'numberOfPassengers': numberOfPassengers,
+      'carImage': carImageUrl,
+    };
   }
 }

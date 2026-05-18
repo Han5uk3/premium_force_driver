@@ -14,7 +14,7 @@ class BookingShimmer extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(1),
           decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withAlpha(26),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Container(

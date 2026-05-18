@@ -596,4 +596,131 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Fetch the latest driver profile details using the profile/me endpoint
+  Future<DriverModel?> fetchDriverProfile() async {
+    _isOtpLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = await _api.ensureValidToken();
+      if (token == null) {
+        _errorMessage = 'Session expired. Please login again.';
+        _isOtpLoading = false;
+        notifyListeners();
+        return null;
+      }
+
+      final result = await _api.getDriverProfile();
+      _isOtpLoading = false;
+
+      if (result['success'] == true) {
+        final driverData = result['driver'] ?? result['data'];
+        if (driverData is Map<String, dynamic>) {
+          _driver = DriverModel.fromJson(driverData);
+          await UserLocalStorage.saveDriver(_driver!.toJson());
+          notifyListeners();
+          return _driver;
+        }
+      }
+      
+      _errorMessage = result['message'] as String? ?? 'Failed to fetch driver profile';
+      notifyListeners();
+      return null;
+    } catch (e) {
+      debugPrint('Fetch driver profile error: $e');
+      _isOtpLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Toggle driver work started status
+  Future<bool> toggleWorkStatus(bool isWorkstarted) async {
+    final driverId = _driver?.uid;
+    if (driverId == null) {
+      _errorMessage = 'Driver not logged in';
+      return false;
+    }
+
+    try {
+      final result = await _api.updateWorkStatus(
+        id: driverId,
+        isWorkstarted: isWorkstarted,
+      );
+
+      if (result['success'] == true) {
+        // Re-fetch profile to sync all status fields
+        await fetchDriverProfile();
+        return true;
+      } else {
+        _errorMessage = result['message'] as String? ?? 'Failed to toggle availability';
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Toggle work status error: $e');
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Take out a fleet vehicle
+  Future<bool> takeOutFleet(String fleetId) async {
+    _isOtpLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _api.takeOutFleet(fleetId);
+      _isOtpLoading = false;
+
+      if (result['success'] == true) {
+        // Re-fetch profile to update hasActiveVehicle and activeVehicle fields
+        await fetchDriverProfile();
+        return true;
+      } else {
+        _errorMessage = result['message'] as String? ?? 'Failed to take out vehicle';
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Take out fleet error: $e');
+      _isOtpLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Return the active vehicle
+  Future<bool> returnFleet() async {
+    _isOtpLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _api.returnFleet();
+      _isOtpLoading = false;
+
+      if (result['success'] == true) {
+        // Re-fetch profile to update hasActiveVehicle and activeVehicle fields
+        await fetchDriverProfile();
+        return true;
+      } else {
+        _errorMessage = result['message'] as String? ?? 'Failed to return vehicle';
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Return fleet error: $e');
+      _isOtpLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

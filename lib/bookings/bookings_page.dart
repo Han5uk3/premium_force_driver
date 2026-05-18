@@ -203,13 +203,11 @@ class _BookingsPageState extends State<BookingsPage>
           final dateFormat = DateFormat('dd MMM, yyyy');
           final timeFormat = DateFormat('h:mm a');
 
-          // Prioritize pickupdatetime then arrival, then fallback to createdAt
+          // Prioritize pickupdatetime then fallback to createdAt
           final displayDateTime =
               (booking.pickupdatetime != null &&
                   booking.pickupdatetime!.isNotEmpty)
               ? DateTime.tryParse(booking.pickupdatetime!)
-              : (booking.arrival != null && booking.arrival!.isNotEmpty)
-              ? DateTime.tryParse(booking.arrival!)
               : booking.createdAt;
 
           final effectiveDateTime = displayDateTime ?? booking.createdAt;

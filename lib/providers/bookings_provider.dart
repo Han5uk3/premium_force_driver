@@ -149,6 +149,14 @@ class BookingsProvider extends ChangeNotifier {
   }
 
   Future<bool> startTracking(String bookingId, {bool skipApi = false}) async {
+    // Ensure the driver can only start tracking for one booking at a time
+    final alreadyTracking = _allBookings.any((b) => b.status.toLowerCase() == 'starttracking' && b.id != bookingId);
+    if (alreadyTracking) {
+      _actionMessage = 'You are already tracking another booking. Please complete it first.';
+      notifyListeners();
+      return false;
+    }
+
     try {
       final startedAt = DateTime.now().toUtc().toIso8601String();
       if (!skipApi) {
@@ -399,14 +407,10 @@ class BookingsProvider extends ChangeNotifier {
     _allBookings.sort((a, b) {
       final dateA = (a.pickupdatetime != null && a.pickupdatetime!.isNotEmpty)
           ? DateTime.tryParse(a.pickupdatetime!) ?? a.createdAt
-          : (a.arrival != null && a.arrival!.isNotEmpty)
-              ? DateTime.tryParse(a.arrival!) ?? a.createdAt
-              : a.createdAt;
+          : a.createdAt;
       final dateB = (b.pickupdatetime != null && b.pickupdatetime!.isNotEmpty)
           ? DateTime.tryParse(b.pickupdatetime!) ?? b.createdAt
-          : (b.arrival != null && b.arrival!.isNotEmpty)
-              ? DateTime.tryParse(b.arrival!) ?? b.createdAt
-              : b.createdAt;
+          : b.createdAt;
       return dateB.compareTo(dateA);
     });
 

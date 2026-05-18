@@ -47,9 +47,6 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         (_currentBooking.pickupdatetime != null &&
             _currentBooking.pickupdatetime!.isNotEmpty)
         ? DateTime.tryParse(_currentBooking.pickupdatetime!)
-        : (_currentBooking.arrival != null &&
-              _currentBooking.arrival!.isNotEmpty)
-        ? DateTime.tryParse(_currentBooking.arrival!)
         : _currentBooking.createdAt;
 
     final effectiveDateTime = displayDateTime ?? _currentBooking.createdAt;

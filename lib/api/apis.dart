@@ -68,7 +68,7 @@ class ApiService {
           // If we get a 401 Unauthorized, try to refresh the token
           if (e.response?.statusCode == 401) {
             debugPrint('🌐 API │ 401 detected on ${e.requestOptions.path}');
-            
+
             // Avoid infinite loop if refresh itself fails with 401
             if (e.requestOptions.path.contains('refresh-token')) {
               return handler.next(e);
@@ -77,12 +77,14 @@ class ApiService {
             try {
               final newToken = await ensureValidToken();
               if (newToken != null) {
-                debugPrint('🌐 API │ Token refreshed successfully, retrying original request...');
-                
+                debugPrint(
+                  '🌐 API │ Token refreshed successfully, retrying original request...',
+                );
+
                 // Update header and retry
                 final options = e.requestOptions;
                 options.headers['Authorization'] = 'Bearer $newToken';
-                
+
                 final response = await _dio.fetch(options);
                 return handler.resolve(response);
               }
@@ -180,7 +182,9 @@ class ApiService {
         }
       }
 
-      debugPrint('❌ Token Service │ Failed to refresh token: ${result['message']}');
+      debugPrint(
+        '❌ Token Service │ Failed to refresh token: ${result['message']}',
+      );
       return null;
     } catch (e) {
       debugPrint('❌ Token Service │ Error: $e');
@@ -252,11 +256,7 @@ class ApiService {
       final response = await _dio.post(
         'drivers/refresh-token',
         data: {'refreshToken': refreshToken},
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $refreshToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $refreshToken'}),
       );
       return _success(response);
     } catch (e) {
@@ -473,6 +473,70 @@ class ApiService {
     }
   }
 
+  /// Fetch driver profile details.
+  /// Calls `GET /api/drivers/profile/me`.
+  Future<Map<String, dynamic>> getDriverProfile() async {
+    try {
+      final response = await _dio.get('/drivers/profile/me');
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  /// Toggle driver work started status.
+  /// Calls `PUT /api/drivers/{id}` with isWorkstarted.
+  Future<Map<String, dynamic>> updateWorkStatus({
+    required String id,
+    required bool isWorkstarted,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/drivers/$id',
+        data: {'isWorkstarted': isWorkstarted},
+      );
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  /// Get list of fleets available for takeout.
+  /// Calls `GET /api/fleets/list/driver`.
+  Future<Map<String, dynamic>> getAvailableFleets() async {
+    try {
+      final response = await _dio.get('/fleets/list/driver');
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  /// Fleet take-out.
+  /// Calls `POST /api/fleets/take-out` with fleetID in body.
+  Future<Map<String, dynamic>> takeOutFleet(String fleetId) async {
+    try {
+      final response = await _dio.post(
+        '/fleets/take-out',
+        data: {'fleetID': fleetId},
+      );
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  /// Fleet return.
+  /// Calls `POST /api/fleets/return`.
+  Future<Map<String, dynamic>> returnFleet() async {
+    try {
+      final response = await _dio.post('/fleets/return');
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
   /// Fetch all drivers (Admin endpoint).
   Future<Map<String, dynamic>> getAllDrivers({String? token}) async {
     try {
@@ -668,17 +732,22 @@ class ApiService {
           rawList = data;
         }
 
-        return rawList.map((b) {
-          try {
-            if (b is Map<String, dynamic>) {
-              return BookingModel.fromJson(b);
-            }
-            return null;
-          } catch (e) {
-            debugPrint('⚠️ Model Error │ Failed to parse regular booking: $e');
-            return null;
-          }
-        }).whereType<BookingModel>().toList();
+        return rawList
+            .map((b) {
+              try {
+                if (b is Map<String, dynamic>) {
+                  return BookingModel.fromJson(b);
+                }
+                return null;
+              } catch (e) {
+                debugPrint(
+                  '⚠️ Model Error │ Failed to parse regular booking: $e',
+                );
+                return null;
+              }
+            })
+            .whereType<BookingModel>()
+            .toList();
       }
       return [];
     } catch (e) {
@@ -716,17 +785,22 @@ class ApiService {
           rawList = data;
         }
 
-        return rawList.map((b) {
-          try {
-            if (b is Map<String, dynamic>) {
-              return BookingModel.fromJson(b);
-            }
-            return null;
-          } catch (e) {
-            debugPrint('⚠️ Model Error │ Failed to parse hourly booking: $e');
-            return null;
-          }
-        }).whereType<BookingModel>().toList();
+        return rawList
+            .map((b) {
+              try {
+                if (b is Map<String, dynamic>) {
+                  return BookingModel.fromJson(b);
+                }
+                return null;
+              } catch (e) {
+                debugPrint(
+                  '⚠️ Model Error │ Failed to parse hourly booking: $e',
+                );
+                return null;
+              }
+            })
+            .whereType<BookingModel>()
+            .toList();
       }
       return [];
     } catch (e) {
@@ -767,7 +841,9 @@ class ApiService {
     String? token,
   }) async {
     try {
-      final path = isHourly ? '/hourly-bookings/$bookingId/status' : '/bookings/$bookingId/status';
+      final path = isHourly
+          ? '/hourly-bookings/$bookingId/status'
+          : '/bookings/$bookingId/status';
       final response = await _dio.patch(
         path,
         data: {'bookingID': bookingId, 'status': 'AC'}, // AC = Accepted
@@ -794,10 +870,7 @@ class ApiService {
         return await updateHourlyBooking(
           bookingId: bookingId,
           token: token,
-          data: {
-            ...extraData,
-            'bookingStatus': status,
-          },
+          data: {...extraData, 'bookingStatus': status},
         );
       } else {
         final response = await _dio.patch(
@@ -821,7 +894,9 @@ class ApiService {
     String? token,
   }) async {
     try {
-      final path = isHourly ? '/hourly-bookings/$bookingId/status' : '/bookings/$bookingId/status';
+      final path = isHourly
+          ? '/hourly-bookings/$bookingId/status'
+          : '/bookings/$bookingId/status';
       final response = await _dio.patch(
         path,
         data: {'bookingID': bookingId, 'status': 'CA'}, // CA = Cancelled
@@ -874,9 +949,7 @@ class ApiService {
           : '/drivers/complete-booking/tracking';
       final response = await _dio.post(
         path,
-        data: {
-          'bookingID': bookingId,
-        },
+        data: {'bookingID': bookingId},
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
@@ -915,10 +988,12 @@ class ApiService {
     } catch (e) {
       if (e is DioException) {
         final statusCode = e.response?.statusCode;
-        
+
         // Retry for 401 Unauthorized
         if (statusCode == 401) {
-          debugPrint('🔄 completeBooking │ 401 detected, attempting token refresh retry...');
+          debugPrint(
+            '🔄 completeBooking │ 401 detected, attempting token refresh retry...',
+          );
           final newToken = await ensureValidToken();
           if (newToken != null) {
             try {
@@ -933,10 +1008,12 @@ class ApiService {
             }
           }
         }
-        
+
         // Fallback for 404 Not Found on regular bookings
         if (statusCode == 404 && !isHourly) {
-          debugPrint('🔄 completeBooking │ 404 detected on regular trip, falling back to status update...');
+          debugPrint(
+            '🔄 completeBooking │ 404 detected on regular trip, falling back to status update...',
+          );
           return await updateBookingStatus(
             bookingId: bookingId,
             status: 'C', // Completed
@@ -978,8 +1055,9 @@ class ApiService {
     String? token,
   }) async {
     try {
-      if (vehicleId == null) return {'success': false, 'message': 'Vehicle ID is required'};
-      
+      if (vehicleId == null)
+        return {'success': false, 'message': 'Vehicle ID is required'};
+
       final authToken = token ?? await ensureValidToken();
       final response = await _dio.get(
         '/hourly-routes/vehicle/$vehicleId',

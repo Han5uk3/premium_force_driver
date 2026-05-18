@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:premium_force_driver/account/account.dart';
 import 'package:premium_force_driver/bookings/bookings_page.dart';
 import 'package:premium_force_driver/common_widgets/bottomnavbar.dart';
+import 'package:premium_force_driver/home/dashboard_page.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,7 +14,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [BookingsPage(), AccountPage()];
+  final List<Widget> _pages = const [DashboardPage(), BookingsPage(), AccountPage()];
 
   void _onNavBarItemTapped(int index) {
     setState(() {

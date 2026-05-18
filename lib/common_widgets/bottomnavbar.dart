@@ -41,16 +41,22 @@ class BottomNavBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 MenuIcon(
-                  icon: Icons.calendar_today_outlined,
-                  label: loc.bookings,
+                  icon: Icons.dashboard_outlined,
+                  label: 'Dashboard',
                   isSelected: selectedIndex == 0,
                   onTap: () => onIndexChanged(0),
                 ),
                 MenuIcon(
-                  icon: Icons.account_circle_outlined,
-                  label: loc.account,
+                  icon: Icons.calendar_today_outlined,
+                  label: loc.bookings,
                   isSelected: selectedIndex == 1,
                   onTap: () => onIndexChanged(1),
+                ),
+                MenuIcon(
+                  icon: Icons.account_circle_outlined,
+                  label: loc.account,
+                  isSelected: selectedIndex == 2,
+                  onTap: () => onIndexChanged(2),
                 ),
               ],
             ),

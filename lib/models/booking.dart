@@ -34,7 +34,6 @@ abstract class BookingModel {
   final String? dropoffLocation;
   final double distance;
   final int estimatedDuration;
-  final String? arrival;
   final String? pickupdatetime;
 
   // Nested Objects
@@ -77,7 +76,6 @@ abstract class BookingModel {
     this.dropoffLocation,
     this.distance = 0.0,
     this.estimatedDuration = 0,
-    this.arrival,
     this.pickupdatetime,
     this.city,
     this.airport,
@@ -200,7 +198,6 @@ class StandardBookingModel extends BookingModel {
     required super.paymentMethod,
     required super.createdAt,
     required super.updatedAt,
-    super.arrival,
     super.pickupdatetime,
     this.flightNumber,
     required super.estimatedDuration,
@@ -252,8 +249,7 @@ class StandardBookingModel extends BookingModel {
       paymentMethod: json['paymentMethod']?.toString() ?? 'Card',
       createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
-      arrival: json['arrival']?.toString(),
-      pickupdatetime: json['pickupdatetime']?.toString() ?? json['pickupDateTime']?.toString(),
+      pickupdatetime: json['pickupdatetime']?.toString() ?? json['pickupDateTime']?.toString() ?? json['arrival']?.toString(),
       flightNumber: json['flightNumber']?.toString(),
       estimatedDuration: BookingModel._toInt(json['estimatedDuration']),
       city: cityData,
@@ -283,8 +279,8 @@ class StandardBookingModel extends BookingModel {
     'dropOffAddress': dropoffLocation,
     'charge': fare,
     'distance': distance,
+    'pickupDateTime': pickupdatetime,
     'pickupdatetime': pickupdatetime,
-    'arrival': arrival,
     'flightNumber': flightNumber,
   };
 
@@ -302,7 +298,7 @@ class StandardBookingModel extends BookingModel {
     pickupLocation: pickupLocation,
     pickupLatitude: pickupLatitude,
     pickupLongitude: pickupLongitude,
-    dropoffLocation: dropoffLocation ?? this.dropoffLocation!,
+    dropoffLocation: dropoffLocation,
     dropoffLatitude: dropoffLatitude,
     dropoffLongitude: dropoffLongitude,
     fare: fare,
@@ -313,7 +309,6 @@ class StandardBookingModel extends BookingModel {
     paymentMethod: paymentMethod,
     createdAt: createdAt,
     updatedAt: updatedAt,
-    arrival: arrival,
     pickupdatetime: pickupdatetime,
     flightNumber: flightNumber,
     estimatedDuration: estimatedDuration,

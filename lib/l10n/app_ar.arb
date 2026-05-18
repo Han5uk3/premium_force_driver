@@ -276,7 +276,32 @@
   "pauseTracking": "إيقاف التتبع مؤقتاً",
   "resumeTracking": "استئناف التتبع",
   "trackingPaused": "التتبع متوقف مؤقتاً",
-  "trackingResumed": "تم استئناف التتبع"
+  "trackingResumed": "تم استئناف التتبع",
+  "hello": "مرحباً،",
+  "selectVehicle": "اختر مركبة لاستلامها",
+  "noVehiclesAvailable": "لا توجد مركبات متاحة للاستلام.",
+  "licensePlate": "لوحة الترخيص",
+  "pickupVehicle": "استلام المركبة",
+  "confirmTakeOut": "تأكيد الاستلام",
+  "confirmTakeOutMessage": "هل أنت متأكد أنك تريد استلام ",
+  "returnVehicle": "إرجاع المركبة",
+  "confirmReturn": "تأكيد الإرجاع",
+  "confirmReturnMessage": "هل أنت متأكد أنك تريد إرجاع مركبتك النشطة؟",
+  "activeAndOnline": "نشط ومتصل",
+  "offline": "غير متصل",
+  "noVehicleTakenOut": "لم يتم استلام أي مركبة اليوم.",
+  "bookingSummary": "ملخص الحجز",
+  "activeRide": "تتبع الرحلة النشطة",
+  "noActiveRide": "لا توجد رحلة نشطة حالياً",
+  "activeRideTip": "ابدأ بتتبع حجز في علامة تبويب الحجوزات لتظهر هنا.",
+  "vehiclePickupSuccess": "تم استلام المركبة بنجاح!",
+  "vehicleReturnSuccess": "تم إرجاع المركبة بنجاح!",
+  "statusActive": "الحالة: نشط ومتصل",
+  "statusOffline": "الحالة: غير متصل",
+  "failedToUpdateStatus": "فشل تحديث الحالة",
+  "activeVehicle": "المركبة النشطة",
+  "failedToPickUpVehicle": "فشل استلام المركبة",
+  "failedToReturnVehicle": "فشل إرجاع المركبة"
 }
 
 

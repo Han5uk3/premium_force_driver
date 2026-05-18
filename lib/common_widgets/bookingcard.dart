@@ -273,9 +273,9 @@ class Bookingcard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withAlpha(13),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                    border: Border.all(color: Colors.amber.withAlpha(77)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -1759,6 +1759,81 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tracking Resumed'**
   String get trackingResumed;
+
+  /// Greeting prefix.
+  String get hello;
+
+  /// Select vehicle to take out text.
+  String get selectVehicle;
+
+  /// No fleets available for takeout text.
+  String get noVehiclesAvailable;
+
+  /// License plate label.
+  String get licensePlate;
+
+  /// Pickup vehicle label.
+  String get pickupVehicle;
+
+  /// Confirm take out header.
+  String get confirmTakeOut;
+
+  /// Confirm take out message prefix.
+  String get confirmTakeOutMessage;
+
+  /// Return vehicle button label.
+  String get returnVehicle;
+
+  /// Confirm return header.
+  String get confirmReturn;
+
+  /// Confirm return message.
+  String get confirmReturnMessage;
+
+  /// Active & Online status switch.
+  String get activeAndOnline;
+
+  /// Offline status switch.
+  String get offline;
+
+  /// No vehicle taken out fallback.
+  String get noVehicleTakenOut;
+
+  /// Booking summary section title.
+  String get bookingSummary;
+
+  /// Active Ride tracker section title.
+  String get activeRide;
+
+  /// No active tracked ride label.
+  String get noActiveRide;
+
+  /// Tip for active ride tracker.
+  String get activeRideTip;
+
+  /// Vehicle pickup success snackbar.
+  String get vehiclePickupSuccess;
+
+  /// Vehicle return success snackbar.
+  String get vehicleReturnSuccess;
+
+  /// Active status snackbar.
+  String get statusActive;
+
+  /// Offline status snackbar.
+  String get statusOffline;
+
+  /// Failed to update status snackbar error.
+  String get failedToUpdateStatus;
+
+  /// Active vehicle label fallback.
+  String get activeVehicle;
+
+  /// Failed to pick up vehicle snackbar error.
+  String get failedToPickUpVehicle;
+
+  /// Failed to return vehicle snackbar error.
+  String get failedToReturnVehicle;
 }
 
 class _AppLocalizationsDelegate
