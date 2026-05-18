@@ -530,6 +530,41 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Update the driver's profile image.
+  ///
+  /// Calls `PATCH /api/drivers/profile/profile-image` and re-fetches the latest profile.
+  Future<bool> updateProfileImage(File imageFile) async {
+    _isOtpLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final token = UserLocalStorage.getToken();
+      final result = await _api.updateProfileImage(
+        profileImage: imageFile,
+        token: token,
+      );
+
+      _isOtpLoading = false;
+
+      if (result['success'] == true) {
+        // Re-fetch profile to sync the updated profile image url
+        await fetchDriverProfile();
+        return true;
+      } else {
+        _errorMessage = result['message'] as String? ?? 'Failed to update profile image';
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Update profile image error: $e');
+      _isOtpLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Token Refresh
   // ---------------------------------------------------------------------------

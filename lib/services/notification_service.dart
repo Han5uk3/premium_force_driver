@@ -61,6 +61,34 @@ class NotificationService {
   // ── Callback invoked when a new FCM token is issued / refreshed
   void Function(String token)? onTokenRefresh;
 
+  // ── ValueNotifier to dynamically track unread notification count
+  final ValueNotifier<int> unreadCountNotifier = ValueNotifier<int>(0);
+
+  /// Synchronise the unread notifications count from local storage
+  void updateUnreadCount() {
+    unreadCountNotifier.value = UserLocalStorage.getNotifications()
+        .where((n) => !(n['read'] as bool? ?? false))
+        .length;
+  }
+
+  /// Parse and save a RemoteMessage notification to local storage
+  Future<void> handleAndSaveMessage(RemoteMessage message) async {
+    final notification = message.notification;
+    final title = notification?.title ?? message.data['title'] ?? 'New Notification';
+    final body = notification?.body ?? message.data['body'] ?? '';
+    final id = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
+
+    await UserLocalStorage.saveNotification({
+      'id': id,
+      'title': title,
+      'body': body,
+      'timestamp': DateTime.now().toIso8601String(),
+      'read': false,
+      'data': message.data,
+    });
+    updateUnreadCount();
+  }
+
   // ---------------------------------------------------------------------------
   // Initialise
   // ---------------------------------------------------------------------------
@@ -75,12 +103,16 @@ class NotificationService {
     // 3. Register background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
+    // Load initial unread count
+    updateUnreadCount();
+
     // 4. Foreground message handler
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
     // 5. Message-opened-from-notification-tray handler
-    FirebaseMessaging.onMessageOpenedApp.listen((msg) {
+    FirebaseMessaging.onMessageOpenedApp.listen((msg) async {
       debugPrint('🔔 FCM [opened-from-tray] │ ${msg.messageId}');
+      await handleAndSaveMessage(msg);
       onNotificationTap?.call(msg);
     });
 
@@ -90,6 +122,7 @@ class NotificationService {
       debugPrint(
         '🔔 FCM [launch-from-notification] │ ${initialMessage.messageId}',
       );
+      await handleAndSaveMessage(initialMessage);
       onNotificationTap?.call(initialMessage);
     }
 
@@ -182,6 +215,7 @@ class NotificationService {
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     debugPrint('🔔 FCM [foreground] │ ${message.notification?.title}');
+    await handleAndSaveMessage(message);
     final notification = message.notification;
     if (notification == null) return;
 

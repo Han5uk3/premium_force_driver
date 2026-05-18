@@ -893,7 +893,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licensePlate => 'License Plate';
 
   @override
-  String get pickupVehicle => 'Pickup Vehicle';
+  String get pickupVehicle => 'Fleet Takeout';
 
   @override
   String get confirmTakeOut => 'Confirm Take Out';
@@ -902,7 +902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmTakeOutMessage => 'Are you sure you want to take out ';
 
   @override
-  String get returnVehicle => 'Return Vehicle';
+  String get returnVehicle => 'Return Fleet';
 
   @override
   String get confirmReturn => 'Confirm Return';
@@ -912,7 +912,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to return your active vehicle?';
 
   @override
-  String get activeAndOnline => 'Active & Online';
+  String get activeAndOnline => 'Available';
 
   @override
   String get offline => 'Offline';
@@ -922,6 +922,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingSummary => 'Booking Summary';
+
+  @override
+  String get workStatus => 'Work Status';
 
   @override
   String get activeRide => 'Active Ride Tracker';
@@ -940,7 +943,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleReturnSuccess => 'Vehicle returned successfully!';
 
   @override
-  String get statusActive => 'Status: Active and Online';
+  String get statusActive => 'Status: Available';
 
   @override
   String get statusOffline => 'Status: Offline';
@@ -962,4 +965,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get language => 'Language';
+
+  @override
+  String get fetchingFleetsForTakeout =>
+      'Fetching available fleets for takeout...';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get noNotifications => 'No notifications yet';
+
+  @override
+  String get markAllAsRead => 'Mark all as read';
+
+  @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String get notificationDeleted => 'Notification deleted';
+
+  @override
+  String get allMarkedAsRead => 'All notifications marked as read';
+
+  @override
+  String get allCleared => 'All notifications cleared';
 }

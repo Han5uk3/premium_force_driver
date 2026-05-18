@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:premium_force_driver/common_widgets/premiumloader.dart';
 import 'package:premium_force_driver/common_widgets/textfield.dart';
+import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
@@ -27,9 +28,38 @@ class _ManageProfilePageState extends State<ManageProfilePage>
   File? _profileImage;
   double? latitude;
   double? longitude;
-  final bool _isLoading = false;
+  bool _isLoading = false;
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
+
+  Future<void> _uploadProfileImage(File file) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await Provider.of<AuthProvider>(context, listen: false)
+        .updateProfileImage(file);
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (success) {
+      AnimatedSnackBar.show(
+        context,
+        AppLocalizations.of(context)!.profileUpdatedSuccessfully,
+        'S',
+      );
+    } else {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      AnimatedSnackBar.show(
+        context,
+        authProvider.errorMessage ?? 'Failed to update profile image',
+        'E',
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -132,9 +162,11 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                             imageQuality: 85,
                           );
                           if (image != null) {
+                            final file = File(image.path);
                             setState(() {
-                              _profileImage = File(image.path);
+                              _profileImage = file;
                             });
+                            _uploadProfileImage(file);
                           }
                         },
                       ),
@@ -150,9 +182,11 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                             imageQuality: 85,
                           );
                           if (image != null) {
+                            final file = File(image.path);
                             setState(() {
-                              _profileImage = File(image.path);
+                              _profileImage = file;
                             });
+                            _uploadProfileImage(file);
                           }
                         },
                       ),
@@ -310,9 +344,7 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                         // Profile Picture
                         Center(
                           child: GestureDetector(
-                            onTap: () {},
-
-                            //  _pickImage,
+                            onTap: _pickImage,
                             child: Stack(
                               children: [
                                 // Gradient border
@@ -379,52 +411,52 @@ class _ManageProfilePageState extends State<ManageProfilePage>
                                   ),
                                 ),
                                 // Camera edit icon
-                                // Positioned(
-                                //   bottom: 2,
-                                //   right: 2,
-                                //   child: Container(
-                                //     width: 34,
-                                //     height: 34,
-                                //     decoration: BoxDecoration(
-                                //       shape: BoxShape.circle,
-                                //       gradient: const LinearGradient(
-                                //         colors: [
-                                //           Color(0xFF404040),
-                                //           Color(0xFFC0C0C0),
-                                //           Color(0xFF808080),
-                                //         ],
-                                //       ),
-                                //       boxShadow: [
-                                //         BoxShadow(
-                                //           color: Colors.black.withAlpha(100),
-                                //           blurRadius: 6,
-                                //           offset: const Offset(0, 2),
-                                //         ),
-                                //       ],
-                                //     ),
-                                //     child: const Icon(
-                                //       Icons.camera_alt_rounded,
-                                //       color: Colors.black,
-                                //       size: 18,
-                                //     ),
-                                //   ),
-                                // ),
+                                Positioned(
+                                  bottom: 2,
+                                  right: 2,
+                                  child: Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF404040),
+                                          Color(0xFFC0C0C0),
+                                          Color(0xFF808080),
+                                        ],
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(100),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt_rounded,
+                                      color: Colors.black,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                         ),
                         const SizedBox(height: 8),
 
-                        // Center(
-                        //   child: Text(
-                        //     AppLocalizations.of(context)!.tapToAddPhoto,
-                        //     style: TextStyle(
-                        //       color: Colors.white.withAlpha(100),
-                        //       fontSize: 10,
-                        //       fontWeight: FontWeight.w400,
-                        //     ),
-                        //   ),
-                        // ),
+                        Center(
+                          child: Text(
+                            AppLocalizations.of(context)!.tapToAddPhoto,
+                            style: TextStyle(
+                              color: Colors.white.withAlpha(100),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 28),
 
                         // Name field

@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:premium_force_driver/firebase_options.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
+import 'package:premium_force_driver/home/notifications_page.dart';
 
 
 /// Global navigator key – allows navigating from outside a widget tree
@@ -45,6 +46,9 @@ void main() async {
 /// when the app is launched from a terminated-state notification).
 void _handleNotificationTap(RemoteMessage message) {
   debugPrint('🔔 Notification tapped │ Opening app');
+  navigatorKey.currentState?.push(
+    MaterialPageRoute(builder: (_) => const NotificationsPage()),
+  );
 }
 
 class MainApp extends StatefulWidget {

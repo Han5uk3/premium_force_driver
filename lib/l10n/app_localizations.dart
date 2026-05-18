@@ -1787,7 +1787,7 @@ abstract class AppLocalizations {
   /// No description provided for @pickupVehicle.
   ///
   /// In en, this message translates to:
-  /// **'Pickup Vehicle'**
+  /// **'Fleet Takeout'**
   String get pickupVehicle;
 
   /// No description provided for @confirmTakeOut.
@@ -1805,7 +1805,7 @@ abstract class AppLocalizations {
   /// No description provided for @returnVehicle.
   ///
   /// In en, this message translates to:
-  /// **'Return Vehicle'**
+  /// **'Return Fleet'**
   String get returnVehicle;
 
   /// No description provided for @confirmReturn.
@@ -1823,7 +1823,7 @@ abstract class AppLocalizations {
   /// No description provided for @activeAndOnline.
   ///
   /// In en, this message translates to:
-  /// **'Active & Online'**
+  /// **'Available'**
   String get activeAndOnline;
 
   /// No description provided for @offline.
@@ -1843,6 +1843,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Booking Summary'**
   String get bookingSummary;
+
+  /// No description provided for @workStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Status'**
+  String get workStatus;
 
   /// No description provided for @activeRide.
   ///
@@ -1877,7 +1883,7 @@ abstract class AppLocalizations {
   /// No description provided for @statusActive.
   ///
   /// In en, this message translates to:
-  /// **'Status: Active and Online'**
+  /// **'Status: Available'**
   String get statusActive;
 
   /// No description provided for @statusOffline.
@@ -1921,6 +1927,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get language;
+
+  /// No description provided for @fetchingFleetsForTakeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching available fleets for takeout...'**
+  String get fetchingFleetsForTakeout;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet'**
+  String get noNotifications;
+
+  /// No description provided for @markAllAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllAsRead;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAll;
+
+  /// No description provided for @notificationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification deleted'**
+  String get notificationDeleted;
+
+  /// No description provided for @allMarkedAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications marked as read'**
+  String get allMarkedAsRead;
+
+  /// No description provided for @allCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications cleared'**
+  String get allCleared;
 }
 
 class _AppLocalizationsDelegate

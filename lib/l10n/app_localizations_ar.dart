@@ -881,7 +881,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get licensePlate => 'لوحة الترخيص';
 
   @override
-  String get pickupVehicle => 'استلام المركبة';
+  String get pickupVehicle => 'استلام الأسطول';
 
   @override
   String get confirmTakeOut => 'تأكيد الاستلام';
@@ -890,7 +890,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmTakeOutMessage => 'هل أنت متأكد أنك تريد استلام ';
 
   @override
-  String get returnVehicle => 'إرجاع المركبة';
+  String get returnVehicle => 'إرجاع الأسطول';
 
   @override
   String get confirmReturn => 'تأكيد الإرجاع';
@@ -900,7 +900,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'هل أنت متأكد أنك تريد إرجاع مركبتك النشطة؟';
 
   @override
-  String get activeAndOnline => 'نشط ومتصل';
+  String get activeAndOnline => 'متاح';
 
   @override
   String get offline => 'غير متصل';
@@ -910,6 +910,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bookingSummary => 'ملخص الحجز';
+
+  @override
+  String get workStatus => 'حالة العمل';
 
   @override
   String get activeRide => 'تتبع الرحلة النشطة';
@@ -928,7 +931,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get vehicleReturnSuccess => 'تم إرجاع المركبة بنجاح!';
 
   @override
-  String get statusActive => 'الحالة: نشط ومتصل';
+  String get statusActive => 'الحالة: متاح';
 
   @override
   String get statusOffline => 'الحالة: غير متصل';
@@ -950,4 +953,29 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get language => 'اللغة';
+
+  @override
+  String get fetchingFleetsForTakeout =>
+      'جاري جلب الأساطيل المتاحة للاستلام...';
+
+  @override
+  String get notificationsTitle => 'الإشعارات';
+
+  @override
+  String get noNotifications => 'لا توجد إشعارات بعد';
+
+  @override
+  String get markAllAsRead => 'تحديد الكل كمقروء';
+
+  @override
+  String get clearAll => 'مسح الكل';
+
+  @override
+  String get notificationDeleted => 'تم حذف الإشعار';
+
+  @override
+  String get allMarkedAsRead => 'تم تحديد جميع الإشعارات كمقروءة';
+
+  @override
+  String get allCleared => 'تم مسح جميع الإشعارات';
 }

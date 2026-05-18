@@ -461,6 +461,7 @@ class ActiveCarDetails {
   final String model;
   final int numberOfPassengers;
   final String? carImageUrl;
+  final String? brandName;
 
   ActiveCarDetails({
     required this.id,
@@ -468,6 +469,7 @@ class ActiveCarDetails {
     required this.model,
     required this.numberOfPassengers,
     this.carImageUrl,
+    this.brandName,
   });
 
   factory ActiveCarDetails.fromJson(Map<String, dynamic> json) {
@@ -479,12 +481,21 @@ class ActiveCarDetails {
       imageUrl = imageRaw['url'] as String?;
     }
 
+    String? brand;
+    final brandRaw = json['brandID'] ?? json['brand'] ?? json['brandName'];
+    if (brandRaw is Map<String, dynamic>) {
+      brand = brandRaw['brandName']?.toString();
+    } else if (brandRaw is String) {
+      brand = brandRaw;
+    }
+
     return ActiveCarDetails(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       carName: json['carName']?.toString() ?? '',
       model: json['model']?.toString() ?? '',
       numberOfPassengers: (json['numberOfPassengers'] as int?) ?? 0,
       carImageUrl: imageUrl,
+      brandName: brand,
     );
   }
 
@@ -495,6 +506,7 @@ class ActiveCarDetails {
       'model': model,
       'numberOfPassengers': numberOfPassengers,
       'carImage': carImageUrl,
+      'brandName': brandName,
     };
   }
 }

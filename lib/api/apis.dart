@@ -485,15 +485,17 @@ class ApiService {
   }
 
   /// Toggle driver work started status.
-  /// Calls `PUT /api/drivers/{id}` with isWorkstarted.
+  /// Calls `PATCH /api/drivers/work-status`.
   Future<Map<String, dynamic>> updateWorkStatus({
-    required String id,
+    String? id,
     required bool isWorkstarted,
+    String? token,
   }) async {
     try {
-      final response = await _dio.put(
-        '/drivers/$id',
-        data: {'isWorkstarted': isWorkstarted},
+      final authToken = token ?? await ensureValidToken();
+      final response = await _dio.patch(
+        '/drivers/work-status',
+        options: authToken != null ? _authOptions(authToken) : null,
       );
       return _success(response);
     } catch (e) {
@@ -672,6 +674,32 @@ class ApiService {
       final response = await _dio.put(
         '/drivers/$id',
         data: FormData.fromMap(fields),
+        options: token != null ? _authOptions(token) : null,
+      );
+      return _success(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  /// Update the driver's profile image.
+  /// Calls `PATCH /api/drivers/profile/profile-image` with form-data.
+  Future<Map<String, dynamic>> updateProfileImage({
+    required File profileImage,
+    String? token,
+  }) async {
+    try {
+      final filename = profileImage.path.split('/').last;
+      final formData = FormData.fromMap({
+        'profileImage': await MultipartFile.fromFile(
+          profileImage.path,
+          filename: filename,
+        ),
+      });
+
+      final response = await _dio.patch(
+        '/drivers/profile/profile-image',
+        data: formData,
         options: token != null ? _authOptions(token) : null,
       );
       return _success(response);
@@ -1055,8 +1083,9 @@ class ApiService {
     String? token,
   }) async {
     try {
-      if (vehicleId == null)
+      if (vehicleId == null) {
         return {'success': false, 'message': 'Vehicle ID is required'};
+      }
 
       final authToken = token ?? await ensureValidToken();
       final response = await _dio.get(
@@ -1082,13 +1111,13 @@ class ApiService {
   /// Call this after login / signup once you have both a valid driver id and an
   /// FCM token.
   Future<Map<String, dynamic>> updateFcmToken({
-    required String userid,
+    String? userid,
     required String fcmToken,
     String? token,
   }) async {
     try {
-      final response = await _dio.put(
-        '/drivers/$userid/driver/fcm-token',
+      final response = await _dio.patch(
+        '/drivers/fcm-token',
         data: {'fcmToken': fcmToken},
         options: token != null ? _authOptions(token) : null,
       );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:provider/provider.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/providers/bookings_provider.dart';
@@ -6,7 +7,8 @@ import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/booking.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/common_widgets/bookingcard.dart';
-import 'package:premium_force_driver/services/tracking_service.dart';
+import 'package:premium_force_driver/services/notification_service.dart';
+import 'package:premium_force_driver/home/notifications_page.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
@@ -21,6 +23,7 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   bool _isLoadingFleets = false;
   List<dynamic> _availableFleets = [];
+  bool _isTogglingStatus = false;
 
   @override
   void initState() {
@@ -78,7 +81,61 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _showPickupVehicleBottomSheet(BuildContext context) async {
-    await _fetchAvailableFleets(context);
+    // Show a premium loading dialog first
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        final dialogLoc = AppLocalizations.of(context)!;
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            backgroundColor: const Color(0xFF1E1E1E),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFC0C0C0),
+                      strokeWidth: 3,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Text(
+                      dialogLoc.fetchingFleetsForTakeout,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      await _fetchAvailableFleets(context);
+    } finally {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
 
     if (!mounted) return;
 
@@ -148,6 +205,14 @@ class _DashboardPageState extends State<DashboardPage> {
                           final licenseNumber =
                               item['carLicenseNumber'] ?? 'N/A';
 
+                          final brandRaw = carId['brandID'] ?? carId['brand'];
+                          final brandName = (brandRaw is Map)
+                              ? (brandRaw['brandName'] ?? '')
+                              : (brandRaw is String ? brandRaw : '');
+                          final displayName =
+                              '${brandName.isNotEmpty ? "$brandName " : ""}$carName $model'
+                                  .trim();
+
                           return Card(
                             color: const Color(0xFF292929),
                             shape: RoundedRectangleBorder(
@@ -172,7 +237,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 ),
                               ),
                               title: Text(
-                                '$carName $model'.trim(),
+                                displayName,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -191,13 +256,13 @@ class _DashboardPageState extends State<DashboardPage> {
                                 onPressed: () => _confirmAndTakeOutFleet(
                                   context,
                                   item['_id'].toString(),
-                                  '$carName $model'.trim(),
+                                  displayName,
                                 ),
                               ),
                               onTap: () => _confirmAndTakeOutFleet(
                                 context,
                                 item['_id'].toString(),
-                                '$carName $model'.trim(),
+                                displayName,
                               ),
                             ),
                           );
@@ -214,15 +279,18 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _confirmAndTakeOutFleet(
-    BuildContext context,
+    BuildContext sheetContext,
     String fleetId,
     String vehicleName,
   ) async {
-    Navigator.pop(context); // Close bottom sheet first
+    Navigator.pop(sheetContext); // Close bottom sheet first
 
-    final loc = AppLocalizations.of(context)!;
+    if (!mounted) return;
+
+    final pageContext = this.context;
+    final loc = AppLocalizations.of(pageContext)!;
     final confirm = await showDialog<bool>(
-      context: context,
+      context: pageContext,
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E1E),
@@ -270,16 +338,16 @@ class _DashboardPageState extends State<DashboardPage> {
 
     if (!mounted) return;
 
-    final authProvider = context.read<AuthProvider>();
+    final authProvider = pageContext.read<AuthProvider>();
     final success = await authProvider.takeOutFleet(fleetId);
 
     if (!mounted) return;
 
     if (success) {
-      AnimatedSnackBar.show(context, loc.vehiclePickupSuccess, 'S');
+      AnimatedSnackBar.show(pageContext, loc.vehiclePickupSuccess, 'S');
     } else {
       AnimatedSnackBar.show(
-        context,
+        pageContext,
         authProvider.errorMessage ?? loc.failedToPickUpVehicle,
         'E',
       );
@@ -357,24 +425,38 @@ class _DashboardPageState extends State<DashboardPage> {
     BuildContext context,
     bool isWorkstarted,
   ) async {
-    final loc = AppLocalizations.of(context)!;
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.toggleWorkStatus(isWorkstarted);
+    if (_isTogglingStatus) return;
 
-    if (!mounted) return;
+    setState(() {
+      _isTogglingStatus = true;
+    });
 
-    if (success) {
-      AnimatedSnackBar.show(
-        context,
-        isWorkstarted ? loc.statusActive : loc.statusOffline,
-        'S',
-      );
-    } else {
-      AnimatedSnackBar.show(
-        context,
-        authProvider.errorMessage ?? loc.failedToUpdateStatus,
-        'E',
-      );
+    try {
+      final loc = AppLocalizations.of(context)!;
+      final authProvider = context.read<AuthProvider>();
+      final success = await authProvider.toggleWorkStatus(isWorkstarted);
+
+      if (!mounted) return;
+
+      if (success) {
+        AnimatedSnackBar.show(
+          context,
+          isWorkstarted ? loc.statusActive : loc.statusOffline,
+          'S',
+        );
+      } else {
+        AnimatedSnackBar.show(
+          context,
+          authProvider.errorMessage ?? loc.failedToUpdateStatus,
+          'E',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTogglingStatus = false;
+        });
+      }
     }
   }
 
@@ -461,14 +543,58 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           actions: [
-            IconButton(
-              icon: const Icon(
-                Icons.notifications_outlined,
-                color: Colors.white,
-                size: 26,
-              ),
-              onPressed: () {
-                // Future notification screen integration
+            ValueListenableBuilder<int>(
+              valueListenable: NotificationService.instance.unreadCountNotifier,
+              builder: (context, unreadCount, _) {
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.notifications_outlined,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationsPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF303030),
+                              width: 1.5,
+                            ),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
               },
             ),
             const SizedBox(width: 8),
@@ -485,6 +611,16 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 1. Status and Vehicle Card
+                Text(
+                  loc.workStatus,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Card(
                   color: const Color(0xFF1E1E1E),
                   shape: RoundedRectangleBorder(
@@ -526,8 +662,10 @@ class _DashboardPageState extends State<DashboardPage> {
                               value: isOnline,
                               activeThumbColor: Colors.green,
                               inactiveTrackColor: Colors.grey.shade800,
-                              onChanged: (val) =>
-                                  _handleToggleWorkStatus(context, val),
+                              onChanged: _isTogglingStatus
+                                  ? null
+                                  : (val) =>
+                                        _handleToggleWorkStatus(context, val),
                             ),
                           ],
                         ),
@@ -560,8 +698,10 @@ class _DashboardPageState extends State<DashboardPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '${activeVehicle.car?.carName ?? loc.activeVehicle} ${activeVehicle.car?.model ?? ""}'
-                                          .trim(),
+                                      (activeVehicle.car != null
+                                          ? '${activeVehicle.car!.brandName != null && activeVehicle.car!.brandName!.isNotEmpty ? "${activeVehicle.car!.brandName!} " : ""}${activeVehicle.car!.carName} ${activeVehicle.car!.model}'
+                                                .trim()
+                                          : loc.activeVehicle),
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
@@ -625,31 +765,33 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () =>
-                                  _showPickupVehicleBottomSheet(context),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFC0C0C0),
-                                foregroundColor: Colors.black,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                          if (isOnline) ...[
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () =>
+                                    _showPickupVehicleBottomSheet(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFC0C0C0),
+                                  foregroundColor: Colors.black,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(
-                                loc.pickupVehicle,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                child: Text(
+                                  loc.pickupVehicle,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
                       ],
                     ),
