@@ -36,6 +36,18 @@ class AuthProvider extends ChangeNotifier {
   final ApiService _api = ApiService();
   Timer? _resendTimer;
 
+  AuthProvider() {
+    _api.onSessionExpired = () {
+      if (_status != AuthStatus.unauthenticated && _status != AuthStatus.initial) {
+        Future.microtask(() async {
+          await logout();
+          _errorMessage = 'Session expired. Please log in again.';
+          notifyListeners();
+        });
+      }
+    };
+  }
+
   AuthStatus _status = AuthStatus.initial;
   AuthStatus get status => _status;
 
@@ -299,16 +311,25 @@ class AuthProvider extends ChangeNotifier {
         // --- Save tokens ---
         final data = result['data'] as Map<String, dynamic>?;
         final tokens =
-            (result['tokens'] ?? data?['tokens'] ?? result) as Map<String, dynamic>?;
+            (result['tokens'] ?? data?['tokens'] ?? data ?? result) as Map<String, dynamic>?;
 
-        final accessToken =
-            (result['accessToken'] ?? tokens?['accessToken'] ?? result['token']) as String?;
-        final refreshToken =
-            (result['refreshToken'] ?? tokens?['refreshToken']) as String?;
+        final accessToken = (result['accessToken'] ??
+            tokens?['accessToken'] ??
+            data?['accessToken'] ??
+            result['token'] ??
+            data?['token']) as String?;
+            
+        final refreshToken = (result['refreshToken'] ??
+            tokens?['refreshToken'] ??
+            data?['refreshToken']) as String?;
+            
         final rawExpiresIn = result['expiresIn'] ??
             tokens?['expiresIn'] ??
+            data?['expiresIn'] ??
             result['expires_in'] ??
-            tokens?['expires_in'];
+            tokens?['expires_in'] ??
+            data?['expires_in'];
+            
         final expiresIn = rawExpiresIn != null
             ? int.tryParse(rawExpiresIn.toString())
             : null;

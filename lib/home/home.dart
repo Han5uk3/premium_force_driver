@@ -8,13 +8,12 @@ class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<Home> createState() => HomeState();
 }
 
-class _HomeState extends State<Home> {
+class HomeState extends State<Home> {
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = const [DashboardPage(), BookingsPage(), AccountPage()];
+  int _bookingsTabIndex = 0;
 
   void _onNavBarItemTapped(int index) {
     setState(() {
@@ -22,10 +21,32 @@ class _HomeState extends State<Home> {
     });
   }
 
+  void navigateToBookings(int tabIndex) {
+    setState(() {
+      _selectedIndex = 1;
+      _bookingsTabIndex = tabIndex;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    Widget bodyWidget;
+    switch (_selectedIndex) {
+      case 0:
+        bodyWidget = const DashboardPage();
+        break;
+      case 1:
+        bodyWidget = BookingsPage(initialIndex: _bookingsTabIndex);
+        break;
+      case 2:
+        bodyWidget = const AccountPage();
+        break;
+      default:
+        bodyWidget = const DashboardPage();
+    }
+
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: bodyWidget,
       bottomNavigationBar: BottomNavBar(
         selectedIndex: _selectedIndex,
         onIndexChanged: _onNavBarItemTapped,

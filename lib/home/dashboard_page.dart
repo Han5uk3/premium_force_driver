@@ -10,6 +10,7 @@ import 'package:premium_force_driver/common_widgets/bookingcard.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
 import 'package:premium_force_driver/home/notifications_page.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
+import 'package:premium_force_driver/home/home.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
@@ -344,7 +345,12 @@ class _DashboardPageState extends State<DashboardPage> {
     if (!mounted) return;
 
     if (success) {
-      AnimatedSnackBar.show(pageContext, loc.vehiclePickupSuccess, 'S');
+      AnimatedSnackBar.show(
+        pageContext,
+        loc.vehiclePickupSuccess,
+        'S',
+        isFullWidth: true,
+      );
     } else {
       AnimatedSnackBar.show(
         pageContext,
@@ -411,7 +417,12 @@ class _DashboardPageState extends State<DashboardPage> {
     if (!mounted) return;
 
     if (success) {
-      AnimatedSnackBar.show(context, loc.vehicleReturnSuccess, 'S');
+      AnimatedSnackBar.show(
+        context,
+        loc.vehicleReturnSuccess,
+        'S',
+        isFullWidth: true,
+      );
     } else {
       AnimatedSnackBar.show(
         context,
@@ -438,13 +449,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
       if (!mounted) return;
 
-      if (success) {
-        AnimatedSnackBar.show(
-          context,
-          isWorkstarted ? loc.statusActive : loc.statusOffline,
-          'S',
-        );
-      } else {
+      if (!success) {
         AnimatedSnackBar.show(
           context,
           authProvider.errorMessage ?? loc.failedToUpdateStatus,
@@ -821,6 +826,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         const Color(0xFF4A4A4A),
                         const Color(0xFF606060),
                       ],
+                      onTap: () {
+                        final homeState = context
+                            .findAncestorStateOfType<HomeState>();
+                        homeState?.navigateToBookings(0);
+                      },
                     ),
                     const SizedBox(width: 10),
                     _buildStatCard(
@@ -830,6 +840,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         const Color(0xFF6B5330),
                         const Color(0xFF4D3D27),
                       ],
+                      onTap: () {
+                        final homeState = context
+                            .findAncestorStateOfType<HomeState>();
+                        homeState?.navigateToBookings(1);
+                      },
                     ),
                     const SizedBox(width: 10),
                     _buildStatCard(
@@ -839,6 +854,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         const Color(0xFF324D39),
                         const Color(0xFF233628),
                       ],
+                      onTap: () {
+                        final homeState = context
+                            .findAncestorStateOfType<HomeState>();
+                        homeState?.navigateToBookings(2);
+                      },
                     ),
                   ],
                 ),
@@ -932,48 +952,52 @@ class _DashboardPageState extends State<DashboardPage> {
     required String label,
     required int count,
     required List<Color> gradientColors,
+    VoidCallback? onTap,
   }) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradientColors,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: gradientColors,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(50),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(50),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              count.toString(),
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                count.toString(),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.white70,
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

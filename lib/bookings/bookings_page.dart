@@ -11,7 +11,8 @@ import 'booking_details_page.dart';
 import 'package:premium_force_driver/common_widgets/booking_shimmer.dart';
 
 class BookingsPage extends StatefulWidget {
-  const BookingsPage({super.key});
+  final int initialIndex;
+  const BookingsPage({super.key, this.initialIndex = 0});
 
   @override
   State<BookingsPage> createState() => _BookingsPageState();
@@ -24,7 +25,7 @@ class _BookingsPageState extends State<BookingsPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialIndex);
 
     // Fetch bookings when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -32,6 +33,14 @@ class _BookingsPageState extends State<BookingsPage>
         context.read<BookingsProvider>().fetchBookings();
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(BookingsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialIndex != oldWidget.initialIndex) {
+      _tabController.animateTo(widget.initialIndex);
+    }
   }
 
   @override

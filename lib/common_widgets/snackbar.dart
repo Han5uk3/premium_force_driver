@@ -5,11 +5,14 @@ class AnimatedSnackBar extends StatefulWidget {
   final VoidCallback onDismissed;
   final String type;
 
+  final bool isFullWidth;
+
   const AnimatedSnackBar({
     super.key,
     required this.message,
     required this.onDismissed,
     required this.type,
+    this.isFullWidth = true,
   });
 
   @override
@@ -17,7 +20,12 @@ class AnimatedSnackBar extends StatefulWidget {
 
   static OverlayEntry? _currentOverlay;
 
-  static void show(BuildContext context, String message, String type) {
+  static void show(
+    BuildContext context,
+    String message,
+    String type, {
+    bool isFullWidth = true,
+  }) {
     dismiss();
     final overlay = Overlay.of(context);
     _currentOverlay = OverlayEntry(
@@ -27,13 +35,21 @@ class AnimatedSnackBar extends StatefulWidget {
         right: 20,
         child: Material(
           color: Colors.transparent,
-          child: Center(
-            child: AnimatedSnackBar(
-              message: message,
-              type: type,
-              onDismissed: () => dismiss(),
-            ),
-          ),
+          child: isFullWidth
+              ? AnimatedSnackBar(
+                  message: message,
+                  type: type,
+                  isFullWidth: true,
+                  onDismissed: () => dismiss(),
+                )
+              : Center(
+                  child: AnimatedSnackBar(
+                    message: message,
+                    type: type,
+                    isFullWidth: false,
+                    onDismissed: () => dismiss(),
+                  ),
+                ),
         ),
       ),
     );
@@ -142,13 +158,16 @@ class AnimatedSnackBarState extends State<AnimatedSnackBar>
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(Icons.info_outline, color: getSnackbarType()),
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
                           widget.message,
+                          textAlign: TextAlign.start,
                           style: TextStyle(
                             color: getSnackbarType(),
                             fontWeight: FontWeight.w600,

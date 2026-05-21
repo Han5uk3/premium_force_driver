@@ -426,15 +426,17 @@ class BookingsProvider extends ChangeNotifier {
       return s == 'c' || s == 'completed' || s == 'reviewed';
     }).toList();
 
-    // 3. Ongoing: All other statuses EXCEPT Pending (P) and Completed (C) and Cancelled (CA)
-    // The user said "all other", but we hide pending (P).
+    // 3. Ongoing: Only include explicit ongoing statuses
     _ongoingBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
-      if (s == 'p' || s == 'pending') return false; // Hide pending
-      if (s == 'ac' || s == 'assigned' || s == 'accepted' || s == 'confirmed') return false; // Already in Upcoming
-      if (s == 'c' || s == 'completed' || s == 'reviewed') return false; // Already in Completed
-      if (s == 'ca' || s == 'cancelled' || s == 'x') return false; // We don't show cancelled in Ongoing usually
-      return true; // Everything else (ongoing, started, starttracking, stoptracking, paymentpending, etc.)
+      return s == 'og' || 
+             s == 'ongoing' || 
+             s == 'started' || 
+             s == 'starttracking' || 
+             s == 'tracking' || 
+             s == 'stoptracking' || 
+             s == 'stopped' || 
+             s == 'paymentpending';
     }).toList();
 
     debugPrint('📊 FILTERED: UI Counts: '

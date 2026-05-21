@@ -34,6 +34,7 @@ class ApiService {
 
   late final Dio _dio;
   Future<String?>? _refreshFuture;
+  VoidCallback? onSessionExpired;
 
   ApiService._internal() {
     _dio = Dio(
@@ -71,6 +72,7 @@ class ApiService {
 
             // Avoid infinite loop if refresh itself fails with 401
             if (e.requestOptions.path.contains('refresh-token')) {
+              onSessionExpired?.call();
               return handler.next(e);
             }
 
@@ -87,9 +89,12 @@ class ApiService {
 
                 final response = await _dio.fetch(options);
                 return handler.resolve(response);
+              } else {
+                onSessionExpired?.call();
               }
             } catch (retryError) {
               debugPrint('🌐 API │ Global retry failed: $retryError');
+              onSessionExpired?.call();
             }
           }
           return handler.next(e);
@@ -156,6 +161,7 @@ class ApiService {
     final refreshToken = UserLocalStorage.getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
       debugPrint('❌ Token Service │ Cannot refresh: no refresh token stored');
+      onSessionExpired?.call();
       return null;
     }
 
@@ -164,12 +170,21 @@ class ApiService {
       final result = await refreshAccessToken(refreshToken: refreshToken);
 
       if (result['success'] == true) {
-        final newAccessToken = result['accessToken'] as String?;
-        final newRefreshToken = result['refreshToken'] as String?;
-        final rawExpiresIn = result['expiresIn'];
-        final expiresIn = rawExpiresIn != null
-            ? int.tryParse(rawExpiresIn.toString())
-            : null;
+        final data = result['data'] as Map<String, dynamic>?;
+        
+        final newAccessToken = (result['accessToken'] ?? data?['accessToken']) as String?;
+        final newRefreshToken = (result['refreshToken'] ?? data?['refreshToken']) as String?;
+        final rawExpiresIn = result['expiresIn'] ?? data?['expiresIn'] ?? result['expires_in'] ?? data?['expires_in'];
+        
+        // Parse expiresIn if it's a number, or handle string like "1d"
+        int? expiresIn;
+        if (rawExpiresIn != null) {
+          if (rawExpiresIn.toString().toLowerCase() == '1d') {
+            expiresIn = 86400; // 24 hours in seconds
+          } else {
+            expiresIn = int.tryParse(rawExpiresIn.toString());
+          }
+        }
 
         if (newAccessToken != null) {
           await UserLocalStorage.saveTokens(
@@ -185,9 +200,11 @@ class ApiService {
       debugPrint(
         '❌ Token Service │ Failed to refresh token: ${result['message']}',
       );
+      onSessionExpired?.call();
       return null;
     } catch (e) {
       debugPrint('❌ Token Service │ Error: $e');
+      onSessionExpired?.call();
       return null;
     }
   }
@@ -242,8 +259,12 @@ class ApiService {
           'purpose': purpose,
         },
       );
+      debugPrint('Verify OTP Full Response: ${response.data}');
       return _success(response);
     } catch (e) {
+      if (e is DioException) {
+        debugPrint('Verify OTP Error Response: ${e.response?.data}');
+      }
       return _handleError(e);
     }
   }
@@ -254,9 +275,8 @@ class ApiService {
   }) async {
     try {
       final response = await _dio.post(
-        'drivers/refresh-token',
+        '/drivers/refresh-token',
         data: {'refreshToken': refreshToken},
-        options: Options(headers: {'Authorization': 'Bearer $refreshToken'}),
       );
       return _success(response);
     } catch (e) {
@@ -738,7 +758,7 @@ class ApiService {
   }) async {
     try {
       final response = await _dio.get(
-        '/bookings/driver/$driverId',
+        '/bookings/driver/list',
         options: token != null ? _authOptions(token) : null,
       );
 
@@ -793,7 +813,7 @@ class ApiService {
   }) async {
     try {
       final response = await _dio.get(
-        '/hourly-bookings/driver/$driverId',
+        '/hourly-bookings/driver/list',
         options: token != null ? _authOptions(token) : null,
       );
 
@@ -965,7 +985,7 @@ class ApiService {
 
   /// Start tracking a booking.
   ///
-  /// Calls `POST /api/drivers/complete-booking/tracking` or `/HourlyBooking`.
+  /// Calls `POST /api/drivers/start-tracking/tracking` or `/HourlyBooking`.
   Future<Map<String, dynamic>> startTrackingBooking({
     required String bookingId,
     bool isHourly = false,
@@ -973,8 +993,8 @@ class ApiService {
   }) async {
     try {
       final path = isHourly
-          ? '/drivers/complete-booking/tracking/HourlyBooking'
-          : '/drivers/complete-booking/tracking';
+          ? '/drivers/start-tracking/tracking/HourlyBooking'
+          : '/drivers/start-tracking/tracking';
       final response = await _dio.post(
         path,
         data: {'bookingID': bookingId},

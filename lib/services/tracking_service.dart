@@ -80,7 +80,7 @@ class TrackingService with ChangeNotifier {
           context,
           loc.enableLocationServices,
           loc.locationServicesDisabledMessage,
-          isSettings: true,
+          openLocationSettings: true,
         );
       }
       return false;
@@ -103,9 +103,9 @@ class TrackingService with ChangeNotifier {
       if (context.mounted) {
         _showErrorDialog(
           context,
-          loc.locationPermissionAlwaysRequired,
+          loc.locationBackgroundDisclosureTitle,
           loc.locationPermissionsPermanentlyDenied,
-          isSettings: true,
+          openAppSettings: true,
         );
       }
       return false;
@@ -129,7 +129,7 @@ class TrackingService with ChangeNotifier {
                context,
                loc.locationBackgroundDisclosureTitle,
                loc.locationPermissionAlwaysRequired,
-               isSettings: true,
+               openAppSettings: true,
              );
            }
            return false;
@@ -178,7 +178,8 @@ class TrackingService with ChangeNotifier {
     BuildContext context,
     String title,
     String message, {
-    bool isSettings = false,
+    bool openAppSettings = false,
+    bool openLocationSettings = false,
   }) {
     final loc = AppLocalizations.of(context)!;
     showDialog(
@@ -199,11 +200,15 @@ class TrackingService with ChangeNotifier {
             onPressed: () => Navigator.pop(context),
             child: Text(loc.ok, style: const TextStyle(color: Colors.grey)),
           ),
-          if (isSettings)
+          if (openAppSettings || openLocationSettings)
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                Geolocator.openAppSettings();
+                if (openLocationSettings) {
+                  Geolocator.openLocationSettings();
+                } else if (openAppSettings) {
+                  Geolocator.openAppSettings();
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFC0C0C0),
