@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/booking.dart';
 import 'package:premium_force_driver/providers/bookings_provider.dart';
+import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/common_widgets/voice_player.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
@@ -610,6 +611,43 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     }
 
     if (status == 'ac' || status == 'accepted' || status == 'assigned') {
+      final displayDateTime =
+          (_currentBooking.pickupdatetime != null &&
+              _currentBooking.pickupdatetime!.isNotEmpty)
+          ? DateTime.tryParse(_currentBooking.pickupdatetime!)
+          : _currentBooking.createdAt;
+
+      final effectiveDateTime = displayDateTime ?? _currentBooking.createdAt;
+
+      final isToday =
+          effectiveDateTime.year == DateTime.now().year &&
+          effectiveDateTime.month == DateTime.now().month &&
+          effectiveDateTime.day == DateTime.now().day;
+
+      final authProvider = Provider.of<AuthProvider>(context);
+      final isAvailable = authProvider.driver?.isWorkstarted ?? false;
+
+      if (!isToday || !isAvailable) {
+        final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+        final offlineMsg = isArabic
+            ? 'يرجى تفعيل حالة العمل إلى "متاح" لبدء الرحلة'
+            : 'Toggle work status to Available to start ride';
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              !isToday ? loc.startRideAvailableOnDate : offlineMsg,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        );
+      }
+
       return _buildActionButton(loc.startRide, Colors.blue, () async {
         final confirm = await _showConfirmationDialog(
           context,
@@ -691,42 +729,74 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           StreamBuilder<Position>(
             stream: TrackingService().positionStream,
             builder: (context, snapshot) {
-              return _buildActionButton(loc.endRide, Colors.red, () async {
-                final confirm = await _showConfirmationDialog(
-                  context,
-                  loc.endRide,
-                  loc.endRideConfirm,
+              bool canStop = false;
+              
+              final isChauffeur = _currentBooking.isHourly;
+              final targetLat = isChauffeur 
+                  ? _currentBooking.pickupLatitude 
+                  : _currentBooking.dropoffLatitude;
+              final targetLong = isChauffeur 
+                  ? _currentBooking.pickupLongitude 
+                  : _currentBooking.dropoffLongitude;
+
+              if (targetLat != null && targetLat != 0 &&
+                  targetLong != null && targetLong != 0 &&
+                  snapshot.hasData) {
+                final pos = snapshot.data!;
+                final distance = Geolocator.distanceBetween(
+                  pos.latitude,
+                  pos.longitude,
+                  targetLat,
+                  targetLong,
                 );
-                if (confirm != true) return;
-                if (_currentBooking.isHourly) {
-                  final success = await provider.stopTracking(
-                    _currentBooking.id,
-                  );
-                  if (mounted) {
-                    AnimatedSnackBar.show(
-                      context,
-                      success
-                          ? (provider.actionMessage ?? loc.tripEnded)
-                          : loc.rideStoppedSyncPending,
-                      success ? 'S' : 'E',
-                    );
-                    _updateBooking(provider.getBookingById(_currentBooking.id));
-                  }
-                } else {
-                  await TrackingService().stopTracking();
-                  final success = await provider.completeBooking(
-                    _currentBooking.id,
-                  );
-                  if (success && mounted) {
-                    AnimatedSnackBar.show(
-                      context,
-                      provider.actionMessage ?? loc.bookingCompleted,
-                      'S',
-                    );
-                    _updateBooking(provider.getBookingById(_currentBooking.id));
-                  }
+                if (distance <= 100) {
+                  canStop = true;
                 }
-              }, icon: Icons.stop_circle);
+              } else if (targetLat == null || targetLat == 0) {
+                canStop = true;
+              }
+
+              return _buildActionButton(
+                loc.endRide,
+                Colors.red,
+                canStop ? () async {
+                  final confirm = await _showConfirmationDialog(
+                    context,
+                    loc.endRide,
+                    loc.endRideConfirm,
+                  );
+                  if (confirm != true) return;
+                  if (_currentBooking.isHourly) {
+                    final success = await provider.stopTracking(
+                      _currentBooking.id,
+                    );
+                    if (mounted) {
+                      AnimatedSnackBar.show(
+                        context,
+                        success
+                            ? (provider.actionMessage ?? loc.tripEnded)
+                            : loc.rideStoppedSyncPending,
+                        success ? 'S' : 'E',
+                      );
+                      _updateBooking(provider.getBookingById(_currentBooking.id));
+                    }
+                  } else {
+                    await TrackingService().stopTracking();
+                    final success = await provider.completeBooking(
+                      _currentBooking.id,
+                    );
+                    if (success && mounted) {
+                      AnimatedSnackBar.show(
+                        context,
+                        provider.actionMessage ?? loc.bookingCompleted,
+                        'S',
+                      );
+                      _updateBooking(provider.getBookingById(_currentBooking.id));
+                    }
+                  }
+                } : null,
+                icon: Icons.stop_circle,
+              );
             },
           ),
         ],
@@ -734,23 +804,60 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     }
 
     if (status == 'og' || status == 'ongoing') {
-      return _buildActionButton(loc.complete, Colors.blue, () async {
-        final confirm = await _showConfirmationDialog(
-          context,
-          loc.completeBooking,
-          loc.completeBookingConfirm,
-        );
-        if (confirm != true) return;
-        final success = await provider.completeBooking(_currentBooking.id);
-        if (success && mounted) {
-          AnimatedSnackBar.show(
-            context,
-            provider.actionMessage ?? loc.bookingCompleted,
-            'S',
+      return StreamBuilder<Position>(
+        stream: TrackingService().positionStream,
+        builder: (context, snapshot) {
+          bool canStop = false;
+          
+          final isChauffeur = _currentBooking.isHourly;
+          final targetLat = isChauffeur 
+              ? _currentBooking.pickupLatitude 
+              : _currentBooking.dropoffLatitude;
+          final targetLong = isChauffeur 
+              ? _currentBooking.pickupLongitude 
+              : _currentBooking.dropoffLongitude;
+
+          if (targetLat != null && targetLat != 0 &&
+              targetLong != null && targetLong != 0 &&
+              snapshot.hasData) {
+            final pos = snapshot.data!;
+            final distance = Geolocator.distanceBetween(
+              pos.latitude,
+              pos.longitude,
+              targetLat,
+              targetLong,
+                );
+            if (distance <= 100) {
+              canStop = true;
+            }
+          } else if (targetLat == null || targetLat == 0) {
+            canStop = true;
+          }
+
+          return _buildActionButton(
+            loc.complete,
+            Colors.blue,
+            canStop ? () async {
+              final confirm = await _showConfirmationDialog(
+                context,
+                loc.completeBooking,
+                loc.completeBookingConfirm,
+              );
+              if (confirm != true) return;
+              final success = await provider.completeBooking(_currentBooking.id);
+              if (success && mounted) {
+                AnimatedSnackBar.show(
+                  context,
+                  provider.actionMessage ?? loc.bookingCompleted,
+                  'S',
+                );
+                _updateBooking(provider.getBookingById(_currentBooking.id));
+              }
+            } : null,
+            icon: Icons.check_circle,
           );
-          _updateBooking(provider.getBookingById(_currentBooking.id));
-        }
-      }, icon: Icons.check_circle);
+        },
+      );
     }
 
     return const SizedBox.shrink();

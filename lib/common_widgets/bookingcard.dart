@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:premium_force_driver/providers/auth_provider.dart';
 
 class Bookingcard extends StatelessWidget {
   final String status;
@@ -331,7 +333,7 @@ class Bookingcard extends StatelessWidget {
                   else if (status.toLowerCase() == 'ac' ||
                       status.toLowerCase() == 'accepted' ||
                       status.toLowerCase() == 'assigned')
-                    ..._buildAcceptedActions(loc)
+                    ..._buildAcceptedActions(context, loc)
                   else if (status.toLowerCase() == 'starttracking' ||
                       status.toLowerCase() == 'started')
                     ...(isChauffeur
@@ -486,15 +488,22 @@ class Bookingcard extends StatelessWidget {
     ];
   }
 
-  List<Widget> _buildAcceptedActions(AppLocalizations loc) {
-    if (!isToday) {
+  List<Widget> _buildAcceptedActions(BuildContext context, AppLocalizations loc) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final isAvailable = authProvider.driver?.isWorkstarted ?? false;
+
+    if (!isToday || !isAvailable) {
+      final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+      final offlineMsg = isArabic
+          ? 'يرجى تفعيل حالة العمل إلى "متاح" لبدء الرحلة'
+          : 'Toggle work status to Available to start ride';
       return [
         Expanded(
           child: Center(
             child: Text(
-              loc.startRideAvailableOnDate,
+              !isToday ? loc.startRideAvailableOnDate : offlineMsg,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54, fontSize: 11),
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
             ),
           ),
         ),
