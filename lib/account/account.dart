@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:premium_force_driver/account/manage_profile.dart';
-import 'package:premium_force_driver/account/terms_and_conditions.dart';
 import 'package:premium_force_driver/authentication/login.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
@@ -10,6 +9,7 @@ import 'package:premium_force_driver/main.dart';
 
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -63,13 +63,13 @@ class _AccountPageState extends State<AccountPage> {
               ),
 
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TermsAndConditionsPage(),
-                    ),
-                  );
+                onTap: () async {
+                  final Uri url = Uri.parse('https://premiumforcegroup.com/terms-and-conditions');
+                  try {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } catch (e) {
+                    debugPrint('Could not launch terms URL: $e');
+                  }
                 },
                 child: profileTile(
                   loc: loc,
@@ -77,6 +77,23 @@ class _AccountPageState extends State<AccountPage> {
                   title: loc.termsAndConditions,
                   icon: Icons.description,
                   svgPath: "assets/icons/terms_and_conditions.svg",
+                ),
+              ),
+              GestureDetector(
+                onTap: () async {
+                  final Uri url = Uri.parse('https://premiumforcegroup.com/privacy-policy');
+                  try {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } catch (e) {
+                    debugPrint('Could not launch privacy URL: $e');
+                  }
+                },
+                child: profileTile(
+                  loc: loc,
+                  isSvg: false,
+                  title: loc.privacyPolicy,
+                  icon: Icons.privacy_tip_outlined,
+                  svgPath: "",
                 ),
               ),
               profileTile(
