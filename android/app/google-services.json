@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "265361809546",
+    "firebase_url": "https://premium-force-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "premium-force",
     "storage_bucket": "premium-force.firebasestorage.app"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "265361809546-hofao0ne2h9n4cm1rfofrrbuei7894eh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.brandbik.premiumforce",
+            "certificate_hash": "9c85ab3a8cd4c21c0de30548b8c5fa9425ab4b05"
+          }
+        },
         {
           "client_id": "265361809546-l7frcki7argtjttarntrgbaqvmj7c5o9.apps.googleusercontent.com",
           "client_type": 1,
@@ -58,6 +67,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "265361809546-om3iohuuonbjjc3e227i99r4p6ej6g7f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.brandbik.premiumforcedriver",
+            "certificate_hash": "21897d289d267ac95754f590c861d898008d0d71"
+          }
+        },
+        {
+          "client_id": "265361809546-ov16vhtgbnoib2cf8ao1t06v00d8m034.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.brandbik.premiumforcedriver",
+            "certificate_hash": "1f41cff8d224a7698a2031797b0b2e19a1a08560"
+          }
+        },
         {
           "client_id": "265361809546-rqr3th8836vq6ochnlk32h6vmfe5a9ha.apps.googleusercontent.com",
           "client_type": 3
