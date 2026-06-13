@@ -157,7 +157,8 @@ class _BookingsPageState extends State<BookingsPage>
     List<dynamic> bookings,
     AppLocalizations loc,
   ) {
-    if (provider.status == BookingStatus.loading) {
+    if (provider.status == BookingStatus.loading ||
+        provider.status == BookingStatus.initial) {
       return const BookingShimmer();
     }
 

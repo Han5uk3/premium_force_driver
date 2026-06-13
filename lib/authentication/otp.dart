@@ -5,6 +5,7 @@ import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/authentication/signup.dart';
+import 'package:premium_force_driver/authentication/blocked_page.dart';
 import 'package:premium_force_driver/home/home.dart';
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
 
@@ -61,12 +62,20 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     setState(() => _isVerifying = false);
 
     if (authProvider.status == AuthStatus.authenticated) {
-      // ── Existing user → go straight to Home ──
-      debugPrint('✅ Existing user — navigating to Home');
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => Home()),
-        (route) => false,
-      );
+      if (authProvider.driver?.isActive == false) {
+        debugPrint('🚫 Driver deactivated — navigating to BlockedPage');
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const BlockedPage()),
+          (route) => false,
+        );
+      } else {
+        // ── Existing user → go straight to Home ──
+        debugPrint('✅ Existing user — navigating to Home');
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => Home()),
+          (route) => false,
+        );
+      }
     } else if (authProvider.status == AuthStatus.otpVerified) {
       // ── New user → go to SignUp ──
       debugPrint('🆕 New user — navigating to SignUp');

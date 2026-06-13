@@ -978,4 +978,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get allCleared => 'تم مسح جميع الإشعارات';
+
+  @override
+  String get accountBlockedTitle => 'تم تعطيل الحساب';
+
+  @override
+  String get accountBlockedMessage =>
+      'قام المسؤول بتعطيل حسابك. يرجى الاتصال بالدعم لمعرفة كيفية المتابعة.';
+
+  @override
+  String get contactSupport => 'اتصل بالدعم';
+
+  @override
+  String get backToLogin => 'العودة لتسجيل الدخول';
 }

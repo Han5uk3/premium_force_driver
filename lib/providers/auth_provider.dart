@@ -760,11 +760,14 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final result = await _api.returnFleet();
-      _isOtpLoading = false;
 
       if (result['success'] == true) {
-        // Re-fetch profile to update hasActiveVehicle and activeVehicle fields
-        await fetchDriverProfile();
+        // Re-fetch profile to update hasActiveVehicle and activeVehicle fields.
+        // Try /profile/me first; fall back to GET /drivers/:id if it returns null.
+        DriverModel? updated = await fetchDriverProfile();
+        if (updated == null) {
+          await fetchDriver();
+        }
         return true;
       } else {
         _errorMessage = result['message'] as String? ?? 'Failed to return vehicle';
@@ -773,10 +776,13 @@ class AuthProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Return fleet error: $e');
-      _isOtpLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
       return false;
+    } finally {
+      // Ensure the loading flag is always cleared so the UI never stays stuck.
+      _isOtpLoading = false;
+      notifyListeners();
     }
   }
 }

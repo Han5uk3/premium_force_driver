@@ -312,5 +312,9 @@
   "clearAll": "Clear all",
   "notificationDeleted": "Notification deleted",
   "allMarkedAsRead": "All notifications marked as read",
-  "allCleared": "All notifications cleared"
+  "allCleared": "All notifications cleared",
+  "accountBlockedTitle": "Account Deactivated",
+  "accountBlockedMessage": "Admin has deactivated your account. Please contact support for how to proceed.",
+  "contactSupport": "Contact Support",
+  "backToLogin": "Back to Login"
 }

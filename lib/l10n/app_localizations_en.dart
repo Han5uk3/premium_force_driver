@@ -990,4 +990,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allCleared => 'All notifications cleared';
+
+  @override
+  String get accountBlockedTitle => 'Account Deactivated';
+
+  @override
+  String get accountBlockedMessage =>
+      'Admin has deactivated your account. Please contact support for how to proceed.';
+
+  @override
+  String get contactSupport => 'Contact Support';
+
+  @override
+  String get backToLogin => 'Back to Login';
 }

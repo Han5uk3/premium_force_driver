@@ -1975,6 +1975,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All notifications cleared'**
   String get allCleared;
+
+  /// No description provided for @accountBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Deactivated'**
+  String get accountBlockedTitle;
+
+  /// No description provided for @accountBlockedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin has deactivated your account. Please contact support for how to proceed.'**
+  String get accountBlockedMessage;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Support'**
+  String get contactSupport;
+
+  /// No description provided for @backToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Login'**
+  String get backToLogin;
 }
 
 class _AppLocalizationsDelegate

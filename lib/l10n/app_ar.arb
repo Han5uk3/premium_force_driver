@@ -312,5 +312,9 @@
   "clearAll": "مسح الكل",
   "notificationDeleted": "تم حذف الإشعار",
   "allMarkedAsRead": "تم تحديد جميع الإشعارات كمقروءة",
-  "allCleared": "تم مسح جميع الإشعارات"
+  "allCleared": "تم مسح جميع الإشعارات",
+  "accountBlockedTitle": "تم تعطيل الحساب",
+  "accountBlockedMessage": "قام المسؤول بتعطيل حسابك. يرجى الاتصال بالدعم لمعرفة كيفية المتابعة.",
+  "contactSupport": "اتصل بالدعم",
+  "backToLogin": "العودة لتسجيل الدخول"
 }

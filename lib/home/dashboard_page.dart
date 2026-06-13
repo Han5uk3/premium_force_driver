@@ -360,10 +360,14 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Future<void> _handleReturnVehicle(BuildContext context) async {
-    final loc = AppLocalizations.of(context)!;
+  Future<void> _handleReturnVehicle() async {
+    if (!mounted) return;
+
+    final currentContext = this.context;
+    final loc = AppLocalizations.of(currentContext)!;
+
     final confirm = await showDialog<bool>(
-      context: context,
+      context: currentContext,
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E1E),
@@ -408,24 +412,23 @@ class _DashboardPageState extends State<DashboardPage> {
     );
 
     if (confirm != true) return;
-
     if (!mounted) return;
 
-    final authProvider = context.read<AuthProvider>();
+    final authProvider = this.context.read<AuthProvider>();
     final success = await authProvider.returnFleet();
 
     if (!mounted) return;
 
     if (success) {
       AnimatedSnackBar.show(
-        context,
+        this.context,
         loc.vehicleReturnSuccess,
         'S',
         isFullWidth: true,
       );
     } else {
       AnimatedSnackBar.show(
-        context,
+        this.context,
         authProvider.errorMessage ?? loc.failedToReturnVehicle,
         'E',
       );
@@ -730,7 +733,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () => _handleReturnVehicle(context),
+                              onPressed: () => _handleReturnVehicle(),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red.shade400,
                                 foregroundColor: Colors.white,

@@ -60,7 +60,8 @@ class BookingsProvider extends ChangeNotifier {
       // Get auth token
       final token = UserLocalStorage.getToken();
 
-      // Fetch bookings from API
+      // Fetch bookings from API (both methods have their own catch and return []
+      // on failure, so Future.wait will not throw here)
       final results = await Future.wait([
         _apiService.getBookingsByDriverId(
           driverId: driverId,
@@ -80,15 +81,17 @@ class BookingsProvider extends ChangeNotifier {
       // Filter bookings by status
       _filterBookingsByStatus();
 
-      // Fetch reviews to link them to bookings
+      // Fetch reviews to link them to bookings (has its own internal try/catch)
       await fetchReviews();
 
       _status = BookingStatus.loaded;
-      notifyListeners();
     } catch (e) {
       debugPrint('Fetch Bookings error: $e');
       _status = BookingStatus.failure;
       _errorMessage = e.toString();
+    } finally {
+      // Always notify listeners so the UI exits the loading state,
+      // even if an unexpected error occurred mid-fetch.
       notifyListeners();
     }
   }

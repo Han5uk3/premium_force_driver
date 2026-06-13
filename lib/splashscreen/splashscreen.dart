@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:premium_force_driver/authentication/login.dart';
+import 'package:premium_force_driver/authentication/blocked_page.dart';
 import 'package:premium_force_driver/home/home.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
@@ -47,8 +48,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (authProvider.status == AuthStatus.authenticated &&
         authProvider.driver != null) {
-      debugPrint('💾 Session valid — navigating to Home');
-      Navigator.pushReplacement(context, SmoothNavigation.route(const Home()));
+      if (authProvider.driver?.isActive == false) {
+        debugPrint('🚫 Session valid but deactivated — navigating to BlockedPage');
+        Navigator.pushReplacement(context, SmoothNavigation.route(const BlockedPage()));
+      } else {
+        debugPrint('💾 Session valid — navigating to Home');
+        Navigator.pushReplacement(context, SmoothNavigation.route(const Home()));
+      }
     } else {
       debugPrint('👋 No active session — navigating to Login');
       Navigator.pushReplacement(

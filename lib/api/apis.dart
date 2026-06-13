@@ -109,7 +109,7 @@ class ApiService {
           request: true,
           requestHeader: true,
           requestBody: true,
-          responseHeader: false,
+          responseHeader: true,
           responseBody: true,
           error: true,
           logPrint: (obj) => debugPrint('🌐 API │ $obj'),
@@ -552,7 +552,8 @@ class ApiService {
   /// Calls `POST /api/fleets/return`.
   Future<Map<String, dynamic>> returnFleet() async {
     try {
-      final response = await _dio.post('/fleets/return');
+      // Pass an empty JSON object so the backend doesn't hang waiting for a body
+      final response = await _dio.post('/fleets/return', data: {});
       return _success(response);
     } catch (e) {
       return _handleError(e);
