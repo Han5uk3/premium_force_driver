@@ -25,7 +25,11 @@ class _BookingsPageState extends State<BookingsPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialIndex);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
 
     // Fetch bookings when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -205,210 +209,232 @@ class _BookingsPageState extends State<BookingsPage>
     }
 
     return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: bookings.length,
-        itemBuilder: (context, index) {
-          final booking = bookings[index];
-          final dateFormat = DateFormat('dd MMM, yyyy');
-          final timeFormat = DateFormat('h:mm a');
+      padding: const EdgeInsets.all(16),
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: bookings.length,
+      itemBuilder: (context, index) {
+        final booking = bookings[index];
+        final dateFormat = DateFormat('dd MMM, yyyy');
+        final timeFormat = DateFormat('h:mm a');
 
-          // Prioritize pickupdatetime then fallback to createdAt
-          final displayDateTime =
-              (booking.pickupdatetime != null &&
-                  booking.pickupdatetime!.isNotEmpty)
-              ? DateTime.tryParse(booking.pickupdatetime!)
-              : booking.createdAt;
+        // Prioritize pickupdatetime then fallback to createdAt
+        final displayDateTime =
+            (booking.pickupdatetime != null &&
+                booking.pickupdatetime!.isNotEmpty)
+            ? DateTime.tryParse(booking.pickupdatetime!)
+            : booking.createdAt;
 
-          final effectiveDateTime = displayDateTime ?? booking.createdAt;
-          final isToday =
-              effectiveDateTime.year == DateTime.now().year &&
-              effectiveDateTime.month == DateTime.now().month &&
-              effectiveDateTime.day == DateTime.now().day;
+        final effectiveDateTime = displayDateTime ?? booking.createdAt;
+        // Backend stores local times with 'Z' suffix — strip UTC flag
+        final localEffective = DateTime(
+          effectiveDateTime.year,
+          effectiveDateTime.month,
+          effectiveDateTime.day,
+          effectiveDateTime.hour,
+          effectiveDateTime.minute,
+          effectiveDateTime.second,
+        );
+        final threshold = localEffective.subtract(const Duration(hours: 3));
+        final now = DateTime.now().toUtc().add(const Duration(hours: 3));
+        final isToday = now.isAfter(threshold);
+        debugPrint('🕐 BOOKING ${booking.id}: raw="${booking.pickupdatetime}", '
+            'localEffective=$localEffective, threshold=$threshold, now=$now, isToday=$isToday');
 
-          return Column(
-            children: [
-              GestureDetector(
-                onTap: () async {
-                  await Navigator.push(
+        return Column(
+          children: [
+            GestureDetector(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookingDetailsPage(booking: booking),
+                  ),
+                );
+                // Refresh bookings when coming back, in case status changed
+                if (context.mounted) {
+                  context.read<BookingsProvider>().refreshBookings();
+                }
+              },
+              child: Bookingcard(
+                status: booking.status,
+                type: booking.isHourly
+                    ? loc.chauffeur
+                    : booking.pickupLocation.toLowerCase().contains('airport')
+                    ? loc.airportArrival
+                    : booking.dropoffLocation.toLowerCase().contains('airport')
+                    ? loc.airportDeparture
+                    : loc.privateTransfer,
+                pickup: booking.pickupLocation,
+                dropoff: booking.dropoffLocation ?? '',
+                date: dateFormat.format(effectiveDateTime),
+                time: timeFormat.format(effectiveDateTime),
+                ride: booking.displayRideType,
+                brand: booking.displayBrand,
+                passengers: booking.passengerCount,
+                bookingId: booking.id,
+                rating: booking.rating,
+                reviewText: booking.review,
+                isChauffeur: booking.isHourly,
+                isToday: isToday,
+                pickupLatitude: booking.pickupLatitude,
+                pickupLongitude: booking.pickupLongitude,
+                dropoffLatitude: booking.dropoffLatitude,
+                dropoffLongitude: booking.dropoffLongitude,
+                onAccept: () async {
+                  final confirm = await _showConfirmationDialog(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          BookingDetailsPage(booking: booking),
-                    ),
+                    loc.acceptBooking,
+                    loc.acceptBookingConfirm,
                   );
-                  // Refresh bookings when coming back, in case status changed
-                  if (context.mounted) {
-                    context.read<BookingsProvider>().refreshBookings();
+                  if (confirm != true) return;
+                  final success = await provider.acceptBooking(booking.id);
+                  if (success && context.mounted) {
+                    AnimatedSnackBar.show(
+                      context,
+                      provider.actionMessage ?? loc.bookingAccepted,
+                      'S',
+                    );
                   }
                 },
-                child: Bookingcard(
-                  status: booking.status,
-                  type: booking.isHourly
-                      ? loc.chauffeur
-                      : booking.pickupLocation.toLowerCase().contains('airport')
-                      ? loc.airportArrival
-                      : booking.dropoffLocation.toLowerCase().contains(
-                          'airport',
-                        )
-                      ? loc.airportDeparture
-                      : loc.privateTransfer,
-                  pickup: booking.pickupLocation,
-                  dropoff: booking.dropoffLocation ?? '',
-                  date: dateFormat.format(effectiveDateTime),
-                  time: timeFormat.format(effectiveDateTime),
-                  ride: booking.displayRideType,
-                  brand: booking.displayBrand,
-                  passengers: booking.passengerCount,
-                  bookingId: booking.id,
-                  rating: booking.rating,
-                  reviewText: booking.review,
-                  isChauffeur: booking.isHourly,
-                  isToday: isToday,
-                  pickupLatitude: booking.pickupLatitude,
-                  pickupLongitude: booking.pickupLongitude,
-                  dropoffLatitude: booking.dropoffLatitude,
-                  dropoffLongitude: booking.dropoffLongitude,
-                  onAccept: () async {
-                    final confirm = await _showConfirmationDialog(
+                onReject: () async {
+                  final confirm = await _showConfirmationDialog(
+                    context,
+                    loc.rejectBooking,
+                    loc.rejectBookingConfirm,
+                  );
+                  if (confirm != true) return;
+                  final success = await provider.rejectBooking(booking.id);
+                  if (success && context.mounted) {
+                    AnimatedSnackBar.show(
                       context,
-                      loc.acceptBooking,
-                      loc.acceptBookingConfirm,
+                      provider.actionMessage ?? loc.bookingRejected,
+                      'E',
                     );
-                    if (confirm != true) return;
-                    final success = await provider.acceptBooking(booking.id);
-                    if (success && context.mounted) {
-                      AnimatedSnackBar.show(
-                        context,
-                        provider.actionMessage ?? loc.bookingAccepted,
-                        'S',
-                      );
-                    }
-                  },
-                  onReject: () async {
-                    final confirm = await _showConfirmationDialog(
-                      context,
-                      loc.rejectBooking,
-                      loc.rejectBookingConfirm,
-                    );
-                    if (confirm != true) return;
-                    final success = await provider.rejectBooking(booking.id);
-                    if (success && context.mounted) {
-                      AnimatedSnackBar.show(
-                        context,
-                        provider.actionMessage ?? loc.bookingRejected,
-                        'E',
-                      );
-                    }
-                  },
-                  onComplete: () async {
-                    final confirm = await _showConfirmationDialog(
-                      context,
-                      loc.completeBooking,
-                      loc.completeBookingConfirm,
-                    );
-                    if (confirm != true) return;
-                    await TrackingService().stopTracking();
-                    final success = await provider.completeBooking(booking.id);
-                    if (success && context.mounted) {
-                      if (context.mounted) {
-                        AnimatedSnackBar.show(
-                          context,
-                          provider.actionMessage ?? loc.bookingCompleted,
-                          success ? 'S' : 'E',
-                        );
-                      }
-                    }
-                  },
-                  onStartTracking: () async {
-                    final confirm = await _showConfirmationDialog(
-                      context,
-                      loc.startRide,
-                      loc.startRideConfirm,
-                    );
-                    if (confirm != true) return;
-
-                    // Check for location permissions (foreground & background)
-                    final hasPermissions = await TrackingService()
-                        .handleLocationPermissions(context);
-                    if (!hasPermissions) return;
-
-                    final success = await provider.startTracking(booking.id);
-                    if (success && context.mounted) {
-                      await TrackingService().startTracking(
-                        bookingId: booking.id,
-                        customerId: booking.customerId,
-                        driverId: booking.driverId ?? '',
-                        isChauffeur: booking.isHourly,
-                        bookedHours:
-                            booking.estimatedDuration, // hours from booking
-                      );
-                      if (context.mounted) {
-                        AnimatedSnackBar.show(
-                          context,
-                          provider.actionMessage ?? loc.rideStarted,
-                          'S',
-                        );
-                        _openMaps(booking);
-                      }
-                    }
-                  },
-                  onStopTracking: () async {
-                    final confirm = await _showConfirmationDialog(
-                      context,
-                      loc.endRide,
-                      loc.endRideConfirm,
-                    );
-                    if (confirm != true) return;
-
-                    final success = await provider.stopTracking(booking.id);
+                  }
+                },
+                onComplete: () async {
+                  final confirm = await _showConfirmationDialog(
+                    context,
+                    loc.completeBooking,
+                    loc.completeBookingConfirm,
+                  );
+                  if (confirm != true) return;
+                  await TrackingService().stopTracking();
+                  final success = await provider.completeBooking(booking.id);
+                  if (success && context.mounted) {
                     if (context.mounted) {
                       AnimatedSnackBar.show(
                         context,
-                        success
-                            ? (provider.actionMessage ?? loc.tripEnded)
-                            : (provider.actionMessage ??
-                                  loc.rideStoppedSyncPending),
+                        provider.actionMessage ?? loc.bookingCompleted,
                         success ? 'S' : 'E',
                       );
                     }
-                  },
-                  onGetDirections: () {
-                    _openMaps(booking);
-                  },
-                  onPauseTracking: () async {
-                    await TrackingService().pauseTracking(
+                  }
+                },
+                onStartTracking: () async {
+                  final hasActiveTracking = provider.allBookings.any(
+                    (b) => b.status.toLowerCase() == 'starttracking',
+                  );
+                  if (hasActiveTracking) {
+                    final isArabic =
+                        Localizations.localeOf(context).languageCode == 'ar';
+                    AnimatedSnackBar.show(
+                      context,
+                      isArabic
+                          ? 'لا يمكنك بدء رحلة جديدة بينما لديك رحلة نشطة حالياً'
+                          : 'You cannot start a new ride while having an active tracked ride',
+                      'E',
+                    );
+                    return;
+                  }
+
+                  final confirm = await _showConfirmationDialog(
+                    context,
+                    loc.startRide,
+                    loc.startRideConfirm,
+                  );
+                  if (confirm != true) return;
+
+                  // Check for location permissions (foreground & background)
+                  final hasPermissions = await TrackingService()
+                      .handleLocationPermissions(context);
+                  if (!hasPermissions) return;
+
+                  final success = await provider.startTracking(booking.id);
+                  if (success && context.mounted) {
+                    await TrackingService().startTracking(
                       bookingId: booking.id,
+                      customerId: booking.customerId,
+                      driverId: booking.driverId ?? '',
+                      isChauffeur: booking.isHourly,
+                      bookedHours:
+                          booking.estimatedDuration, // hours from booking
                     );
                     if (context.mounted) {
-                      setState(() {});
                       AnimatedSnackBar.show(
                         context,
-                        AppLocalizations.of(context)!.ridePaused,
+                        provider.actionMessage ?? loc.rideStarted,
                         'S',
                       );
+                      _openMaps(booking);
                     }
-                  },
-                  onResumeTracking: () async {
-                    await TrackingService().resumeTracking(
-                      bookingId: booking.id,
+                  }
+                },
+                onStopTracking: () async {
+                  final confirm = await _showConfirmationDialog(
+                    context,
+                    loc.endRide,
+                    loc.endRideConfirm,
+                  );
+                  if (confirm != true) return;
+
+                  final success = await provider.stopTracking(booking.id);
+                  if (context.mounted) {
+                    AnimatedSnackBar.show(
+                      context,
+                      success
+                          ? (provider.actionMessage ?? loc.tripEnded)
+                          : (provider.actionMessage ??
+                                loc.rideStoppedSyncPending),
+                      success ? 'S' : 'E',
                     );
-                    if (context.mounted) {
-                      setState(() {});
-                      AnimatedSnackBar.show(
-                        context,
-                        AppLocalizations.of(context)!.rideResumed,
-                        'S',
-                      );
-                    }
-                  },
-                ),
+                  }
+                },
+                onGetDirections: () {
+                  _openMaps(booking);
+                },
+                onPauseTracking: () async {
+                  await TrackingService().pauseTracking(bookingId: booking.id);
+                  if (context.mounted) {
+                    setState(() {});
+                    AnimatedSnackBar.show(
+                      context,
+                      AppLocalizations.of(context)!.ridePaused,
+                      'S',
+                    );
+                  }
+                },
+                onResumeTracking: () async {
+                  final hasPermissions = await TrackingService()
+                      .handleLocationPermissions(context);
+                  if (!hasPermissions) return;
+                  await TrackingService().resumeTracking(bookingId: booking.id);
+                  if (context.mounted) {
+                    setState(() {});
+                    AnimatedSnackBar.show(
+                      context,
+                      AppLocalizations.of(context)!.rideResumed,
+                      'S',
+                    );
+                  }
+                },
               ),
-              if (index < bookings.length - 1) const SizedBox(height: 16),
-            ],
-          );
-        },
-      );
+            ),
+            if (index < bookings.length - 1) const SizedBox(height: 16),
+          ],
+        );
+      },
+    );
   }
 
   void _openMaps(dynamic booking) async {

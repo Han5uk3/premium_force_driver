@@ -618,25 +618,45 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           : _currentBooking.createdAt;
 
       final effectiveDateTime = displayDateTime ?? _currentBooking.createdAt;
-
-      final isToday =
-          effectiveDateTime.year == DateTime.now().year &&
-          effectiveDateTime.month == DateTime.now().month &&
-          effectiveDateTime.day == DateTime.now().day;
+      // Backend stores local times with 'Z' suffix — strip UTC flag
+      final localEffective = DateTime(
+        effectiveDateTime.year,
+        effectiveDateTime.month,
+        effectiveDateTime.day,
+        effectiveDateTime.hour,
+        effectiveDateTime.minute,
+        effectiveDateTime.second,
+      );
+      final threshold = localEffective.subtract(const Duration(hours: 3));
+      final now = DateTime.now().toUtc().add(const Duration(hours: 3));
+      final isToday = now.isAfter(threshold);
+      debugPrint('🕐 DETAIL BOOKING: raw="${_currentBooking.pickupdatetime}", '
+          'localEffective=$localEffective, threshold=$threshold, now=$now, isToday=$isToday');
 
       final authProvider = Provider.of<AuthProvider>(context);
       final isAvailable = authProvider.driver?.isWorkstarted ?? false;
+      final hasActiveVehicle = authProvider.driver?.hasActiveVehicle ?? false;
 
-      if (!isToday || !isAvailable) {
+      if (!isToday || !isAvailable || !hasActiveVehicle) {
         final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-        final offlineMsg = isArabic
-            ? 'يرجى تفعيل حالة العمل إلى "متاح" لبدء الرحلة'
-            : 'Toggle work status to Available to start ride';
+        String errorMsg = '';
+        if (!isToday) {
+          errorMsg = loc.startRideAvailableOnDate;
+        } else if (!isAvailable) {
+          errorMsg = isArabic
+              ? 'يرجى تفعيل حالة العمل إلى "متاح" لبدء الرحلة'
+              : 'Toggle work status to Available to start ride';
+        } else if (!hasActiveVehicle) {
+          errorMsg = isArabic
+              ? 'يرجى أخذ مركبة لبدء الرحلة'
+              : 'Please take out a vehicle to start ride';
+        }
+
         return Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
-              !isToday ? loc.startRideAvailableOnDate : offlineMsg,
+              errorMsg,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white54,
@@ -649,6 +669,17 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       }
 
       return _buildActionButton(loc.startRide, Colors.blue, () async {
+        final hasActiveTracking = provider.allBookings.any((b) => b.status.toLowerCase() == 'starttracking');
+        if (hasActiveTracking) {
+          final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+          AnimatedSnackBar.show(
+            context,
+            isArabic ? 'لا يمكنك بدء رحلة جديدة بينما لديك رحلة نشطة حالياً' : 'You cannot start a new ride while having an active tracked ride',
+            'E',
+          );
+          return;
+        }
+
         final confirm = await _showConfirmationDialog(
           context,
           loc.startRide,
@@ -701,6 +732,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     : Colors.orange.shade700,
                 () async {
                   if (TrackingService().isPaused) {
+                    final hasPermissions = await TrackingService()
+                        .handleLocationPermissions(context);
+                    if (!hasPermissions) return;
                     await TrackingService().resumeTracking(
                       bookingId: _currentBooking.id,
                     );

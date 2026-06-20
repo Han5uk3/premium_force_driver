@@ -491,17 +491,28 @@ class Bookingcard extends StatelessWidget {
   List<Widget> _buildAcceptedActions(BuildContext context, AppLocalizations loc) {
     final authProvider = Provider.of<AuthProvider>(context);
     final isAvailable = authProvider.driver?.isWorkstarted ?? false;
+    final hasActiveVehicle = authProvider.driver?.hasActiveVehicle ?? false;
 
-    if (!isToday || !isAvailable) {
+    if (!isToday || !isAvailable || !hasActiveVehicle) {
       final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-      final offlineMsg = isArabic
-          ? 'يرجى تفعيل حالة العمل إلى "متاح" لبدء الرحلة'
-          : 'Toggle work status to Available to start ride';
+      String errorMsg = '';
+      if (!isToday) {
+        errorMsg = loc.startRideAvailableOnDate;
+      } else if (!isAvailable) {
+        errorMsg = isArabic
+            ? 'يرجى تفعيل حالة العمل إلى "متاح" لبدء الرحلة'
+            : 'Toggle work status to Available to start ride';
+      } else if (!hasActiveVehicle) {
+        errorMsg = isArabic
+            ? 'يرجى أخذ مركبة لبدء الرحلة'
+            : 'Please take out a vehicle to start ride';
+      }
+
       return [
         Expanded(
           child: Center(
             child: Text(
-              !isToday ? loc.startRideAvailableOnDate : offlineMsg,
+              errorMsg,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white54, fontSize: 11),
             ),

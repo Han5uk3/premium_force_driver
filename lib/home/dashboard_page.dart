@@ -1111,6 +1111,9 @@ class _DashboardPageState extends State<DashboardPage> {
         }
       },
       onResumeTracking: () async {
+        final hasPermissions = await TrackingService()
+            .handleLocationPermissions(context);
+        if (!hasPermissions) return;
         await TrackingService().resumeTracking(bookingId: booking.id);
         if (context.mounted) {
           setState(() {});
