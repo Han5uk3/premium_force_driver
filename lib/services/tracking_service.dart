@@ -62,6 +62,22 @@ class TrackingService with ChangeNotifier {
         });
     debugPrint('🟢 [TrackingService] Tracking resumed for $targetId');
     notifyListeners();
+
+    // Write an immediate location so the customer sees the driver right away.
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      _updateLocationInFirebase(targetId, position);
+      if (!_positionStreamController.isClosed) {
+        _positionStreamController.add(position);
+      }
+      debugPrint('📍 [TrackingService] Resume location written: ${position.latitude}, ${position.longitude}');
+    } catch (e) {
+      debugPrint('⚠️ [TrackingService] Could not get position on resume: $e');
+    }
   }
 
   /// Ensure location permissions are granted, including background permission.
@@ -262,6 +278,23 @@ class TrackingService with ChangeNotifier {
     await sessionRef.set(sessionData);
     debugPrint('✅ [TrackingService] Tracking session successfully registered in Realtime Database.');
     notifyListeners();
+
+    // Write an initial location immediately so the customer app sees the
+    // driver right away (the position stream only fires after movement).
+    try {
+      final initialPosition = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      _updateLocationInFirebase(bookingId, initialPosition);
+      if (!_positionStreamController.isClosed) {
+        _positionStreamController.add(initialPosition);
+      }
+      debugPrint('📍 [TrackingService] Initial location written: ${initialPosition.latitude}, ${initialPosition.longitude}');
+    } catch (e) {
+      debugPrint('⚠️ [TrackingService] Could not get initial position: $e');
+    }
 
     // Configure location settings
     const LocationSettings locationSettings = LocationSettings(

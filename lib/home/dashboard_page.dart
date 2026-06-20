@@ -439,6 +439,20 @@ class _DashboardPageState extends State<DashboardPage> {
     BuildContext context,
     bool isWorkstarted,
   ) async {
+    if (!isWorkstarted) {
+      final bookingsProvider = context.read<BookingsProvider>();
+      final hasActiveTracking = bookingsProvider.allBookings.any((b) => b.status.toLowerCase() == 'starttracking');
+      if (hasActiveTracking) {
+        final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+        AnimatedSnackBar.show(
+          context,
+          isArabic ? 'لا يمكنك تغيير حالة العمل إلى غير متصل أثناء وجود حجز نشط' : 'Cannot toggle work status to offline while having an active booking',
+          'E',
+        );
+        return;
+      }
+    }
+
     if (_isTogglingStatus) return;
 
     setState(() {

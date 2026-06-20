@@ -5,8 +5,10 @@ import 'package:premium_force_driver/authentication/login.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
+import 'package:premium_force_driver/providers/bookings_provider.dart';
 import 'package:premium_force_driver/main.dart';
 
+import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -168,6 +170,17 @@ class _AccountPageState extends State<AccountPage> {
               ),
               GestureDetector(
                 onTap: () {
+                  final bookingsProvider = context.read<BookingsProvider>();
+                  final hasActiveTracking = bookingsProvider.allBookings.any((b) => b.status.toLowerCase() == 'starttracking');
+                  if (hasActiveTracking) {
+                    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+                    AnimatedSnackBar.show(
+                      context,
+                      isArabic ? 'لا يمكنك تسجيل الخروج أثناء وجود حجز نشط' : 'Cannot logout while having an active booking',
+                      'E',
+                    );
+                    return;
+                  }
                   _showLogoutBottomSheet(context, loc);
                 },
                 child: profileTile(
