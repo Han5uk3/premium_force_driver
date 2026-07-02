@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:premium_force_driver/splashscreen/splashscreen.dart';
@@ -12,7 +14,6 @@ import 'package:premium_force_driver/firebase_options.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
 import 'package:premium_force_driver/home/notifications_page.dart';
-
 
 /// Global navigator key – allows navigating from outside a widget tree
 /// (e.g. when the user taps a push notification).
@@ -82,25 +83,33 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomPadding = MediaQueryData.fromView(
+      View.of(context),
+    ).padding.bottom;
+    final bool isThickNavBar = bottomPadding > 24.0;
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => BookingsProvider()),
       ],
-      child: MaterialApp(
-        title: "Premium Force Driver",
-        debugShowCheckedModeBanner: false,
-        navigatorKey: navigatorKey,
-        locale: _locale,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const SplashScreen(),
+      child: SafeArea(
+        top: false,
+        bottom: Platform.isAndroid ? isThickNavBar : true,
+        child: MaterialApp(
+          title: "Premium Force Driver",
+          debugShowCheckedModeBanner: false,
+          navigatorKey: navigatorKey,
+          locale: _locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SplashScreen(),
+        ),
       ),
     );
   }
