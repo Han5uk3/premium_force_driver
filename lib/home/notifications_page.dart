@@ -45,11 +45,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
-        final loc = AppLocalizations.of(context)!;
         final isArabic = Localizations.localeOf(context).languageCode == 'ar';
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E1E),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Text(
             isArabic ? 'مسح الكل' : 'Clear All',
             style: const TextStyle(color: Colors.white),
@@ -72,7 +73,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(
                 isArabic ? 'مسح' : 'Clear',
@@ -105,7 +108,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  Future<void> _showNotificationDetail(Map<String, dynamic> notification) async {
+  Future<void> _showNotificationDetail(
+    Map<String, dynamic> notification,
+  ) async {
     final id = notification['id'] as String?;
     if (id != null && !(notification['read'] as bool? ?? false)) {
       await UserLocalStorage.markNotificationAsRead(id);
@@ -132,7 +137,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E1E),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               const Icon(Icons.notifications, color: Colors.amber, size: 24),
@@ -157,10 +164,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 if (formattedTime.isNotEmpty) ...[
                   Text(
                     formattedTime,
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -180,7 +184,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
               onPressed: () => Navigator.pop(context),
               child: Text(
                 isArabic ? 'إغلاق' : 'Close',
-                style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -236,7 +243,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ),
               IconButton(
                 tooltip: loc.clearAll,
-                icon: const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent),
+                icon: const Icon(
+                  Icons.delete_sweep_outlined,
+                  color: Colors.redAccent,
+                ),
                 onPressed: _clearAll,
               ),
               const SizedBox(width: 8),
@@ -273,7 +283,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ),
               )
             : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 itemCount: _notifications.length,
                 itemBuilder: (context, index) {
                   final item = _notifications[index];
@@ -306,13 +319,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       child: const Icon(Icons.delete, color: Colors.white),
                     ),
                     child: Card(
-                      color: isRead ? const Color(0xFF1E1E1E) : const Color(0xFF282828),
+                      color: isRead
+                          ? const Color(0xFF1E1E1E)
+                          : const Color(0xFF282828),
                       margin: const EdgeInsets.only(bottom: 12),
                       elevation: isRead ? 0 : 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
-                          color: isRead ? Colors.transparent : Colors.amber.withAlpha(100),
+                          color: isRead
+                              ? Colors.transparent
+                              : Colors.amber.withAlpha(100),
                           width: 1,
                         ),
                       ),
@@ -334,7 +351,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  isRead ? Icons.notifications_none : Icons.notifications_active,
+                                  isRead
+                                      ? Icons.notifications_none
+                                      : Icons.notifications_active,
                                   color: isRead ? Colors.white38 : Colors.amber,
                                   size: 20,
                                 ),
@@ -346,8 +365,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Expanded(
                                           child: Text(
@@ -355,7 +376,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                             style: TextStyle(
                                               color: Colors.white,
                                               fontSize: 15,
-                                              fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                                              fontWeight: isRead
+                                                  ? FontWeight.normal
+                                                  : FontWeight.bold,
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -377,7 +400,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                     Text(
                                       item['body'] ?? '',
                                       style: TextStyle(
-                                        color: isRead ? Colors.white38 : Colors.white70,
+                                        color: isRead
+                                            ? Colors.white38
+                                            : Colors.white70,
                                         fontSize: 13,
                                         height: 1.4,
                                       ),

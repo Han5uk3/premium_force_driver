@@ -161,11 +161,15 @@ class Bookingcard extends StatelessWidget {
                 ),
                 if (!isChauffeur) ...[
                   const SizedBox(width: 4),
-                  Image.asset(
-                    "assets/icons/pixel_arrow.png",
-                    height: 30,
-                    width: 30,
-                    fit: BoxFit.contain,
+                  SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.grey.shade900.withValues(
+                        alpha: 0.6,
+                      ),
+                      child: Icon(Icons.arrow_forward, color: Colors.white),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -488,7 +492,10 @@ class Bookingcard extends StatelessWidget {
     ];
   }
 
-  List<Widget> _buildAcceptedActions(BuildContext context, AppLocalizations loc) {
+  List<Widget> _buildAcceptedActions(
+    BuildContext context,
+    AppLocalizations loc,
+  ) {
     final authProvider = Provider.of<AuthProvider>(context);
     final isAvailable = authProvider.driver?.isWorkstarted ?? false;
     final hasActiveVehicle = authProvider.driver?.hasActiveVehicle ?? false;

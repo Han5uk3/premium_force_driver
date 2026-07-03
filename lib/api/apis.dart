@@ -171,11 +171,17 @@ class ApiService {
 
       if (result['success'] == true) {
         final data = result['data'] as Map<String, dynamic>?;
-        
-        final newAccessToken = (result['accessToken'] ?? data?['accessToken']) as String?;
-        final newRefreshToken = (result['refreshToken'] ?? data?['refreshToken']) as String?;
-        final rawExpiresIn = result['expiresIn'] ?? data?['expiresIn'] ?? result['expires_in'] ?? data?['expires_in'];
-        
+
+        final newAccessToken =
+            (result['accessToken'] ?? data?['accessToken']) as String?;
+        final newRefreshToken =
+            (result['refreshToken'] ?? data?['refreshToken']) as String?;
+        final rawExpiresIn =
+            result['expiresIn'] ??
+            data?['expiresIn'] ??
+            result['expires_in'] ??
+            data?['expires_in'];
+
         // Parse expiresIn if it's a number, or handle string like "1d"
         int? expiresIn;
         if (rawExpiresIn != null) {
@@ -1023,8 +1029,8 @@ class ApiService {
     final data = {
       'bookingID': bookingId,
       'bookingId': bookingId,
-      if (driverId != null) 'driverID': driverId,
-      if (driverId != null) 'driverId': driverId,
+      'driverID': ?driverId,
+      'driverId': ?driverId,
     };
 
     try {

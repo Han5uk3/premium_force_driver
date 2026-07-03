@@ -123,7 +123,7 @@ abstract class BookingModel {
     String? status,
     String? startedAt,
     String? stoppedAt,
-    int? extraHours,
+    double? extraHours,
   });
 
   @override
@@ -290,7 +290,7 @@ class StandardBookingModel extends BookingModel {
     String? status,
     String? startedAt,
     String? stoppedAt,
-    int? extraHours,
+    double? extraHours,
   }) => StandardBookingModel(
     id: id ?? this.id,
     status: status ?? this.status,
@@ -334,7 +334,7 @@ class StandardBookingModel extends BookingModel {
 
 class ChauffeurBookingModel extends BookingModel {
   final int hours;
-  final int? extraHours;
+  final double? extraHours;
   final double? extraPayment;
   final String? startedAt;
   final String? stoppedAt;
@@ -399,7 +399,7 @@ class ChauffeurBookingModel extends BookingModel {
       pickupLatitude: BookingModel._toDouble(json['pickupLat'] ?? json['pickupLatitude']),
       pickupLongitude: BookingModel._toDouble(json['pickuplong'] ?? json['pickupLong'] ?? json['pickupLongitude']),
       hours: BookingModel._toInt(json['hours'] ?? json['estimatedHours']),
-      extraHours: BookingModel._toInt(json['extraHours'] ?? json['extrahours']),
+      extraHours: BookingModel._toDouble(json['extraHours'] ?? json['extrahours']),
       extraPayment: BookingModel._toDouble(json['extraPayment']),
       startedAt: json['startedAt']?.toString(),
       stoppedAt: json['stoppedAt']?.toString(),
@@ -446,7 +446,7 @@ class ChauffeurBookingModel extends BookingModel {
     String? status,
     String? startedAt,
     String? stoppedAt,
-    int? extraHours,
+    double? extraHours,
   }) => ChauffeurBookingModel(
     id: id ?? this.id,
     status: status ?? this.status,

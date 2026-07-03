@@ -63,10 +63,7 @@ class BookingsProvider extends ChangeNotifier {
       // Fetch bookings from API (both methods have their own catch and return []
       // on failure, so Future.wait will not throw here)
       final results = await Future.wait([
-        _apiService.getBookingsByDriverId(
-          driverId: driverId,
-          token: token,
-        ),
+        _apiService.getBookingsByDriverId(driverId: driverId, token: token),
         _apiService.getHourlyBookingsByDriverId(
           driverId: driverId,
           token: token,
@@ -132,7 +129,7 @@ class BookingsProvider extends ChangeNotifier {
 
         // Update the booking in the list
         _updateBookingInList(bookingId, 'AC');
-        
+
         // Refresh from backend to ensure full sync
         await fetchBookings();
 
@@ -153,9 +150,12 @@ class BookingsProvider extends ChangeNotifier {
 
   Future<bool> startTracking(String bookingId, {bool skipApi = false}) async {
     // Ensure the driver can only start tracking for one booking at a time
-    final alreadyTracking = _allBookings.any((b) => b.status.toLowerCase() == 'starttracking' && b.id != bookingId);
+    final alreadyTracking = _allBookings.any(
+      (b) => b.status.toLowerCase() == 'starttracking' && b.id != bookingId,
+    );
     if (alreadyTracking) {
-      _actionMessage = 'You are already tracking another booking. Please complete it first.';
+      _actionMessage =
+          'You are already tracking another booking. Please complete it first.';
       notifyListeners();
       return false;
     }
@@ -171,7 +171,7 @@ class BookingsProvider extends ChangeNotifier {
         }
 
         final booking = _allBookings.firstWhere((b) => b.id == bookingId);
-        
+
         final response = await _apiService.startTrackingBooking(
           bookingId: bookingId,
           isHourly: booking.isHourly,
@@ -192,26 +192,26 @@ class BookingsProvider extends ChangeNotifier {
           if (index != -1) {
             _allBookings[index] = updatedBooking;
             _filterBookingsByStatus();
-            
+
             // Refresh from backend to ensure all lists are synced
             await fetchBookings();
-            
+
             notifyListeners();
             return true;
           }
         }
       }
-      
+
       _actionMessage = 'Tracking started!';
       _updateBookingInList(
         bookingId,
         'starttracking', // Match backend status
         startedAt: startedAt,
       );
-      
+
       // Refresh from backend for consistency
       await fetchBookings();
-      
+
       notifyListeners();
       return true;
     } catch (e) {
@@ -226,13 +226,13 @@ class BookingsProvider extends ChangeNotifier {
     debugPrint('🛑 Stopping Tracking for Booking: ID = $bookingId');
     try {
       final TrackingService trackingService = TrackingService();
-      
+
       // Stop local/firebase tracking
       await trackingService.stopTracking();
 
       // Call the completion API (handles extra hours, status, etc.)
       bool success = await completeBooking(bookingId);
-      
+
       notifyListeners();
       return success;
     } catch (e) {
@@ -244,7 +244,12 @@ class BookingsProvider extends ChangeNotifier {
   }
 
   /// Generic update status
-  Future<bool> updateBookingStatus(String bookingId, String status, {bool isHourly = false, Map<String, dynamic>? extraData}) async {
+  Future<bool> updateBookingStatus(
+    String bookingId,
+    String status, {
+    bool isHourly = false,
+    Map<String, dynamic>? extraData,
+  }) async {
     try {
       Map<String, dynamic> response;
       if (isHourly && extraData != null) {
@@ -255,10 +260,7 @@ class BookingsProvider extends ChangeNotifier {
         response = await _apiService.updateHourlyBooking(
           bookingId: bookingId,
           token: token,
-          data: {
-            ...extraData,
-            'bookingStatus': status,
-          },
+          data: {...extraData, 'bookingStatus': status},
         );
       } else {
         final token = await _apiService.ensureValidToken();
@@ -272,7 +274,7 @@ class BookingsProvider extends ChangeNotifier {
           token: token,
         );
       }
-      
+
       if (response['success'] == true) {
         _actionMessage = 'Status updated';
         _updateBookingInList(bookingId, status);
@@ -307,7 +309,7 @@ class BookingsProvider extends ChangeNotifier {
 
         // Remove booking from list or move to cancelled
         _updateBookingInList(bookingId, 'CA');
-        
+
         // Refresh from backend
         await fetchBookings();
 
@@ -353,7 +355,7 @@ class BookingsProvider extends ChangeNotifier {
         final bookingData = response['booking'] ?? response['data'];
         if (bookingData != null && bookingData is Map<String, dynamic>) {
           final updatedBooking = BookingModel.fromJson(bookingData);
-          
+
           if (updatedBooking.status == 'paymentpending') {
             _actionMessage = 'Extra hours detected. Payment pending.';
           }
@@ -420,9 +422,14 @@ class BookingsProvider extends ChangeNotifier {
     // 1. Upcoming: Assigned/Accepted (AC) and New (Pending)
     _upcomingBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
-      return s == 'ac' || s == 'assigned' || s == 'accepted' || s == 'confirmed' || s == 'p' || s == 'pending';
+      return s == 'ac' ||
+          s == 'assigned' ||
+          s == 'accepted' ||
+          s == 'confirmed' ||
+          s == 'p' ||
+          s == 'pending';
     }).toList();
-    
+
     // 2. Completed: Completed (C), Reviewed
     _completedBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
@@ -432,20 +439,22 @@ class BookingsProvider extends ChangeNotifier {
     // 3. Ongoing: Only include explicit ongoing statuses
     _ongoingBookings = _allBookings.where((b) {
       final s = b.status.toLowerCase().trim();
-      return s == 'og' || 
-             s == 'ongoing' || 
-             s == 'started' || 
-             s == 'starttracking' || 
-             s == 'tracking' || 
-             s == 'stoptracking' || 
-             s == 'stopped' || 
-             s == 'paymentpending';
+      return s == 'og' ||
+          s == 'ongoing' ||
+          s == 'started' ||
+          s == 'starttracking' ||
+          s == 'tracking' ||
+          s == 'stoptracking' ||
+          s == 'stopped' ||
+          s == 'paymentpending';
     }).toList();
 
-    debugPrint('📊 FILTERED: UI Counts: '
-        'Upcoming: ${_upcomingBookings.length}, '
-        'Ongoing: ${_ongoingBookings.length}, '
-        'Completed: ${_completedBookings.length}');
+    debugPrint(
+      '📊 FILTERED: UI Counts: '
+      'Upcoming: ${_upcomingBookings.length}, '
+      'Ongoing: ${_ongoingBookings.length}, '
+      'Completed: ${_completedBookings.length}',
+    );
   }
 
   /// Update a booking in the local list after an action.
@@ -454,7 +463,7 @@ class BookingsProvider extends ChangeNotifier {
     String newStatus, {
     String? startedAt,
     String? stoppedAt,
-    int? extraHours,
+    double? extraHours,
   }) {
     final index = _allBookings.indexWhere((b) => b.id == bookingId);
     if (index != -1) {

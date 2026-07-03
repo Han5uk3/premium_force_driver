@@ -313,16 +313,16 @@ class TrackingService with ChangeNotifier {
   }
 
   /// Stop tracking. For chauffeur bookings, writes [stopTime] and [tripDuration] to RTDB.
-  Future<int> stopTracking() async {
+  Future<double> stopTracking() async {
     _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
 
-    if (_currentBookingId == null) return 0;
+    if (_currentBookingId == null) return 0.0;
 
     final bookingId = _currentBookingId!;
     final stopTime = DateTime.now();
 
-    int extraHours = 0;
+    double extraHours = 0.0;
 
     // Mark session inactive in RTDB
     try {
@@ -337,13 +337,12 @@ class TrackingService with ChangeNotifier {
         final durationSeconds = stopTime.difference(_startTime!).inSeconds;
         updateData['tripDurationSeconds'] = durationSeconds;
 
-        // Calculate extra hours: actual hours – booked hours, rounded
-        // e.g. 1.56 extra → 2 h, 1.48 extra → 1 h (standard round)
+        // Calculate extra hours: actual hours – booked hours, keeping decimals
         final actualHoursDecimal = durationSeconds / 3600.0;
         
         if (_bookedHours > 0 && actualHoursDecimal > _bookedHours) {
           final overDecimal = actualHoursDecimal - _bookedHours;
-          extraHours = overDecimal.round(); // ≥0.5 → up, <0.5 → down
+          extraHours = double.parse(overDecimal.toStringAsFixed(2));
           if (extraHours > 0) {
             updateData['extraHours'] = extraHours;
             debugPrint('⏱️ Extra hours over booked: $extraHours');
