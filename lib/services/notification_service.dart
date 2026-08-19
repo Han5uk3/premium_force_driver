@@ -5,8 +5,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/api/apis.dart';
+import 'package:premium_force_driver/api/driver_api_v2.dart';
+import 'package:premium_force_driver/storage/user_local_storage.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Top-level background handler (must be a top-level / static function)
@@ -61,33 +62,13 @@ class NotificationService {
   // ── Callback invoked when a new FCM token is issued / refreshed
   void Function(String token)? onTokenRefresh;
 
-  // ── ValueNotifier to dynamically track unread notification count
-  final ValueNotifier<int> unreadCountNotifier = ValueNotifier<int>(0);
-
-  /// Synchronise the unread notifications count from local storage
-  void updateUnreadCount() {
-    unreadCountNotifier.value = UserLocalStorage.getNotifications()
-        .where((n) => !(n['read'] as bool? ?? false))
-        .length;
-  }
-
-  /// Parse and save a RemoteMessage notification to local storage
-  Future<void> handleAndSaveMessage(RemoteMessage message) async {
-    final notification = message.notification;
-    final title = notification?.title ?? message.data['title'] ?? 'New Notification';
-    final body = notification?.body ?? message.data['body'] ?? '';
-    final id = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
-
-    await UserLocalStorage.saveNotification({
-      'id': id,
-      'title': title,
-      'body': body,
-      'timestamp': DateTime.now().toIso8601String(),
-      'read': false,
-      'data': message.data,
-    });
-    updateUnreadCount();
-  }
+  /// Invoked when a push arrives, whether it was tapped or simply delivered
+  /// while the app was open.
+  ///
+  /// The notification centre and the trip list are both server-backed, so the
+  /// app answers a push by re-reading them rather than by keeping its own copy
+  /// of the message.
+  void Function(RemoteMessage message)? onMessageReceived;
 
   // ---------------------------------------------------------------------------
   // Initialise
@@ -103,16 +84,13 @@ class NotificationService {
     // 3. Register background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // Load initial unread count
-    updateUnreadCount();
-
     // 4. Foreground message handler
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
     // 5. Message-opened-from-notification-tray handler
-    FirebaseMessaging.onMessageOpenedApp.listen((msg) async {
+    FirebaseMessaging.onMessageOpenedApp.listen((msg) {
       debugPrint('🔔 FCM [opened-from-tray] │ ${msg.messageId}');
-      await handleAndSaveMessage(msg);
+      onMessageReceived?.call(msg);
       onNotificationTap?.call(msg);
     });
 
@@ -122,7 +100,7 @@ class NotificationService {
       debugPrint(
         '🔔 FCM [launch-from-notification] │ ${initialMessage.messageId}',
       );
-      await handleAndSaveMessage(initialMessage);
+      onMessageReceived?.call(initialMessage);
       onNotificationTap?.call(initialMessage);
     }
 
@@ -215,7 +193,11 @@ class NotificationService {
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
     debugPrint('🔔 FCM [foreground] │ ${message.notification?.title}');
-    await handleAndSaveMessage(message);
+
+    // The server already holds this notification; tell the app to re-read its
+    // feed so the list and the unread badge pick it up.
+    onMessageReceived?.call(message);
+
     final notification = message.notification;
     if (notification == null) return;
 
@@ -313,6 +295,7 @@ class NotificationService {
       debugPrint('🔔 FCM │ Token delete error: $e');
     }
   }
+
   /// Synchronise the local FCM token with the backend if the user is logged in.
   Future<void> _updateTokenOnBackend(String fcmToken) async {
     final uid = UserLocalStorage.getUserId();
@@ -331,6 +314,13 @@ class NotificationService {
         } else {
           debugPrint('⚠️ FCM │ Token sync failed: ${response['message']}');
         }
+
+        // The v2 settings endpoint stores the token alongside the driver's
+        // locale, which is the language the server renders pushes and emails in.
+        await DriverApiV2().updateSettings(
+          locale: UserLocalStorage.getLanguage(),
+          fcmToken: fcmToken,
+        );
       } catch (e) {
         debugPrint('❌ FCM │ Token sync error: $e');
       }

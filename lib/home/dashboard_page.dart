@@ -1,18 +1,18 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
-import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:provider/provider.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
-import 'package:premium_force_driver/providers/bookings_provider.dart';
+import 'package:premium_force_driver/providers/trips_provider.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
-import 'package:premium_force_driver/models/booking.dart';
+import 'package:premium_force_driver/models/v2/trip_v2.dart';
 import 'package:premium_force_driver/api/apis.dart';
-import 'package:premium_force_driver/common_widgets/bookingcard.dart';
-import 'package:premium_force_driver/services/notification_service.dart';
+import 'package:premium_force_driver/trips/trip_card.dart';
+import 'package:premium_force_driver/trips/trip_details_page.dart';
+import 'package:premium_force_driver/providers/notifications_provider.dart';
 import 'package:premium_force_driver/home/notifications_page.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/home/home.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:intl/intl.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -29,18 +29,21 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Load profile and bookings on startup
+    // Load profile and trips on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<AuthProvider>().fetchDriverProfile();
-        context.read<BookingsProvider>().fetchBookings();
+        context.read<TripsProvider>().refresh();
+        // Populates the unread badge in the app bar; the notification centre
+        // re-reads the feed itself when opened.
+        context.read<NotificationsProvider>().refresh();
       }
     });
   }
 
   Future<void> _handleRefresh() async {
     await context.read<AuthProvider>().fetchDriverProfile();
-    await context.read<BookingsProvider>().fetchBookings();
+    await context.read<TripsProvider>().refresh(silent: true);
   }
 
   Future<void> _fetchAvailableFleets(BuildContext context) async {
@@ -52,6 +55,7 @@ class _DashboardPageState extends State<DashboardPage> {
       final api = ApiService();
       final response = await api.getAvailableFleets();
       if (response['success'] == true) {
+        log('Available fleets: ${response['data']}');
         setState(() {
           _availableFleets = response['data'] ?? [];
         });
@@ -440,13 +444,13 @@ class _DashboardPageState extends State<DashboardPage> {
     bool isWorkstarted,
   ) async {
     if (!isWorkstarted) {
-      final bookingsProvider = context.read<BookingsProvider>();
-      final hasActiveTracking = bookingsProvider.allBookings.any((b) => b.status.toLowerCase() == 'starttracking');
-      if (hasActiveTracking) {
+      if (context.read<TripsProvider>().hasLiveTrip) {
         final isArabic = Localizations.localeOf(context).languageCode == 'ar';
         AnimatedSnackBar.show(
           context,
-          isArabic ? 'لا يمكنك تغيير حالة العمل إلى غير متصل أثناء وجود حجز نشط' : 'Cannot toggle work status to offline while having an active booking',
+          isArabic
+              ? 'لا يمكنك تغيير حالة العمل إلى غير متصل أثناء وجود حجز نشط'
+              : 'Cannot toggle work status to offline while having an active booking',
           'E',
         );
         return;
@@ -486,7 +490,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final authProvider = context.watch<AuthProvider>();
-    final bookingsProvider = context.watch<BookingsProvider>();
+    final tripsProvider = context.watch<TripsProvider>();
 
     final driver = authProvider.driver;
     final username = driver?.fullName ?? 'Driver';
@@ -500,17 +504,12 @@ class _DashboardPageState extends State<DashboardPage> {
     final activeVehicle = driver?.activeVehicle;
 
     // Counts
-    final upcomingCount = bookingsProvider.upcomingBookings.length;
-    final ongoingCount = bookingsProvider.ongoingBookings.length;
-    final completedCount = bookingsProvider.completedBookings.length;
+    final upcomingCount = tripsProvider.upcomingCount;
+    final ongoingCount = tripsProvider.ongoingCount;
+    final completedCount = tripsProvider.completedCount;
 
-    // Current active tracked booking
-    final activeBookingsList = bookingsProvider.allBookings.where(
-      (b) => b.status.toLowerCase() == 'starttracking',
-    );
-    final BookingModel? activeBooking = activeBookingsList.isNotEmpty
-        ? activeBookingsList.first
-        : null;
+    // The ride under way, or the next one the driver is due to start.
+    final TripV2? activeTrip = tripsProvider.nextTrip;
 
     return Container(
       decoration: const BoxDecoration(
@@ -565,9 +564,11 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           actions: [
-            ValueListenableBuilder<int>(
-              valueListenable: NotificationService.instance.unreadCountNotifier,
-              builder: (context, unreadCount, _) {
+            // The badge tracks the server-side unread count, which is what
+            // the notification centre reconciles read state against.
+            Consumer<NotificationsProvider>(
+              builder: (context, notifications, _) {
+                final unreadCount = notifications.unreadCount;
                 return Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -860,7 +861,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       onTap: () {
                         final homeState = context
                             .findAncestorStateOfType<HomeState>();
-                        homeState?.navigateToBookings(1);
+                        homeState?.navigateToBookings(0);
                       },
                     ),
                     const SizedBox(width: 10),
@@ -874,7 +875,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       onTap: () {
                         final homeState = context
                             .findAncestorStateOfType<HomeState>();
-                        homeState?.navigateToBookings(2);
+                        homeState?.navigateToBookings(1);
                       },
                     ),
                   ],
@@ -894,17 +895,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(height: 12),
 
                 // Current active card
-                if (activeBooking != null)
-                  GestureDetector(
-                    onTap: () {
-                      // Navigate to details screen or do nothing if custom card suffices
-                    },
-                    child: _buildActiveRideCard(
-                      context,
-                      activeBooking,
-                      bookingsProvider,
-                    ),
-                  )
+                if (activeTrip != null)
+                  TripCard(trip: activeTrip, onTap: () => _openTrip(activeTrip))
                 else
                   Card(
                     color: const Color(0xFF1E1E1E),
@@ -1020,181 +1012,18 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildActiveRideCard(
-    BuildContext context,
-    dynamic booking,
-    BookingsProvider provider,
-  ) {
-    final loc = AppLocalizations.of(context)!;
-    final dateFormat = DateFormat('dd MMM, yyyy');
-    final timeFormat = DateFormat('h:mm a');
-
-    final effectiveDateTime =
-        (booking.pickupdatetime != null && booking.pickupdatetime!.isNotEmpty)
-        ? DateTime.tryParse(booking.pickupdatetime!) ?? booking.createdAt
-        : booking.createdAt;
-
-    final typeStr = booking.isHourly
-        ? loc.chauffeurService
-        : booking.pickupLocation.toLowerCase().contains('airport')
-        ? loc.airportArrival
-        : booking.dropoffLocation.toLowerCase().contains('airport')
-        ? loc.airportDeparture
-        : loc.privateTransfer;
-
-    return Bookingcard(
-      status: booking.status,
-      type: typeStr,
-      pickup: booking.pickupLocation,
-      dropoff: booking.dropoffLocation ?? '',
-      date: dateFormat.format(effectiveDateTime),
-      time: timeFormat.format(effectiveDateTime),
-      ride: booking.displayRideType,
-      brand: booking.displayBrand,
-      passengers: booking.passengerCount,
-      bookingId: booking.id,
-      rating: booking.rating,
-      reviewText: booking.review,
-      isChauffeur: booking.isHourly,
-      isToday: true,
-      pickupLatitude: booking.pickupLatitude,
-      pickupLongitude: booking.pickupLongitude,
-      dropoffLatitude: booking.dropoffLatitude,
-      dropoffLongitude: booking.dropoffLongitude,
-      onAccept: () {},
-      onReject: () {},
-      onComplete: () async {
-        final confirm = await _showConfirmationDialog(
-          context,
-          loc.completeBooking,
-          loc.completeBookingConfirm,
-        );
-        if (confirm != true) return;
-        await TrackingService().stopTracking();
-        final success = await provider.completeBooking(booking.id);
-        if (success && context.mounted) {
-          AnimatedSnackBar.show(
-            context,
-            provider.actionMessage ?? loc.bookingCompleted,
-            'S',
-          );
-        }
-      },
-      onStartTracking: () {},
-      onStopTracking: () async {
-        final confirm = await _showConfirmationDialog(
-          context,
-          loc.endRide,
-          loc.endRideConfirm,
-        );
-        if (confirm != true) return;
-
-        final success = await provider.stopTracking(booking.id);
-        if (context.mounted) {
-          AnimatedSnackBar.show(
-            context,
-            success
-                ? (provider.actionMessage ?? loc.tripEnded)
-                : (provider.actionMessage ?? loc.rideStoppedSyncPending),
-            success ? 'S' : 'E',
-          );
-        }
-      },
-      onGetDirections: () {
-        _openMaps(booking);
-      },
-      onPauseTracking: () async {
-        await TrackingService().pauseTracking(bookingId: booking.id);
-        if (context.mounted) {
-          setState(() {});
-          AnimatedSnackBar.show(context, loc.ridePaused, 'S');
-        }
-      },
-      onResumeTracking: () async {
-        final hasPermissions = await TrackingService()
-            .handleLocationPermissions(context);
-        if (!hasPermissions) return;
-        await TrackingService().resumeTracking(bookingId: booking.id);
-        if (context.mounted) {
-          setState(() {});
-          AnimatedSnackBar.show(context, loc.rideResumed, 'S');
-        }
-      },
+  /// Open the trip detail screen, where the ride can be driven forward.
+  Future<void> _openTrip(TripV2 trip) async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            TripDetailsPage(tripId: trip.id, initialTrip: trip),
+      ),
     );
-  }
 
-  void _openMaps(dynamic booking) async {
-    final pickupLat = booking.pickupLatitude;
-    final pickupLong = booking.pickupLongitude;
-    final dropoffLat = booking.dropoffLatitude;
-    final dropoffLong = booking.dropoffLongitude;
-
-    final currentPos = TrackingService().currentPosition;
-    final origin = currentPos != null
-        ? '${currentPos.latitude},${currentPos.longitude}'
-        : 'Current+Location';
-
-    String url;
-    if (booking.rideType.toLowerCase().contains('chauffeur') ||
-        dropoffLat == 0) {
-      url =
-          "https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$pickupLat,$pickupLong";
-    } else {
-      url =
-          "https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$dropoffLat,$dropoffLong&waypoints=$pickupLat,$pickupLong";
+    if ((changed ?? false) && mounted) {
+      await context.read<TripsProvider>().refresh(silent: true);
     }
-
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) {
-        AnimatedSnackBar.show(
-          context,
-          AppLocalizations.of(context)!.couldNotLaunchMaps,
-          'E',
-        );
-      }
-    }
-  }
-
-  Future<bool?> _showConfirmationDialog(
-    BuildContext context,
-    String title,
-    String content,
-  ) {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        final loc = AppLocalizations.of(context)!;
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          title: Text(title, style: const TextStyle(color: Colors.white)),
-          content: Text(content, style: const TextStyle(color: Colors.white70)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                loc.cancel,
-                style: const TextStyle(color: Colors.grey),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC0C0C0),
-              ),
-              child: Text(
-                loc.confirm,
-                style: const TextStyle(color: Colors.black),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 }

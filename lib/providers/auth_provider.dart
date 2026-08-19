@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/models/driver.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
+import 'package:premium_force_driver/main.dart'
+    show notificationsProvider, tripsProvider;
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 
 enum AuthStatus {
@@ -35,6 +37,20 @@ class AuthProvider extends ChangeNotifier {
 
   final ApiService _api = ApiService();
   Timer? _resendTimer;
+
+  /// The language the app is currently running in, as the API's `locale`.
+  ///
+  /// Read from Hive rather than from a widget's `BuildContext`: the provider runs
+  /// outside the tree during session restore, and Hive is what the language
+  /// switch persists to anyway.
+  String get _currentLocale => UserLocalStorage.getLanguage();
+
+  /// The device's push token, when one has been issued.
+  ///
+  /// Sent alongside the locale on login and registration so a fresh install is
+  /// reachable by push from its first request, without waiting for the separate
+  /// token-sync round trip.
+  String? get _currentFcmToken => UserLocalStorage.getFcmToken();
 
   AuthProvider() {
     _api.onSessionExpired = () {
@@ -302,6 +318,8 @@ class AuthProvider extends ChangeNotifier {
         countryCode: countryCode,
         phoneNumber: phoneNumber,
         otp: otp,
+        locale: _currentLocale,
+        fcmToken: _currentFcmToken,
       );
 
       _isOtpLoading = false;
@@ -459,6 +477,8 @@ class AuthProvider extends ChangeNotifier {
         profileImage: profileImage,
         licenseImage: licenseImage,
         token: token,
+        locale: _currentLocale,
+        fcmToken: _currentFcmToken,
       );
 
       if (result['success'] == true) {
@@ -637,6 +657,11 @@ class AuthProvider extends ChangeNotifier {
 
       // Clear local storage
       await UserLocalStorage.clearUser();
+
+      // Trips and notifications are per-driver; drop what this session holds so
+      // the next sign-in starts from an empty list and badge.
+      tripsProvider.reset();
+      notificationsProvider.reset();
 
       _cancelResendTimer();
       _driver = null;

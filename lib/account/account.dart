@@ -5,7 +5,7 @@ import 'package:premium_force_driver/authentication/login.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
-import 'package:premium_force_driver/providers/bookings_provider.dart';
+import 'package:premium_force_driver/providers/trips_provider.dart';
 import 'package:premium_force_driver/main.dart';
 
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
@@ -170,9 +170,7 @@ class _AccountPageState extends State<AccountPage> {
               ),
               GestureDetector(
                 onTap: () {
-                  final bookingsProvider = context.read<BookingsProvider>();
-                  final hasActiveTracking = bookingsProvider.allBookings.any((b) => b.status.toLowerCase() == 'starttracking');
-                  if (hasActiveTracking) {
+                  if (context.read<TripsProvider>().hasLiveTrip) {
                     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
                     AnimatedSnackBar.show(
                       context,

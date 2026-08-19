@@ -32,6 +32,7 @@ assets/PremiumForce.postman_collection_04_04_2026_evenning
 .pub-cache/
 .pub/
 /build/
+/assets/api_documentation
 /coverage/
 
 # Symbolication related

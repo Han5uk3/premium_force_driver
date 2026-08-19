@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:premium_force_driver/account/account.dart';
-import 'package:premium_force_driver/bookings/bookings_page.dart';
+import 'package:premium_force_driver/trips/trips_page.dart';
 import 'package:premium_force_driver/common_widgets/bottomnavbar.dart';
 import 'package:premium_force_driver/home/dashboard_page.dart';
 
@@ -13,7 +13,10 @@ class Home extends StatefulWidget {
 
 class HomeState extends State<Home> {
   int _selectedIndex = 0;
-  int _bookingsTabIndex = 0;
+
+  /// Which trips tab to open — 0 active, 1 completed. Set by the dashboard's
+  /// summary cards so tapping a count lands on the matching list.
+  int _tripsTabIndex = 0;
 
   void _onNavBarItemTapped(int index) {
     setState(() {
@@ -24,7 +27,7 @@ class HomeState extends State<Home> {
   void navigateToBookings(int tabIndex) {
     setState(() {
       _selectedIndex = 1;
-      _bookingsTabIndex = tabIndex;
+      _tripsTabIndex = tabIndex;
     });
   }
 
@@ -36,7 +39,7 @@ class HomeState extends State<Home> {
         bodyWidget = const DashboardPage();
         break;
       case 1:
-        bodyWidget = BookingsPage(initialIndex: _bookingsTabIndex);
+        bodyWidget = TripsPage(initialIndex: _tripsTabIndex);
         break;
       case 2:
         bodyWidget = const AccountPage();

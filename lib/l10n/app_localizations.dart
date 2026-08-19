@@ -1999,6 +1999,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to Login'**
   String get backToLogin;
+
+  /// No description provided for @myTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'My Trips'**
+  String get myTrips;
+
+  /// No description provided for @active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get active;
+
+  /// No description provided for @noActiveTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'No active trips'**
+  String get noActiveTrips;
+
+  /// No description provided for @noActiveTripsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Trips assigned to you will appear here.'**
+  String get noActiveTripsMessage;
+
+  /// No description provided for @noCompletedTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed trips yet'**
+  String get noCompletedTrips;
+
+  /// No description provided for @tripProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip Progress'**
+  String get tripProgress;
+
+  /// No description provided for @statusPendingPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting Payment'**
+  String get statusPendingPayment;
+
+  /// No description provided for @statusConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get statusConfirmed;
+
+  /// No description provided for @statusAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned'**
+  String get statusAssigned;
+
+  /// No description provided for @statusEnRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way'**
+  String get statusEnRoute;
+
+  /// No description provided for @statusArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived at pickup'**
+  String get statusArrived;
+
+  /// No description provided for @statusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip in progress'**
+  String get statusInProgress;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
+
+  /// No description provided for @actionStartDriving.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Driving'**
+  String get actionStartDriving;
+
+  /// No description provided for @actionArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'I have Arrived'**
+  String get actionArrived;
+
+  /// No description provided for @actionStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Trip'**
+  String get actionStartTrip;
+
+  /// No description provided for @actionCompleteTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Trip'**
+  String get actionCompleteTrip;
+
+  /// No description provided for @confirmStatusUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to continue?'**
+  String get confirmStatusUpdate;
+
+  /// No description provided for @tripStatusUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip status updated'**
+  String get tripStatusUpdated;
+
+  /// No description provided for @waitingForDispatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for dispatch to confirm this trip.'**
+  String get waitingForDispatch;
+
+  /// No description provided for @extraCharges.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Charges'**
+  String get extraCharges;
+
+  /// No description provided for @extraChargesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add anything you collected during the ride — waiting time, parking or tolls.'**
+  String get extraChargesHint;
+
+  /// No description provided for @amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amount;
+
+  /// No description provided for @paymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Method'**
+  String get paymentMethod;
+
+  /// No description provided for @cardPos.
+  ///
+  /// In en, this message translates to:
+  /// **'Card / POS'**
+  String get cardPos;
+
+  /// No description provided for @cash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get cash;
+
+  /// No description provided for @notesOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get notesOptional;
+
+  /// No description provided for @extraNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 1h extra waiting + airport parking'**
+  String get extraNotesHint;
+
+  /// No description provided for @completeWithoutExtras.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete without extras'**
+  String get completeWithoutExtras;
+
+  /// No description provided for @enterValidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount.'**
+  String get enterValidAmount;
+
+  /// No description provided for @extras.
+  ///
+  /// In en, this message translates to:
+  /// **'Extras'**
+  String get extras;
+
+  /// No description provided for @grandTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Grand Total'**
+  String get grandTotal;
+
+  /// No description provided for @callCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Customer'**
+  String get callCustomer;
+
+  /// No description provided for @customer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get customer;
+
+  /// No description provided for @tripCouldNotBeLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip could not be loaded.'**
+  String get tripCouldNotBeLoaded;
+
+  /// No description provided for @goOnlineToStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch your work status to Available before starting a trip.'**
+  String get goOnlineToStartTrip;
+
+  /// No description provided for @takeOutVehicleToStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Take out a vehicle before starting a trip.'**
+  String get takeOutVehicleToStartTrip;
+
+  /// No description provided for @finishActiveTripFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish your active trip before starting another one.'**
+  String get finishActiveTripFirst;
 }
 
 class _AppLocalizationsDelegate

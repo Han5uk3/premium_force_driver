@@ -991,4 +991,123 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backToLogin => 'العودة لتسجيل الدخول';
+
+  @override
+  String get myTrips => 'رحلاتي';
+
+  @override
+  String get active => 'نشطة';
+
+  @override
+  String get noActiveTrips => 'لا توجد رحلات نشطة';
+
+  @override
+  String get noActiveTripsMessage => 'ستظهر الرحلات المخصصة لك هنا.';
+
+  @override
+  String get noCompletedTrips => 'لا توجد رحلات مكتملة بعد';
+
+  @override
+  String get tripProgress => 'مسار الرحلة';
+
+  @override
+  String get statusPendingPayment => 'بانتظار الدفع';
+
+  @override
+  String get statusConfirmed => 'تم التأكيد';
+
+  @override
+  String get statusAssigned => 'تم التعيين';
+
+  @override
+  String get statusEnRoute => 'في الطريق';
+
+  @override
+  String get statusArrived => 'وصل إلى نقطة الاستلام';
+
+  @override
+  String get statusInProgress => 'الرحلة جارية';
+
+  @override
+  String get statusCompleted => 'مكتملة';
+
+  @override
+  String get statusCancelled => 'ملغاة';
+
+  @override
+  String get actionStartDriving => 'ابدأ التوجه';
+
+  @override
+  String get actionArrived => 'لقد وصلت';
+
+  @override
+  String get actionStartTrip => 'ابدأ الرحلة';
+
+  @override
+  String get actionCompleteTrip => 'إكمال الرحلة';
+
+  @override
+  String get confirmStatusUpdate => 'هل تريد المتابعة؟';
+
+  @override
+  String get tripStatusUpdated => 'تم تحديث حالة الرحلة';
+
+  @override
+  String get waitingForDispatch => 'بانتظار تأكيد الرحلة من الإدارة.';
+
+  @override
+  String get extraCharges => 'رسوم إضافية';
+
+  @override
+  String get extraChargesHint =>
+      'أضف ما تم تحصيله خلال الرحلة — وقت الانتظار أو المواقف أو الرسوم.';
+
+  @override
+  String get amount => 'المبلغ';
+
+  @override
+  String get paymentMethod => 'طريقة الدفع';
+
+  @override
+  String get cardPos => 'بطاقة / نقاط بيع';
+
+  @override
+  String get cash => 'نقداً';
+
+  @override
+  String get notesOptional => 'ملاحظات (اختياري)';
+
+  @override
+  String get extraNotesHint => 'مثال: ساعة انتظار إضافية + مواقف المطار';
+
+  @override
+  String get completeWithoutExtras => 'إكمال بدون رسوم إضافية';
+
+  @override
+  String get enterValidAmount => 'أدخل مبلغاً صحيحاً.';
+
+  @override
+  String get extras => 'إضافات';
+
+  @override
+  String get grandTotal => 'الإجمالي النهائي';
+
+  @override
+  String get callCustomer => 'اتصل بالعميل';
+
+  @override
+  String get customer => 'العميل';
+
+  @override
+  String get tripCouldNotBeLoaded => 'تعذر تحميل هذه الرحلة.';
+
+  @override
+  String get goOnlineToStartTrip =>
+      'غيّر حالة العمل إلى \"متاح\" قبل بدء الرحلة.';
+
+  @override
+  String get takeOutVehicleToStartTrip => 'استلم مركبة قبل بدء الرحلة.';
+
+  @override
+  String get finishActiveTripFirst => 'أكمل رحلتك النشطة قبل بدء رحلة أخرى.';
 }

@@ -1003,4 +1003,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backToLogin => 'Back to Login';
+
+  @override
+  String get myTrips => 'My Trips';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get noActiveTrips => 'No active trips';
+
+  @override
+  String get noActiveTripsMessage => 'Trips assigned to you will appear here.';
+
+  @override
+  String get noCompletedTrips => 'No completed trips yet';
+
+  @override
+  String get tripProgress => 'Trip Progress';
+
+  @override
+  String get statusPendingPayment => 'Awaiting Payment';
+
+  @override
+  String get statusConfirmed => 'Confirmed';
+
+  @override
+  String get statusAssigned => 'Assigned';
+
+  @override
+  String get statusEnRoute => 'On the way';
+
+  @override
+  String get statusArrived => 'Arrived at pickup';
+
+  @override
+  String get statusInProgress => 'Trip in progress';
+
+  @override
+  String get statusCompleted => 'Completed';
+
+  @override
+  String get statusCancelled => 'Cancelled';
+
+  @override
+  String get actionStartDriving => 'Start Driving';
+
+  @override
+  String get actionArrived => 'I have Arrived';
+
+  @override
+  String get actionStartTrip => 'Start Trip';
+
+  @override
+  String get actionCompleteTrip => 'Complete Trip';
+
+  @override
+  String get confirmStatusUpdate => 'Do you want to continue?';
+
+  @override
+  String get tripStatusUpdated => 'Trip status updated';
+
+  @override
+  String get waitingForDispatch => 'Waiting for dispatch to confirm this trip.';
+
+  @override
+  String get extraCharges => 'Extra Charges';
+
+  @override
+  String get extraChargesHint =>
+      'Add anything you collected during the ride — waiting time, parking or tolls.';
+
+  @override
+  String get amount => 'Amount';
+
+  @override
+  String get paymentMethod => 'Payment Method';
+
+  @override
+  String get cardPos => 'Card / POS';
+
+  @override
+  String get cash => 'Cash';
+
+  @override
+  String get notesOptional => 'Notes (optional)';
+
+  @override
+  String get extraNotesHint => 'e.g. 1h extra waiting + airport parking';
+
+  @override
+  String get completeWithoutExtras => 'Complete without extras';
+
+  @override
+  String get enterValidAmount => 'Enter a valid amount.';
+
+  @override
+  String get extras => 'Extras';
+
+  @override
+  String get grandTotal => 'Grand Total';
+
+  @override
+  String get callCustomer => 'Call Customer';
+
+  @override
+  String get customer => 'Customer';
+
+  @override
+  String get tripCouldNotBeLoaded => 'This trip could not be loaded.';
+
+  @override
+  String get goOnlineToStartTrip =>
+      'Switch your work status to Available before starting a trip.';
+
+  @override
+  String get takeOutVehicleToStartTrip =>
+      'Take out a vehicle before starting a trip.';
+
+  @override
+  String get finishActiveTripFirst =>
+      'Finish your active trip before starting another one.';
 }

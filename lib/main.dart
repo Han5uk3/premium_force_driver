@@ -6,11 +6,13 @@ import 'package:premium_force_driver/splashscreen/splashscreen.dart';
 import 'package:provider/provider.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/providers/user_provider.dart';
-import 'package:premium_force_driver/providers/bookings_provider.dart';
+import 'package:premium_force_driver/providers/notifications_provider.dart';
+import 'package:premium_force_driver/providers/trips_provider.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:premium_force_driver/firebase_options.dart';
+import 'package:premium_force_driver/api/driver_api_v2.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
 import 'package:premium_force_driver/home/notifications_page.dart';
@@ -18,6 +20,18 @@ import 'package:premium_force_driver/home/notifications_page.dart';
 /// Global navigator key – allows navigating from outside a widget tree
 /// (e.g. when the user taps a push notification).
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+/// The notification centre's state.
+///
+/// Created outside the widget tree so a push arriving before (or without) any
+/// screen being mounted can still refresh the feed and the unread badge.
+final NotificationsProvider notificationsProvider = NotificationsProvider();
+
+/// The driver's trips.
+///
+/// Shared by the dashboard, the trips screen and the detail screen so a status
+/// change on one is reflected on the others without a round trip.
+final TripsProvider tripsProvider = TripsProvider();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +53,13 @@ void main() async {
 
   // Optional: react to notification taps globally
   NotificationService.instance.onNotificationTap = _handleNotificationTap;
+
+  // A push only announces that something happened — a new assignment, a
+  // cancellation — so the app answers by re-reading the feed and the trips.
+  NotificationService.instance.onMessageReceived = (_) {
+    notificationsProvider.refresh(silent: true);
+    tripsProvider.refresh(silent: true);
+  };
 
   runApp(const MainApp());
 }
@@ -79,6 +100,30 @@ class _MainAppState extends State<MainApp> {
       _locale = locale;
     });
     UserLocalStorage.saveLanguage(locale.languageCode);
+    _syncLocaleWithBackend(locale.languageCode);
+  }
+
+  /// Mirror the chosen language onto the driver's account.
+  ///
+  /// Pushes and emails are rendered server-side, so the backend has to know
+  /// which language to use. The call is fire-and-forget: the UI has already
+  /// switched and Hive holds the choice, so a failure here only means the server
+  /// keeps using the previous language until the next successful sync.
+  void _syncLocaleWithBackend(String languageCode) {
+    if (!UserLocalStorage.isLoggedIn) return;
+
+    DriverApiV2()
+        .updateSettings(
+          locale: languageCode,
+          fcmToken: UserLocalStorage.getFcmToken(),
+        )
+        .then((result) {
+          if (result.success) {
+            debugPrint('🌐 Locale │ synced with backend: $languageCode');
+          } else {
+            debugPrint('🌐 Locale │ sync failed: ${result.message}');
+          }
+        });
   }
 
   @override
@@ -91,7 +136,8 @@ class _MainAppState extends State<MainApp> {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(create: (_) => BookingsProvider()),
+        ChangeNotifierProvider.value(value: tripsProvider),
+        ChangeNotifierProvider.value(value: notificationsProvider),
       ],
       child: SafeArea(
         top: false,

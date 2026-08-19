@@ -4,8 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/models/user.dart';
 import 'package:premium_force_driver/models/driver.dart';
-import 'package:premium_force_driver/models/booking.dart';
-import 'package:premium_force_driver/models/review.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 
 /// Centralised API service for the Premium Force app.
@@ -116,6 +114,21 @@ class ApiService {
         ),
       );
     }
+  }
+
+  /// The preferred-language and push-token fields the auth endpoints accept.
+  ///
+  /// OTP verification and registration both take the same optional pair, and
+  /// both treat a missing value as "leave unchanged" — so blank entries are
+  /// dropped rather than sent empty. Once signed in, the same two fields are
+  /// updated through `PATCH /api/v2/drivers/settings`.
+  static Map<String, String> _localePayload(String? locale, String? fcmToken) {
+    final language = locale?.trim();
+    final token = fcmToken?.trim();
+    return {
+      if (language != null && language.isNotEmpty) 'locale': language,
+      if (token != null && token.isNotEmpty) 'fcmToken': token,
+    };
   }
 
   /// Attach a Bearer token for authenticated requests.
@@ -249,11 +262,16 @@ class ApiService {
   /// On success the backend returns:
   /// - `accessToken` / `refreshToken`
   /// - Driver data if already registered
+  /// [locale] and [fcmToken] ride along so the backend can start addressing
+  /// this driver in their language, and on this device, from the moment they
+  /// log in.
   Future<Map<String, dynamic>> verifyOtp({
     required String countryCode,
     required String phoneNumber,
     required String otp,
     String purpose = 'login',
+    String? locale,
+    String? fcmToken,
   }) async {
     try {
       final response = await _dio.post(
@@ -263,6 +281,7 @@ class ApiService {
           'phoneNumber': phoneNumber,
           'otp': otp,
           'purpose': purpose,
+          ..._localePayload(locale, fcmToken),
         },
       );
       debugPrint('Verify OTP Full Response: ${response.data}');
@@ -597,6 +616,8 @@ class ApiService {
     File? profileImage,
     File? licenseImage,
     String? token,
+    String? locale,
+    String? fcmToken,
   }) async {
     try {
       final fields = <String, dynamic>{
@@ -607,6 +628,7 @@ class ApiService {
         'countryCode': countryCode,
         'phoneNumber': phoneNumber,
         'location': location,
+        ..._localePayload(locale, fcmToken),
         if (lat != null) 'lat': lat.toString(),
         if (long != null) 'long': long.toString(),
         'licenseNumber': licenseNumber,
@@ -751,336 +773,6 @@ class ApiService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Bookings
-  // ---------------------------------------------------------------------------
-
-  /// Fetch all bookings assigned to the driver by [driverId].
-  ///
-  /// Calls `GET /api/bookings/driver/{driverId}`.
-  /// Returns a list of BookingModel objects.
-  Future<List<BookingModel>> getBookingsByDriverId({
-    required String driverId,
-    String? token,
-  }) async {
-    try {
-      final response = await _dio.get(
-        '/bookings/driver/list',
-        options: token != null ? _authOptions(token) : null,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        List<dynamic> rawList = [];
-
-        if (data is Map<String, dynamic>) {
-          // Check common keys for list data
-          final possibleKeys = ['bookings', 'data', 'result', 'results'];
-          for (var key in possibleKeys) {
-            if (data.containsKey(key) && data[key] is List) {
-              rawList = data[key];
-              break;
-            }
-          }
-          // If no key found but it's a map, maybe the map itself is the object (not likely for 'all')
-        } else if (data is List) {
-          rawList = data;
-        }
-
-        return rawList
-            .map((b) {
-              try {
-                if (b is Map<String, dynamic>) {
-                  return BookingModel.fromJson(b);
-                }
-                return null;
-              } catch (e) {
-                debugPrint(
-                  '⚠️ Model Error │ Failed to parse regular booking: $e',
-                );
-                return null;
-              }
-            })
-            .whereType<BookingModel>()
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      debugPrint('getBookingsByDriverId error: $e');
-      return [];
-    }
-  }
-
-  /// Fetch all hourly bookings assigned to the driver by [driverId].
-  ///
-  /// Calls `GET /api/hourly-bookings/driver/{driverId}`.
-  Future<List<BookingModel>> getHourlyBookingsByDriverId({
-    required String driverId,
-    String? token,
-  }) async {
-    try {
-      final response = await _dio.get(
-        '/hourly-bookings/driver/list',
-        options: token != null ? _authOptions(token) : null,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        List<dynamic> rawList = [];
-
-        if (data is Map<String, dynamic>) {
-          final possibleKeys = ['bookings', 'data', 'result', 'results'];
-          for (var key in possibleKeys) {
-            if (data.containsKey(key) && data[key] is List) {
-              rawList = data[key];
-              break;
-            }
-          }
-        } else if (data is List) {
-          rawList = data;
-        }
-
-        return rawList
-            .map((b) {
-              try {
-                if (b is Map<String, dynamic>) {
-                  return BookingModel.fromJson(b);
-                }
-                return null;
-              } catch (e) {
-                debugPrint(
-                  '⚠️ Model Error │ Failed to parse hourly booking: $e',
-                );
-                return null;
-              }
-            })
-            .whereType<BookingModel>()
-            .toList();
-      }
-      return [];
-    } catch (e) {
-      debugPrint('getHourlyBookingsByDriverId error: $e');
-      return [];
-    }
-  }
-
-  /// Fetch a single booking by [bookingId].
-  ///
-  /// Calls `GET /api/bookings/{bookingId}`.
-  Future<BookingModel?> getBookingById({
-    required String bookingId,
-    String? token,
-  }) async {
-    try {
-      final response = await _dio.get(
-        '/bookings/$bookingId',
-        options: token != null ? _authOptions(token) : null,
-      );
-
-      if (response.statusCode == 200) {
-        return BookingModel.fromJson(response.data as Map<String, dynamic>);
-      }
-      return null;
-    } catch (e) {
-      debugPrint('getBookingById error: $e');
-      return null;
-    }
-  }
-
-  /// Accept a booking by [bookingId].
-  ///
-  /// Calls `PATCH /api/bookings/{bookingId}/status` or `/api/hourly-bookings/{bookingId}/status` to update status to "AC" (Accepted).
-  Future<Map<String, dynamic>> acceptBooking({
-    required String bookingId,
-    bool isHourly = false,
-    String? token,
-  }) async {
-    try {
-      final path = isHourly
-          ? '/hourly-bookings/$bookingId/status'
-          : '/bookings/$bookingId/status';
-      final response = await _dio.patch(
-        path,
-        data: {'bookingID': bookingId, 'status': 'AC'}, // AC = Accepted
-        options: token != null ? _authOptions(token) : null,
-      );
-      return _success(response);
-    } catch (e) {
-      return _handleError(e);
-    }
-  }
-
-  /// Update booking status.
-  ///
-  /// Calls `PATCH /api/bookings/{bookingId}/status` or `/api/hourly-bookings/{bookingId}/status`.
-  Future<Map<String, dynamic>> updateBookingStatus({
-    required String bookingId,
-    required String status,
-    Map<String, dynamic> extraData = const {},
-    bool isHourly = false,
-    String? token,
-  }) async {
-    try {
-      if (isHourly) {
-        return await updateHourlyBooking(
-          bookingId: bookingId,
-          token: token,
-          data: {...extraData, 'bookingStatus': status},
-        );
-      } else {
-        final response = await _dio.patch(
-          '/bookings/$bookingId/status',
-          data: {'bookingID': bookingId, 'status': status},
-          options: token != null ? _authOptions(token) : null,
-        );
-        return _success(response);
-      }
-    } catch (e) {
-      return _handleError(e);
-    }
-  }
-
-  /// Reject a booking by [bookingId].
-  ///
-  /// Calls `PATCH /api/bookings/{bookingId}/status` or `/api/hourly-bookings/{bookingId}/status` to update status to "CA" (Cancelled).
-  Future<Map<String, dynamic>> rejectBooking({
-    required String bookingId,
-    bool isHourly = false,
-    String? token,
-  }) async {
-    try {
-      final path = isHourly
-          ? '/hourly-bookings/$bookingId/status'
-          : '/bookings/$bookingId/status';
-      final response = await _dio.patch(
-        path,
-        data: {'bookingID': bookingId, 'status': 'CA'}, // CA = Cancelled
-        options: token != null ? _authOptions(token) : null,
-      );
-      return _success(response);
-    } catch (e) {
-      return _handleError(e);
-    }
-  }
-
-  /// Save chauffeur trip timing data (startTime, stopTime, duration) to backend.
-  ///
-  /// Calls `PUT /api/hourly-bookings/{bookingId}` with timing fields.
-  /// [extraHours] is > 0 when the driver ran over the booked hour allocation.
-  /// Update hourly booking data using PUT method.
-  Future<Map<String, dynamic>> updateHourlyBooking({
-    required String bookingId,
-    required Map<String, dynamic> data,
-    String? token,
-  }) async {
-    try {
-      final authToken = token ?? await ensureValidToken();
-      // Ensure the bookingID is in the body if the backend requires it
-      data['bookingID'] = bookingId;
-      data['bookingId'] = bookingId;
-
-      final response = await _dio.put(
-        '/hourly-bookings/$bookingId',
-        data: data,
-        options: authToken != null ? _authOptions(authToken) : null,
-      );
-      return _success(response);
-    } catch (e) {
-      return _handleError(e);
-    }
-  }
-
-  /// Start tracking a booking.
-  ///
-  /// Calls `POST /api/drivers/start-tracking/tracking` or `/HourlyBooking`.
-  Future<Map<String, dynamic>> startTrackingBooking({
-    required String bookingId,
-    bool isHourly = false,
-    String? token,
-  }) async {
-    try {
-      final path = isHourly
-          ? '/drivers/start-tracking/tracking/HourlyBooking'
-          : '/drivers/start-tracking/tracking';
-      final response = await _dio.post(
-        path,
-        data: {'bookingID': bookingId},
-        options: token != null ? _authOptions(token) : null,
-      );
-      return _success(response);
-    } catch (e) {
-      return _handleError(e);
-    }
-  }
-
-  /// Mark a booking as completed (trip finished).
-  ///
-  /// Calls `POST /api/drivers/complete-trip/` endpoint.
-  Future<Map<String, dynamic>> completeBooking({
-    required String bookingId,
-    bool isHourly = false,
-    String? driverId,
-    String? token,
-  }) async {
-    final path = isHourly
-        ? 'drivers/complete-trip/HourlyBooking'
-        : 'drivers/complete-trip';
-
-    final data = {
-      'bookingID': bookingId,
-      'bookingId': bookingId,
-      'driverID': ?driverId,
-      'driverId': ?driverId,
-    };
-
-    try {
-      final response = await _dio.post(
-        path,
-        data: data,
-        options: token != null ? _authOptions(token) : null,
-      );
-      return _success(response);
-    } catch (e) {
-      if (e is DioException) {
-        final statusCode = e.response?.statusCode;
-
-        // Retry for 401 Unauthorized
-        if (statusCode == 401) {
-          debugPrint(
-            '🔄 completeBooking │ 401 detected, attempting token refresh retry...',
-          );
-          final newToken = await ensureValidToken();
-          if (newToken != null) {
-            try {
-              final retryResponse = await _dio.post(
-                path,
-                data: data,
-                options: _authOptions(newToken),
-              );
-              return _success(retryResponse);
-            } catch (retryError) {
-              return _handleError(retryError);
-            }
-          }
-        }
-
-        // Fallback for 404 Not Found on regular bookings
-        if (statusCode == 404 && !isHourly) {
-          debugPrint(
-            '🔄 completeBooking │ 404 detected on regular trip, falling back to status update...',
-          );
-          return await updateBookingStatus(
-            bookingId: bookingId,
-            status: 'C', // Completed
-            isHourly: false,
-            token: token,
-          );
-        }
-      }
-      return _handleError(e);
-    }
-  }
-
   /// Fetch monthly earnings for the driver.
   ///
   /// Calls `GET /api/bookings/earnings/monthly?year={year}`.
@@ -1151,42 +843,6 @@ class ApiService {
       return _success(response);
     } catch (e) {
       return _handleError(e);
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Reviews
-  // ---------------------------------------------------------------------------
-
-  /// Submit a review for a booking.
-  ///
-  /// Format:
-  /// {
-  /// Fetch all reviews.
-  ///
-  /// Calls `GET /api/reviews`.
-  Future<List<ReviewModel>> getAllReviews({String? token}) async {
-    try {
-      final response = await _dio.get(
-        '/reviews',
-        options: token != null ? _authOptions(token) : null,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          final reviewList = data['data'] as List?;
-          if (reviewList != null) {
-            return reviewList
-                .map((r) => ReviewModel.fromJson(r as Map<String, dynamic>))
-                .toList();
-          }
-        }
-      }
-      return [];
-    } catch (e) {
-      debugPrint('getAllReviews error: $e');
-      return [];
     }
   }
 
