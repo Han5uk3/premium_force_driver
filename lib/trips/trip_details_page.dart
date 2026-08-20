@@ -9,7 +9,6 @@ import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/providers/trips_provider.dart';
-import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:premium_force_driver/trips/complete_trip_sheet.dart';
 import 'package:premium_force_driver/trips/trip_card.dart' show TripFare;
 import 'package:premium_force_driver/trips/trip_status_style.dart';
@@ -102,14 +101,6 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     final confirmed = await _confirm(actionLabel, loc.confirmStatusUpdate);
     if (confirmed != true || !mounted) return;
 
-    // Location sharing needs permission before the customer starts watching.
-    if (next == TripStatusV2.driverEnRoute) {
-      final hasPermissions = await TrackingService().handleLocationPermissions(
-        context,
-      );
-      if (!hasPermissions || !mounted) return;
-    }
-
     ExtraChargesInput? extras;
     if (next == TripStatusV2.completed) {
       extras = await CompleteTripSheet.show(context, currency: trip.currency);
@@ -141,9 +132,6 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
       _didChange = true;
     });
 
-    await _syncTracking(updated, previous: trip);
-    if (!mounted) return;
-
     AnimatedSnackBar.show(context, message ?? loc.tripStatusUpdated, 'S');
   }
 
@@ -166,33 +154,6 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     if (live != null && live.id != trip.id) return loc.finishActiveTripFirst;
 
     return null;
-  }
-
-  /// Start or stop location sharing to match the trip's new status.
-  ///
-  /// Sharing begins when the driver goes en route — that is when the customer's
-  /// tracking screen unlocks — and ends when the trip completes.
-  Future<void> _syncTracking(TripV2 trip, {required TripV2 previous}) async {
-    final tracking = TrackingService();
-
-    if (trip.status == TripStatusV2.driverEnRoute &&
-        !previous.status.isLive &&
-        mounted) {
-      await tracking.startTracking(
-        bookingId: trip.id,
-        // The tracking session is addressed by booking; the ids are metadata the
-        // customer app reads to confirm it is watching the right ride.
-        customerId: trip.customerId ?? '',
-        driverId: context.read<AuthProvider>().driver?.uid ?? '',
-        isChauffeur: trip.isChauffeur,
-        bookedHours: trip.route?.durationHours ?? 0,
-      );
-      return;
-    }
-
-    if (trip.status.isFinished) {
-      await tracking.stopTracking();
-    }
   }
 
   Future<bool?> _confirm(String title, String message) {
@@ -242,10 +203,8 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     if (trip == null) return;
 
     final loc = AppLocalizations.of(context)!;
-    final position = TrackingService().currentPosition;
-    final origin = position != null
-        ? '${position.latitude},${position.longitude}'
-        : 'Current+Location';
+    // Maps resolves the driver's own position; the app no longer holds one.
+    const origin = 'Current+Location';
 
     final headingToDropOff =
         trip.status == TripStatusV2.tripStarted &&

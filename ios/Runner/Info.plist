@@ -58,11 +58,7 @@
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to location when open to track trips and update passengers on your driver status.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This app needs access to location even in the background to ensure steady trip tracking during bookings.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app needs access to location for steady trip tracking during bookings for driver accuracy and safety.</string>
+	<string>This app needs access to your location while open so you can set your address when registering.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Premium Force Chauffeur requires access to the camera to take your profile picture.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
