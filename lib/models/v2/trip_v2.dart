@@ -63,9 +63,18 @@ enum TripStatusV2 {
   /// Whether the driver can act on the trip at all.
   bool get isActionable => next != null;
 
-  /// Whether the ride is under way, which is what gates live location sharing.
+  /// Whether the ride is under way.
   bool get isLive =>
       this == driverEnRoute || this == driverArrived || this == tripStarted;
+
+  /// Whether the driver's location is published to the customer.
+  ///
+  /// From the moment the ride starts until it ends — the window the backend
+  /// opens by accepting `trip_started` and closes by accepting `completed`.
+  /// `TrackingService` reconciles against this and nothing else, so widening it
+  /// to [driverEnRoute] here is all it takes to let customers watch the car
+  /// approach as well.
+  bool get sharesLocation => this == tripStarted;
 
   /// Whether the trip is over, one way or the other.
   bool get isFinished => this == completed || this == cancelled;

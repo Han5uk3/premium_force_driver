@@ -9,6 +9,7 @@ import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/providers/trips_provider.dart';
+import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:premium_force_driver/trips/complete_trip_sheet.dart';
 import 'package:premium_force_driver/trips/trip_card.dart' show TripFare;
 import 'package:premium_force_driver/trips/trip_status_style.dart';
@@ -101,6 +102,16 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     final confirmed = await _confirm(actionLabel, loc.confirmStatusUpdate);
     if (confirmed != true || !mounted) return;
 
+    // The ride about to start is the one whose location gets published, so
+    // everything sharing needs is asked for here — while the driver is looking
+    // at the screen and can act on a refusal. Nothing later prompts: the status
+    // change itself happens without UI. Refusing stops the status change too,
+    // rather than starting a ride the customer could not watch.
+    if (next.sharesLocation) {
+      final granted = await TrackingService().ensurePermissions(context);
+      if (!granted || !mounted) return;
+    }
+
     ExtraChargesInput? extras;
     if (next == TripStatusV2.completed) {
       extras = await CompleteTripSheet.show(context, currency: trip.currency);
@@ -132,6 +143,9 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
       _didChange = true;
     });
 
+    // Sharing is not started or stopped from here: TripsProvider.advance has
+    // already handed the accepted status to TrackingService, so the feed
+    // follows the backend rather than this screen.
     AnimatedSnackBar.show(context, message ?? loc.tripStatusUpdated, 'S');
   }
 
@@ -203,8 +217,10 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     if (trip == null) return;
 
     final loc = AppLocalizations.of(context)!;
-    // Maps resolves the driver's own position; the app no longer holds one.
-    const origin = 'Current+Location';
+    final position = TrackingService().currentPosition;
+    final origin = position != null
+        ? '${position.latitude},${position.longitude}'
+        : 'Current+Location';
 
     final headingToDropOff =
         trip.status == TripStatusV2.tripStarted &&

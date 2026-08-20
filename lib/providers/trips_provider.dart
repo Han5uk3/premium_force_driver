@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/api/driver_api_v2.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
+import 'package:premium_force_driver/services/tracking_service.dart';
 
 /// Loading state of a trip list.
 enum TripsStatus { initial, loading, loaded, failure }
@@ -17,10 +20,19 @@ enum TripsStatus { initial, loading, loaded, failure }
 /// Status changes go through [advance], which only ever sends
 /// [TripStatusV2.next]: the endpoint refuses a skipped step, so the provider
 /// never offers one.
+///
+/// Live location sharing hangs off the same statuses. Every path that learns
+/// what the backend now says about a trip — [advance], and each refresh of the
+/// active list — hands it to [TrackingService], which starts or stops sharing
+/// to match. The provider is the only place that does this, so there is one
+/// answer to "is this driver being watched", and it is the server's.
 class TripsProvider extends ChangeNotifier {
-  TripsProvider({DriverApiV2? api}) : _api = api ?? DriverApiV2();
+  TripsProvider({DriverApiV2? api, TrackingService? tracking})
+    : _api = api ?? DriverApiV2(),
+      _tracking = tracking ?? TrackingService();
 
   final DriverApiV2 _api;
+  final TrackingService _tracking;
 
   static const int _pageSize = 10;
 
@@ -137,6 +149,14 @@ class TripsProvider extends ChangeNotifier {
       _totalPages[filter] = page.totalPages;
       _statuses[filter] = TripsStatus.loaded;
       _errors.remove(filter);
+
+      // The freshly-read active list is the backend's word on what is live, so
+      // it also settles whether this driver should be sharing location — the
+      // path by which sharing resumes after the app was killed mid-ride, and
+      // by which it stops when dispatch ended the ride elsewhere.
+      if (filter == TripFilterV2.active) {
+        unawaited(_tracking.syncWithActiveTrips(_activeTrips));
+      }
     } else if (statusFor(filter) != TripsStatus.loaded) {
       // Nothing on screen to fall back on, so the failure has to be shown —
       // even when the caller asked to refresh quietly.
@@ -264,6 +284,11 @@ class TripsProvider extends ChangeNotifier {
     _updatingTripId = null;
     _applyTrip(updated);
     notifyListeners();
+
+    // The backend has accepted the new status; location sharing follows it.
+    // Starting the ride opens the feed, completing or cancelling closes it.
+    unawaited(_tracking.syncWithTrip(updated));
+
     return updated;
   }
 
@@ -275,7 +300,11 @@ class TripsProvider extends ChangeNotifier {
   }
 
   /// Drop everything held, on logout.
+  ///
+  /// Sharing stops with it: there is no longer a driver to attribute a position
+  /// to, and the session has to be closed rather than left open.
   void reset() {
+    unawaited(_tracking.stopTracking());
     _activeTrips = const [];
     _completedTrips = const [];
     _errors.clear();
