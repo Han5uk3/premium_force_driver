@@ -9,7 +9,10 @@ enum TripsStatus { initial, loading, loaded, failure }
 ///
 /// The two lists are separate server-side queries rather than slices of one
 /// response — `filter=active` and `filter=completed` — so the bucketing rules
-/// live with the backend and each list pages independently.
+/// live with the backend and each list loads, pages and fails independently.
+/// [refreshFilter] fetches one of them, which is what the trips screen uses to
+/// pay only for the tab in front of the driver; [refresh] takes both, for the
+/// dashboard and for pushes that could have touched either.
 ///
 /// Status changes go through [advance], which only ever sends
 /// [TripStatusV2.next]: the endpoint refuses a skipped step, so the provider
@@ -21,8 +24,21 @@ class TripsProvider extends ChangeNotifier {
 
   static const int _pageSize = 10;
 
-  TripsStatus _status = TripsStatus.initial;
-  TripsStatus get status => _status;
+  /// Loading state per list.
+  ///
+  /// The two tabs are fetched independently — opening the trips screen loads
+  /// only the tab being looked at — so one list being unloaded, in flight or
+  /// broken says nothing about the other.
+  final Map<TripFilterV2, TripsStatus> _statuses = {
+    for (final filter in TripFilterV2.values) filter: TripsStatus.initial,
+  };
+
+  TripsStatus statusFor(TripFilterV2 filter) =>
+      _statuses[filter] ?? TripsStatus.initial;
+
+  /// Whether [filter] has never been fetched, so a screen showing it should.
+  bool needsLoad(TripFilterV2 filter) =>
+      statusFor(filter) == TripsStatus.initial;
 
   List<TripV2> _activeTrips = const [];
 
@@ -32,8 +48,10 @@ class TripsProvider extends ChangeNotifier {
   List<TripV2> _completedTrips = const [];
   List<TripV2> get completedTrips => _completedTrips;
 
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
+  /// Why the last load of each list failed, for the tab showing it.
+  final Map<TripFilterV2, String?> _errors = {};
+
+  String? errorFor(TripFilterV2 filter) => _errors[filter];
 
   /// Message from the last action, for the caller to surface. Cleared by
   /// [consumeActionMessage] so it is shown once and not on every rebuild.
@@ -95,48 +113,54 @@ class TripsProvider extends ChangeNotifier {
   /// Whether a ride is under way, which blocks starting another.
   bool get hasLiveTrip => liveTrip != null;
 
-  /// Load the first page of both lists.
+  /// Load the first page of one list.
   ///
-  /// [silent] keeps whatever is on screen while refetching — used when returning
-  /// to a screen, so the list does not flash back to a shimmer.
-  Future<void> refresh({bool silent = false}) async {
+  /// This is what the trips screen calls: it fetches the tab in front of the
+  /// driver and leaves the other alone until they ask for it, rather than
+  /// paying for both on every visit.
+  ///
+  /// [silent] keeps whatever is on screen while refetching — used when
+  /// returning to a screen, so the list does not flash back to a shimmer.
+  Future<void> refreshFilter(TripFilterV2 filter, {bool silent = false}) async {
     if (!silent) {
-      _status = TripsStatus.loading;
-      _errorMessage = null;
+      _statuses[filter] = TripsStatus.loading;
+      _errors.remove(filter);
       notifyListeners();
     }
 
-    final results = await Future.wait([
-      _api.getMyTrips(filter: TripFilterV2.active, limit: _pageSize),
-      _api.getMyTrips(filter: TripFilterV2.completed, limit: _pageSize),
-    ]);
+    final result = await _api.getMyTrips(filter: filter, limit: _pageSize);
 
-    final active = results[0];
-    final completed = results[1];
-
-    if (active.hasData) {
-      _activeTrips = active.data!.trips;
-      _pages[TripFilterV2.active] = active.data!.page;
-      _totalPages[TripFilterV2.active] = active.data!.totalPages;
-    }
-    if (completed.hasData) {
-      _completedTrips = completed.data!.trips;
-      _pages[TripFilterV2.completed] = completed.data!.page;
-      _totalPages[TripFilterV2.completed] = completed.data!.totalPages;
-    }
-
-    // Only a total failure is worth an error screen: if either list arrived, the
-    // driver can still work.
-    if (active.hasData || completed.hasData) {
-      _status = TripsStatus.loaded;
-      _errorMessage = null;
-    } else if (!silent) {
-      _status = TripsStatus.failure;
-      _errorMessage = active.message ?? completed.message;
+    if (result.hasData) {
+      final page = result.data!;
+      _setTrips(filter, page.trips);
+      _pages[filter] = page.page;
+      _totalPages[filter] = page.totalPages;
+      _statuses[filter] = TripsStatus.loaded;
+      _errors.remove(filter);
+    } else if (statusFor(filter) != TripsStatus.loaded) {
+      // Nothing on screen to fall back on, so the failure has to be shown —
+      // even when the caller asked to refresh quietly.
+      _statuses[filter] = TripsStatus.failure;
+      _errors[filter] = result.message;
+    } else {
+      debugPrint(
+        '🚘 Trips │ ${filter.wireValue} refresh failed: '
+        '${result.message}',
+      );
     }
 
     notifyListeners();
   }
+
+  /// Load the first page of both lists, in parallel.
+  ///
+  /// For screens that read from both — the dashboard's counters and its live
+  /// trip card — and for the push handler, which cannot know which list the
+  /// notification touched.
+  Future<void> refresh({bool silent = false}) => Future.wait([
+    for (final filter in TripFilterV2.values)
+      refreshFilter(filter, silent: silent),
+  ]);
 
   /// Append the next page of one list, if there is one.
   Future<void> loadMore(TripFilterV2 filter) async {
@@ -163,11 +187,7 @@ class TripsProvider extends ChangeNotifier {
         ...page.trips.where((t) => !seen.contains(t.id)),
       ];
 
-      if (filter == TripFilterV2.active) {
-        _activeTrips = merged;
-      } else {
-        _completedTrips = merged;
-      }
+      _setTrips(filter, merged);
       _pages[filter] = page.page;
       _totalPages[filter] = page.totalPages;
     } else {
@@ -258,15 +278,26 @@ class TripsProvider extends ChangeNotifier {
   void reset() {
     _activeTrips = const [];
     _completedTrips = const [];
-    _errorMessage = null;
+    _errors.clear();
     _actionMessage = null;
     _updatingTripId = null;
-    _pages[TripFilterV2.active] = 1;
-    _pages[TripFilterV2.completed] = 1;
-    _totalPages[TripFilterV2.active] = 1;
-    _totalPages[TripFilterV2.completed] = 1;
-    _status = TripsStatus.initial;
+    _loadingMore.clear();
+    for (final filter in TripFilterV2.values) {
+      _pages[filter] = 1;
+      _totalPages[filter] = 1;
+      _statuses[filter] = TripsStatus.initial;
+    }
     notifyListeners();
+  }
+
+  /// Replace the list behind [filter].
+  void _setTrips(TripFilterV2 filter, List<TripV2> trips) {
+    switch (filter) {
+      case TripFilterV2.active:
+        _activeTrips = trips;
+      case TripFilterV2.completed:
+        _completedTrips = trips;
+    }
   }
 
   /// Put [trip] where its current status belongs.

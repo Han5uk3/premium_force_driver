@@ -121,7 +121,7 @@ class ApiService {
   /// OTP verification and registration both take the same optional pair, and
   /// both treat a missing value as "leave unchanged" — so blank entries are
   /// dropped rather than sent empty. Once signed in, the same two fields are
-  /// updated through `PATCH /api/v2/drivers/settings`.
+  /// updated through `PATCH /api/drivers/settings`.
   static Map<String, String> _localePayload(String? locale, String? fcmToken) {
     final language = locale?.trim();
     final token = fcmToken?.trim();

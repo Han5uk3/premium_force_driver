@@ -34,6 +34,9 @@ class _TripsPageState extends State<TripsPage>
 
   late TabController _tabController;
 
+  /// The filter currently on screen — the only one this page fetches.
+  TripFilterV2 get _visibleFilter => _filters[_tabController.index];
+
   @override
   void initState() {
     super.initState();
@@ -42,13 +45,30 @@ class _TripsPageState extends State<TripsPage>
       vsync: this,
       initialIndex: widget.initialIndex.clamp(0, _filters.length - 1),
     );
+    _tabController.addListener(_onTabChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final provider = context.read<TripsProvider>();
-      // Keep any warm list on screen; the dashboard usually loaded it already.
-      provider.refresh(silent: provider.status == TripsStatus.loaded);
+      final filter = _visibleFilter;
+      // Keep a warm list on screen; the dashboard may have loaded it already.
+      provider.refreshFilter(
+        filter,
+        silent: provider.statusFor(filter) == TripsStatus.loaded,
+      );
     });
+  }
+
+  /// Fetch the tab the driver just moved to, the first time they look at it.
+  ///
+  /// Coming back to a tab that already has trips on it costs nothing — pulling
+  /// down refreshes it when they want that.
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    final provider = context.read<TripsProvider>();
+    if (provider.needsLoad(_visibleFilter)) {
+      provider.refreshFilter(_visibleFilter);
+    }
   }
 
   @override
@@ -63,6 +83,7 @@ class _TripsPageState extends State<TripsPage>
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -79,7 +100,10 @@ class _TripsPageState extends State<TripsPage>
     // The detail screen already folded its update into the provider; a full
     // refresh is only worth it when something actually changed.
     if ((changed ?? false) && mounted) {
-      await context.read<TripsProvider>().refresh(silent: true);
+      await context.read<TripsProvider>().refreshFilter(
+        _visibleFilter,
+        silent: true,
+      );
     }
   }
 
@@ -158,7 +182,7 @@ class _TripsPageState extends State<TripsPage>
     TripFilterV2 filter,
   ) {
     return RefreshIndicator(
-      onRefresh: () => provider.refresh(silent: true),
+      onRefresh: () => provider.refreshFilter(filter, silent: true),
       backgroundColor: Colors.grey.shade800,
       color: Colors.white,
       child: _buildListBody(loc, provider, filter),
@@ -170,12 +194,13 @@ class _TripsPageState extends State<TripsPage>
     TripsProvider provider,
     TripFilterV2 filter,
   ) {
-    if (provider.status == TripsStatus.initial ||
-        provider.status == TripsStatus.loading) {
+    final status = provider.statusFor(filter);
+
+    if (status == TripsStatus.initial || status == TripsStatus.loading) {
       return const BookingShimmer();
     }
 
-    if (provider.status == TripsStatus.failure) {
+    if (status == TripsStatus.failure) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
@@ -192,13 +217,13 @@ class _TripsPageState extends State<TripsPage>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  provider.errorMessage ?? loc.pleaseTryAgain,
+                  provider.errorFor(filter) ?? loc.pleaseTryAgain,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: provider.refresh,
+                  onPressed: () => provider.refreshFilter(filter),
                   child: Text(loc.retry),
                 ),
               ],

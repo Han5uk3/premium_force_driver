@@ -503,9 +503,8 @@ class _DashboardPageState extends State<DashboardPage> {
     final hasActiveVehicle = driver?.hasActiveVehicle ?? false;
     final activeVehicle = driver?.activeVehicle;
 
-    // Counts
-    final upcomingCount = tripsProvider.upcomingCount;
-    final ongoingCount = tripsProvider.ongoingCount;
+    // Counts — one per trips tab, so tapping a card lands on the list it counts.
+    final activeCount = tripsProvider.activeCount;
     final completedCount = tripsProvider.completedCount;
 
     // The ride under way, or the next one the driver is due to start.
@@ -838,22 +837,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 Row(
                   children: [
                     _buildStatCard(
-                      label: loc.upcoming,
-                      count: upcomingCount,
-                      gradientColors: [
-                        const Color(0xFF4A4A4A),
-                        const Color(0xFF606060),
-                      ],
-                      onTap: () {
-                        final homeState = context
-                            .findAncestorStateOfType<HomeState>();
-                        homeState?.navigateToBookings(0);
-                      },
-                    ),
-                    const SizedBox(width: 10),
-                    _buildStatCard(
-                      label: loc.ongoing,
-                      count: ongoingCount,
+                      label: loc.active,
+                      count: activeCount,
                       gradientColors: [
                         const Color(0xFF6B5330),
                         const Color(0xFF4D3D27),

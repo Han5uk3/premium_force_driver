@@ -11,8 +11,9 @@ import 'package:premium_force_driver/utils/json_utils.dart';
 ///
 /// Covers the three surfaces the driver app needs from v2: the trip list and
 /// detail (`driver/bookings/...`), the linear status progression that moves a
-/// trip from assignment to completion, and the driver's own notification centre
-/// and settings.
+/// trip from assignment to completion, and the driver's own notification
+/// centre. Settings live here too, though that one endpoint is served from the
+/// unversioned `/api/` root.
 ///
 /// Auth reuses the tokens [ApiService] already manages — including its
 /// single-flight refresh — so both clients stay in step and only one refresh is
@@ -29,7 +30,16 @@ class DriverApiV2 {
   // Configuration
   // ---------------------------------------------------------------------------
 
-  static const String _baseUrl = 'https://api.premiumforcegroup.com/api/v2/';
+  /// The unversioned API root.
+  static const String _apiRoot = 'https://api.premiumforcegroup.com/api/';
+
+  static const String _baseUrl = '${_apiRoot}v2/';
+
+  /// Driver settings are served from the unversioned root, not from v2.
+  ///
+  /// Absolute, so [Dio] uses it in place of [_baseUrl] while the request still
+  /// goes through this client's auth and token-refresh interceptors.
+  static const String _settingsUrl = '${_apiRoot}drivers/settings';
 
   // ---------------------------------------------------------------------------
   // Singleton + Dio instance
@@ -251,7 +261,7 @@ class DriverApiV2 {
     }
 
     return _request(
-      () => _dio.patch('drivers/settings', data: body),
+      () => _dio.patch(_settingsUrl, data: body),
       parse: (payload) => DriverSettingsV2.fromJson(asMap(payload)),
     );
   }
@@ -337,7 +347,7 @@ class DriverApiV2 {
 }
 
 /// The driver settings the backend now holds, echoed back by
-/// `PATCH /drivers/settings`.
+/// `PATCH /api/drivers/settings`.
 class DriverSettingsV2 {
   const DriverSettingsV2({this.driverId, this.locale, this.fcmToken});
 

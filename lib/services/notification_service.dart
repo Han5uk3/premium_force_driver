@@ -315,12 +315,12 @@ class NotificationService {
           debugPrint('⚠️ FCM │ Token sync failed: ${response['message']}');
         }
 
-        // The v2 settings endpoint stores the token alongside the driver's
-        // locale, which is the language the server renders pushes and emails in.
-        await DriverApiV2().updateSettings(
-          locale: UserLocalStorage.getLanguage(),
-          fcmToken: fcmToken,
-        );
+        // The token only. Every path that reaches here has just sent the
+        // driver's locale already — verify-otp and registration both carry it,
+        // and a session restore has not changed it — so re-sending it would
+        // only be a second call saying the same thing. Switching language syncs
+        // itself.
+        await DriverApiV2().updateSettings(fcmToken: fcmToken);
       } catch (e) {
         debugPrint('❌ FCM │ Token sync error: $e');
       }
