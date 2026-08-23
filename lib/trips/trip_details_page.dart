@@ -465,12 +465,17 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
         final isLast = index == trip.timeline.length - 1;
         final isReached = step.isCompleted || step.isCurrent;
 
+        // Completed is checked before current, and the order matters: the
+        // backend marks the stage the trip has reached as both. Reading
+        // `isCurrent` first left the step the trip had got to — the final
+        // `completed` one, once the driver ended the ride — in the in-progress
+        // gold instead of green.
         final color = step.isCancelled
             ? Colors.red
-            : step.isCurrent
-            ? const Color(0xFFE4A46B)
             : step.isCompleted
             ? Colors.green
+            : step.isCurrent
+            ? const Color(0xFFE4A46B)
             : Colors.white24;
 
         // The step below is only behind the ride if it has been reached too;
