@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:premium_force_driver/api/api_logger.dart';
 import 'package:premium_force_driver/api/api_result.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/models/v2/notification_v2.dart';
@@ -96,17 +97,7 @@ class DriverApiV2 {
     );
 
     if (kDebugMode) {
-      _dio.interceptors.add(
-        LogInterceptor(
-          request: false,
-          requestHeader: false,
-          requestBody: true,
-          responseHeader: false,
-          responseBody: true,
-          error: true,
-          logPrint: (obj) => debugPrint('🚘 v2 │ $obj'),
-        ),
-      );
+      _dio.interceptors.add(DriverApiLogger(label: 'v2'));
     }
   }
 
@@ -132,7 +123,13 @@ class DriverApiV2 {
           'limit': limit,
         },
       ),
-      parse: (payload) => TripListPage.fromJson(asMap(payload)),
+      // The requested page and limit stand in when the response omits them,
+      // so paging does not reset itself to page 1 on every load.
+      parse: (payload) => TripListPage.fromJson(
+        asMap(payload),
+        requestedPage: page,
+        requestedLimit: limit,
+      ),
     );
   }
 

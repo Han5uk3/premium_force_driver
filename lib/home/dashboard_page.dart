@@ -7,6 +7,7 @@ import 'package:premium_force_driver/providers/trips_provider.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
 import 'package:premium_force_driver/api/apis.dart';
+import 'package:premium_force_driver/trips/trip_actions.dart';
 import 'package:premium_force_driver/trips/trip_card.dart';
 import 'package:premium_force_driver/trips/trip_details_page.dart';
 import 'package:premium_force_driver/providers/notifications_provider.dart';
@@ -881,7 +882,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
                 // Current active card
                 if (activeTrip != null)
-                  TripCard(trip: activeTrip, onTap: () => _openTrip(activeTrip))
+                  TripCard(
+                    trip: activeTrip,
+                    onTap: () => _openTrip(activeTrip),
+                    onAction: () => TripActions.advance(context, activeTrip),
+                    isUpdating:
+                        tripsProvider.updatingTripId == activeTrip.id,
+                  )
                 else
                   Card(
                     color: const Color(0xFF1E1E1E),

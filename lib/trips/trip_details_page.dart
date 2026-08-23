@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/common_widgets/voice_player.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
-import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/providers/trips_provider.dart';
-import 'package:premium_force_driver/services/tracking_service.dart';
-import 'package:premium_force_driver/trips/complete_trip_sheet.dart';
+import 'package:premium_force_driver/trips/trip_actions.dart';
 import 'package:premium_force_driver/trips/trip_card.dart' show TripFare;
-import 'package:premium_force_driver/trips/trip_status_style.dart';
+import 'package:premium_force_driver/trips/trip_controls.dart';
+import 'package:premium_force_driver/utils/trip_display.dart';
 
 /// Detail view for one trip, backed by `GET /driver/bookings/:id`.
 ///
@@ -20,11 +17,18 @@ import 'package:premium_force_driver/trips/trip_status_style.dart';
 /// status in the chain, so the screen offers exactly one action at a time —
 /// "Start Driving", "I have Arrived", "Start Trip", "Complete Trip" — and
 /// completing opens the extra-charges sheet first, since that transition is the
-/// only one that can carry money.
+/// only one that can carry money. That control leads the screen rather than
+/// closing it: a driver opening a ride at the kerb is here to act on it, not to
+/// scroll past the fare to find the button.
+///
+/// The status is not restated in a badge of its own — the appbar's action
+/// already says what stage the ride is at, and the timeline lower down says how
+/// it got there.
 ///
 /// Live location sharing is tied to the same transitions: it starts when the
 /// driver goes en route (which is when the customer's tracking screen opens up)
-/// and stops when the trip completes.
+/// and stops when the trip completes. [TripActions] owns all of that, so the
+/// trip card enforces exactly the same rules.
 class TripDetailsPage extends StatefulWidget {
   const TripDetailsPage({super.key, required this.tripId, this.initialTrip});
 
@@ -83,177 +87,17 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     final trip = _trip;
     if (trip == null || _isUpdating) return;
 
-    final loc = AppLocalizations.of(context)!;
-    final provider = context.read<TripsProvider>();
-    final next = trip.status.next;
-    final actionLabel = trip.status.actionLabel(loc);
-    if (next == null || actionLabel == null) return;
-
-    // Going en route is the point of no return for dispatch, and the app's own
-    // rules gate it: the driver must be on shift, holding a vehicle.
-    if (next == TripStatusV2.driverEnRoute) {
-      final blockedReason = _startBlockedReason(loc, provider, trip);
-      if (blockedReason != null) {
-        AnimatedSnackBar.show(context, blockedReason, 'E');
-        return;
-      }
-    }
-
-    final confirmed = await _confirm(actionLabel, loc.confirmStatusUpdate);
-    if (confirmed != true || !mounted) return;
-
-    // The ride about to start is the one whose location gets published, so
-    // everything sharing needs is asked for here — while the driver is looking
-    // at the screen and can act on a refusal. Nothing later prompts: the status
-    // change itself happens without UI. Refusing stops the status change too,
-    // rather than starting a ride the customer could not watch.
-    if (next.sharesLocation) {
-      final granted = await TrackingService().ensurePermissions(context);
-      if (!granted || !mounted) return;
-    }
-
-    ExtraChargesInput? extras;
-    if (next == TripStatusV2.completed) {
-      extras = await CompleteTripSheet.show(context, currency: trip.currency);
-      // A dismissed sheet means the driver changed their mind about completing.
-      if (extras == null || !mounted) return;
-    }
-
     setState(() => _isUpdating = true);
-
-    final updated = await provider.advance(
-      trip,
-      extraAmount: extras?.amount,
-      extraPaymentMethod: extras?.paymentMethod,
-      extraNotes: extras?.notes,
-    );
-
+    final updated = await TripActions.advance(context, trip);
     if (!mounted) return;
-    setState(() => _isUpdating = false);
-
-    final message = provider.consumeActionMessage();
-
-    if (updated == null) {
-      AnimatedSnackBar.show(context, message ?? loc.failedToUpdateStatus, 'E');
-      return;
-    }
 
     setState(() {
-      _trip = updated;
-      _didChange = true;
+      _isUpdating = false;
+      if (updated != null) {
+        _trip = updated;
+        _didChange = true;
+      }
     });
-
-    // Sharing is not started or stopped from here: TripsProvider.advance has
-    // already handed the accepted status to TrackingService, so the feed
-    // follows the backend rather than this screen.
-    AnimatedSnackBar.show(context, message ?? loc.tripStatusUpdated, 'S');
-  }
-
-  /// Why the driver cannot go en route yet, or null when they can.
-  String? _startBlockedReason(
-    AppLocalizations loc,
-    TripsProvider provider,
-    TripV2 trip,
-  ) {
-    final driver = context.read<AuthProvider>().driver;
-
-    if (!(driver?.isWorkstarted ?? false)) return loc.goOnlineToStartTrip;
-    if (!(driver?.hasActiveVehicle ?? false)) {
-      return loc.takeOutVehicleToStartTrip;
-    }
-
-    // Only one ride can be under way: the tracking session is keyed by booking,
-    // and the customer of the other ride would stop seeing their driver.
-    final live = provider.liveTrip;
-    if (live != null && live.id != trip.id) return loc.finishActiveTripFirst;
-
-    return null;
-  }
-
-  Future<bool?> _confirm(String title, String message) {
-    return showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        final loc = AppLocalizations.of(dialogContext)!;
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1A1A1A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          title: Text(title, style: const TextStyle(color: Colors.white)),
-          content: Text(message, style: const TextStyle(color: Colors.white70)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(
-                loc.cancel,
-                style: const TextStyle(color: Colors.grey),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC0C0C0),
-              ),
-              child: Text(
-                loc.confirm,
-                style: const TextStyle(color: Colors.black),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // External apps
-  // ---------------------------------------------------------------------------
-
-  /// Open turn-by-turn directions: to the pickup before the passenger is on
-  /// board, and to the drop-off once the trip has started.
-  Future<void> _openMaps() async {
-    final trip = _trip;
-    if (trip == null) return;
-
-    final loc = AppLocalizations.of(context)!;
-    final position = TrackingService().currentPosition;
-    final origin = position != null
-        ? '${position.latitude},${position.longitude}'
-        : 'Current+Location';
-
-    final headingToDropOff =
-        trip.status == TripStatusV2.tripStarted &&
-        trip.dropOffLat != null &&
-        trip.dropOffLng != null;
-
-    final destination = headingToDropOff
-        ? '${trip.dropOffLat},${trip.dropOffLng}'
-        : (trip.pickupLat != null && trip.pickupLng != null)
-        ? '${trip.pickupLat},${trip.pickupLng}'
-        : null;
-
-    if (destination == null) {
-      AnimatedSnackBar.show(context, loc.couldNotLaunchMaps, 'E');
-      return;
-    }
-
-    final uri = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$destination',
-    );
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else if (mounted) {
-      AnimatedSnackBar.show(context, loc.couldNotLaunchMaps, 'E');
-    }
-  }
-
-  Future<void> _callCustomer(String phoneNumber) async {
-    final uri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
   }
 
   // ---------------------------------------------------------------------------
@@ -333,9 +177,11 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
   }
 
   Widget _buildContent(AppLocalizations loc, TripV2 trip) {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    final isArabic = languageCode == 'ar';
-    final pickupAt = trip.pickupDateTime?.toLocal();
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final pickup = formatTripPickup(context, trip);
+    final durationLabel = tripDurationLabel(loc, trip);
+    final notes = trip.rideNotes?.trim();
+    final voiceNote = trip.voiceNoteUrl?.trim();
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -343,7 +189,15 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(child: _buildStatusBadge(loc, trip)),
+          // The ride controls lead the screen: this is what the driver came to
+          // the page to press. Directions are not repeated here — they sit
+          // beside the trip-info heading, next to the addresses.
+          TripControls(
+            trip: trip,
+            onAdvance: _advance,
+            isUpdating: _isUpdating,
+            showDirections: false,
+          ),
           const SizedBox(height: 20),
 
           _buildCard(
@@ -351,64 +205,54 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
               children: [
                 _buildRow(
                   loc.service,
-                  trip.isChauffeur ? loc.chauffeur : loc.serviceType,
+                  tripServiceLabel(loc, trip),
                   Icons.drive_eta,
                 ),
-                if (trip.vehicle?.label.isNotEmpty ?? false) ...[
-                  const Divider(color: Colors.white10, height: 24),
-                  _buildRow(
-                    loc.vehicleType,
-                    trip.vehicle!.label,
-                    Icons.directions_car_outlined,
-                  ),
-                ],
-                if (trip.vehicle?.licensePlate != null) ...[
-                  const Divider(color: Colors.white10, height: 24),
-                  _buildRow(
-                    loc.licensePlate,
-                    trip.vehicle!.licensePlate!,
-                    Icons.confirmation_number_outlined,
-                  ),
-                ],
-                const Divider(color: Colors.white10, height: 24),
                 _buildRow(
                   loc.passengers,
                   trip.passengersCount.toString(),
                   Icons.groups_outlined,
+                  divided: true,
                 ),
-                if ((trip.route?.durationHours ?? 0) > 0) ...[
-                  const Divider(color: Colors.white10, height: 24),
+                // Hourly hire is booked by the hour rather than to a
+                // destination, so the booked hours are what the driver owes.
+                if (durationLabel != null)
                   _buildRow(
                     loc.duration,
-                    '${trip.route!.durationHours} ${loc.hrs}',
+                    durationLabel,
                     Icons.timer_outlined,
+                    divided: true,
                   ),
-                ],
-                if (pickupAt != null) ...[
-                  const Divider(color: Colors.white10, height: 24),
-                  _buildRow(
-                    loc.pickupDateAndTime,
-                    DateFormat(
-                      'dd MMM, yyyy  ·  h:mm a',
-                      languageCode,
-                    ).format(pickupAt),
-                    Icons.event_outlined,
-                  ),
-                ],
-                if (trip.route?.flightNumber != null) ...[
-                  const Divider(color: Colors.white10, height: 24),
+                _buildRow(
+                  loc.pickupDateAndTime,
+                  pickup.time.isEmpty
+                      ? pickup.date
+                      : '${pickup.date}  ·  ${pickup.time}',
+                  Icons.event_outlined,
+                  divided: true,
+                ),
+                if (trip.route?.flightNumber?.trim().isNotEmpty ?? false)
                   _buildRow(
                     loc.flightNumber,
                     trip.route!.flightNumber!,
                     Icons.flight_takeoff,
+                    divided: true,
                   ),
-                ],
               ],
             ),
           ),
           const SizedBox(height: 16),
 
-          _buildSectionTitle(loc.tripInfo),
+          _buildVehicleSection(loc, trip),
+
+          _buildSectionHeader(
+            loc.tripInfo,
+            // Directions belong with the addresses they lead to, so the button
+            // sits across from the heading rather than under the card.
+            trailing: trip.status.isFinished
+                ? null
+                : _buildDirectionsButton(loc, trip),
+          ),
           _buildCard(
             child: Column(
               children: [
@@ -417,41 +261,25 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
                   trip.pickupAddress ?? '—',
                   Icons.trip_origin,
                 ),
-                if (trip.dropOffAddress != null) ...[
-                  const Divider(color: Colors.white10, height: 24),
+                if (trip.dropOffAddress != null)
                   _buildRow(
                     loc.dropoff,
                     trip.dropOffAddress!,
                     Icons.place_outlined,
+                    divided: true,
                   ),
-                ],
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _openMaps,
-            icon: const Icon(Icons.directions, size: 18),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFE4A46B),
-              side: const BorderSide(color: Color(0xFFE4A46B)),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            label: Text(loc.getDirections),
-          ),
-          const SizedBox(height: 16),
 
-          _buildCustomerSection(loc, trip),
-
-          if (trip.rideNotes?.trim().isNotEmpty ?? false) ...[
+          // What the customer asked for comes before who they are: the driver
+          // needs to have read it before they pick up, not after.
+          if (notes?.isNotEmpty ?? false) ...[
             const SizedBox(height: 16),
-            _buildSectionTitle(loc.specialRequests),
+            _buildSectionHeader(loc.specialRequests),
             _buildCard(
               child: Text(
-                trip.rideNotes!,
+                notes!,
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 13,
@@ -461,56 +289,118 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
             ),
           ],
 
-          if (trip.voiceNoteUrl?.trim().isNotEmpty ?? false) ...[
+          if (voiceNote?.isNotEmpty ?? false) ...[
             const SizedBox(height: 16),
-            _buildSectionTitle(loc.voiceNote),
-            _buildCard(child: VoicePlayer(audioUrl: trip.voiceNoteUrl!)),
+            _buildSectionHeader(loc.voiceNote),
+            _buildCard(child: VoicePlayer(audioUrl: voiceNote!)),
           ],
+
+          const SizedBox(height: 16),
+          _buildCustomerSection(loc, trip),
 
           if (trip.timeline.isNotEmpty) ...[
             const SizedBox(height: 16),
-            _buildSectionTitle(loc.tripProgress),
+            _buildSectionHeader(loc.tripProgress),
             _buildCard(child: _buildTimeline(trip, isArabic)),
           ],
 
           const SizedBox(height: 16),
           _buildPaymentSummary(loc, trip),
-
-          const SizedBox(height: 24),
-          _buildAction(loc, trip),
           const SizedBox(height: 32),
         ],
       ),
     );
   }
 
-  Widget _buildStatusBadge(AppLocalizations loc, TripV2 trip) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: trip.status.color.withAlpha(50),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: trip.status.color),
+  /// The car dispatch put on this ride, and the class it was booked as.
+  ///
+  /// The two are separate records — the fleet vehicle carries the plate the
+  /// driver is actually holding keys to, the booked class is what the customer
+  /// paid for — so they are read and shown separately rather than merged into
+  /// one row that could show either.
+  Widget _buildVehicleSection(AppLocalizations loc, TripV2 trip) {
+    final fleet = trip.fleet;
+    final vehicle = trip.vehicle;
+
+    final hasFleet = fleet != null && !fleet.isEmpty;
+    final hasVehicle = vehicle != null && !vehicle.isEmpty;
+    if (!hasFleet && !hasVehicle) return const SizedBox.shrink();
+
+    final rows = <Widget>[];
+
+    void add(String label, String value, IconData icon) {
+      rows.add(_buildRow(label, value, icon, divided: rows.isNotEmpty));
+    }
+
+    // The assigned car first — that is the one at the kerb.
+    if (hasFleet) {
+      if (fleet.label.isNotEmpty) {
+        add(loc.assignedVehicle, fleet.label, Icons.directions_car_filled);
+      }
+      if (fleet.licensePlate?.trim().isNotEmpty ?? false) {
+        add(
+          loc.licensePlate,
+          fleet.licensePlate!.trim(),
+          Icons.confirmation_number_outlined,
+        );
+      }
+      if (fleet.colour?.trim().isNotEmpty ?? false) {
+        add(loc.vehicleColor, fleet.colour!.trim(), Icons.palette_outlined);
+      }
+    }
+
+    // The booked class, named only when it says something the fleet row did
+    // not — otherwise it just repeats the car above it.
+    if (hasVehicle &&
+        vehicle.label.isNotEmpty &&
+        vehicle.label != fleet?.label) {
+      add(
+        loc.bookedVehicleClass,
+        vehicle.label,
+        Icons.directions_car_outlined,
+      );
+    }
+
+    if (rows.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionHeader(loc.vehicleType),
+        _buildCard(child: Column(children: rows)),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildDirectionsButton(AppLocalizations loc, TripV2 trip) {
+    if (!TripActions.canOpenDirections(trip)) return const SizedBox.shrink();
+
+    return TextButton.icon(
+      onPressed: () => TripActions.openDirections(context, trip),
+      icon: const Icon(Icons.directions, size: 16),
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xFFE4A46B),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        visualDensity: VisualDensity.compact,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-      child: Text(
-        trip.status.label(loc),
-        style: TextStyle(
-          color: trip.status.color,
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-        ),
+      label: Text(
+        loc.getDirections,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );
   }
 
   Widget _buildCustomerSection(AppLocalizations loc, TripV2 trip) {
     final customer = trip.customer;
-    final phone = customer?.phone;
+    final phone = customer?.phone?.trim();
+    final hasPhone = phone != null && phone.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSectionTitle(loc.customerInfo),
+        _buildSectionHeader(loc.customerInfo),
         _buildCard(
           child: Column(
             children: [
@@ -519,30 +409,39 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
                 customer?.name ?? '—',
                 Icons.person_outline,
               ),
-              if (phone != null && phone.trim().isNotEmpty) ...[
-                const Divider(color: Colors.white10, height: 24),
-                _buildRow(loc.phoneNumber, phone, Icons.phone_outlined),
-              ],
+              if (hasPhone)
+                _buildRow(
+                  loc.phoneNumber,
+                  phone,
+                  Icons.phone_outlined,
+                  divided: true,
+                  // Calling is one tap from the number itself rather than a
+                  // full-width button below the card.
+                  trailing: _buildCallButton(loc, phone),
+                ),
             ],
           ),
         ),
-        if (phone != null && phone.trim().isNotEmpty) ...[
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () => _callCustomer(phone),
-            icon: const Icon(Icons.call, size: 18),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.greenAccent,
-              side: const BorderSide(color: Colors.greenAccent),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            label: Text(loc.callCustomer),
-          ),
-        ],
       ],
+    );
+  }
+
+  Widget _buildCallButton(AppLocalizations loc, String phone) {
+    return Semantics(
+      button: true,
+      label: loc.callCustomer,
+      child: Material(
+        color: Colors.black,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => TripActions.callCustomer(phone),
+          child: const Padding(
+            padding: EdgeInsets.all(9),
+            child: Icon(Icons.phone, size: 18, color: Colors.white),
+          ),
+        ),
+      ),
     );
   }
 
@@ -553,7 +452,7 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSectionTitle(loc.paymentSummary),
+        _buildSectionHeader(loc.paymentSummary),
         _buildCard(
           child: Column(
             children: [
@@ -616,11 +515,21 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
 
   /// The progress stepper, rendered from the timeline the API returns so the
   /// wording matches what the customer sees.
+  ///
+  /// The connector between two steps is what carries the sense of progress, and
+  /// it used to be drawn in the same faint grey the whole way down however far
+  /// the ride had got — so the stepper read as empty no matter the status. It
+  /// now takes the colour of the step above it, which leaves a filled track
+  /// behind the ride and a grey one ahead of it.
   Widget _buildTimeline(TripV2 trip, bool isArabic) {
+    final languageCode = Localizations.localeOf(context).languageCode;
+
     return Column(
       children: List.generate(trip.timeline.length, (index) {
         final step = trip.timeline[index];
         final isLast = index == trip.timeline.length - 1;
+        final isReached = step.isCompleted || step.isCurrent;
+
         final color = step.isCancelled
             ? Colors.red
             : step.isCurrent
@@ -628,6 +537,20 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
             : step.isCompleted
             ? Colors.green
             : Colors.white24;
+
+        // The step below is only behind the ride if it has been reached too;
+        // the current step is the head of the track, so the line leaving it is
+        // still ahead.
+        final nextReached =
+            !isLast &&
+            (trip.timeline[index + 1].isCompleted ||
+                trip.timeline[index + 1].isCurrent ||
+                trip.timeline[index + 1].isCancelled);
+        final connectorColor = step.isCancelled
+            ? Colors.red
+            : nextReached
+            ? Colors.green
+            : Colors.white12;
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,15 +561,13 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
                   width: 14,
                   height: 14,
                   decoration: BoxDecoration(
-                    color: step.isCompleted || step.isCurrent
-                        ? color
-                        : Colors.transparent,
+                    color: isReached ? color : Colors.transparent,
                     shape: BoxShape.circle,
                     border: Border.all(color: color, width: 2),
                   ),
                 ),
                 if (!isLast)
-                  Container(width: 2, height: 32, color: Colors.white12),
+                  Container(width: 2, height: 32, color: connectorColor),
               ],
             ),
             const SizedBox(width: 12),
@@ -659,9 +580,7 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
                     Text(
                       step.displayLabel(isArabic),
                       style: TextStyle(
-                        color: step.isCompleted || step.isCurrent
-                            ? Colors.white
-                            : Colors.white38,
+                        color: isReached ? Colors.white : Colors.white38,
                         fontSize: 13,
                         fontWeight: step.isCurrent
                             ? FontWeight.bold
@@ -672,7 +591,7 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
                       Text(
                         DateFormat(
                           'dd MMM, h:mm a',
-                          Localizations.localeOf(context).languageCode,
+                          languageCode,
                         ).format(step.timestamp!.toLocal()),
                         style: const TextStyle(
                           color: Colors.white38,
@@ -689,61 +608,26 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     );
   }
 
-  /// The one action available from the current status, or an explanation of why
-  /// there is none.
-  Widget _buildAction(AppLocalizations loc, TripV2 trip) {
-    final actionLabel = trip.status.actionLabel(loc);
-
-    if (actionLabel == null) {
-      // Before assignment the trip is dispatch's to move; afterwards it is done.
-      if (trip.status.isFinished) return const SizedBox.shrink();
-      return Center(
-        child: Text(
-          loc.waitingForDispatch,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white54, fontSize: 13),
-        ),
-      );
-    }
-
-    return ElevatedButton(
-      onPressed: _isUpdating ? null : _advance,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: trip.status.color,
-        disabledBackgroundColor: trip.status.color.withAlpha(120),
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: _isUpdating
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : Text(
-              actionLabel,
+  /// A section heading, optionally with a control across from it.
+  Widget _buildSectionHeader(String title, {Widget? trailing}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Flexible(
+            child: Text(
+              title,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
             ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-        ),
+          ),
+          ?trailing,
+        ],
       ),
     );
   }
@@ -760,9 +644,19 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     );
   }
 
-  Widget _buildRow(String label, String value, IconData icon) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  /// One labelled value inside a card.
+  ///
+  /// [divided] draws the rule above it, so a card built from a conditional list
+  /// of rows never opens or closes on a stray divider.
+  Widget _buildRow(
+    String label,
+    String value,
+    IconData icon, {
+    bool divided = false,
+    Widget? trailing,
+  }) {
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(icon, size: 16, color: Colors.grey.shade400),
         const SizedBox(width: 12),
@@ -782,7 +676,14 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
             ],
           ),
         ),
+        if (trailing != null) ...[const SizedBox(width: 12), trailing],
       ],
+    );
+
+    if (!divided) return row;
+
+    return Column(
+      children: [const Divider(color: Colors.white10, height: 24), row],
     );
   }
 }

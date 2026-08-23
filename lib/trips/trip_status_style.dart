@@ -4,9 +4,10 @@ import 'package:premium_force_driver/models/v2/trip_v2.dart';
 
 /// How each v2 trip status is presented, in one place.
 ///
-/// The status drives a badge colour, a label, and the wording of the single
-/// action the driver may take next; keeping the three together stops the trip
-/// list and the detail screen from drifting apart.
+/// The status drives a badge colour, a label, the wording of the single action
+/// the driver may take next, and what confirming that action warns them of;
+/// keeping the four together stops the trip list and the detail screen from
+/// drifting apart.
 extension TripStatusStyle on TripStatusV2 {
   /// Badge colour — one hue per stage of the ride.
   Color get color => switch (this) {
@@ -42,5 +43,22 @@ extension TripStatusStyle on TripStatusV2 {
     TripStatusV2.tripStarted => loc.actionStartTrip,
     TripStatusV2.completed => loc.actionCompleteTrip,
     _ => null,
+  };
+
+  /// What the confirmation dialog says under its title.
+  ///
+  /// Each transition is worth a sentence of its own, because each one does
+  /// something different and irreversible: going en route opens the customer's
+  /// view of the driver's location, arriving tells them to come out, starting
+  /// the trip is a claim that the passenger is aboard, and completing closes
+  /// the ride and the location feed. A shared "Do you want to continue?" asked
+  /// the driver to confirm without telling them what they were confirming.
+  String confirmMessage(AppLocalizations loc) => switch (next) {
+    TripStatusV2.driverEnRoute => loc.confirmStartDriving,
+    TripStatusV2.driverArrived => loc.confirmArrived,
+    TripStatusV2.tripStarted => loc.confirmStartTrip,
+    TripStatusV2.completed => loc.confirmCompleteTrip,
+    // Unreachable from the UI: nothing offers an action without a label.
+    _ => loc.confirmStatusUpdate,
   };
 }

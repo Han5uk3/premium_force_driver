@@ -3,18 +3,23 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:premium_force_driver/common_widgets/riyal_symbol.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
+import 'package:premium_force_driver/trips/trip_controls.dart';
 import 'package:premium_force_driver/trips/trip_status_style.dart';
+import 'package:premium_force_driver/utils/trip_display.dart';
 
 /// One trip in the driver's list.
 ///
-/// Deliberately read-only: every state change happens on the detail screen,
-/// where the driver can see who they are collecting and from where before they
-/// advance the ride. The card carries [onTap] and, when the trip is actionable,
-/// [onAction] for the single next step.
+/// Tapping opens the detail screen; the controls under the customer's name drive
+/// the ride from here, so a driver moving between pickups does not have to open
+/// a ride to say they have arrived. Both surfaces go through [TripControls], so
+/// the guards and the wording are the same either way.
+///
+/// The fare is deliberately absent: the driver collects nothing at the kerb
+/// except the extras they record on completion, and the card is read over a
+/// shoulder often enough that the ride's price does not belong on it.
 class TripCard extends StatelessWidget {
   const TripCard({
     super.key,
@@ -36,17 +41,9 @@ class TripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final languageCode = Localizations.localeOf(context).languageCode;
 
-    final pickupAt = trip.pickupDateTime?.toLocal();
-    final dateStr = pickupAt == null
-        ? '—'
-        : DateFormat('dd MMM, yyyy', languageCode).format(pickupAt);
-    final timeStr = pickupAt == null
-        ? '—'
-        : DateFormat('h:mm a', languageCode).format(pickupAt);
-
-    final actionLabel = onAction == null ? null : trip.status.actionLabel(loc);
+    final pickup = formatTripPickup(context, trip);
+    final durationLabel = tripDurationLabel(loc, trip);
 
     return InkWell(
       onTap: onTap,
@@ -110,25 +107,45 @@ class TripCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // The product, not the name of the field — an arrival, a
+                  // departure, hourly hire or a private transfer.
+                  Text(
+                    tripServiceLabel(loc, trip),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // The pickup the ride was booked for. Given its own line
+                  // rather than squeezed beside the service, so a long date and
+                  // a translated product name cannot crowd each other out.
                   Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          trip.isChauffeur ? loc.chauffeur : loc.serviceType,
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
                       Icon(
                         Icons.calendar_today_outlined,
                         size: 12,
                         color: Colors.grey.shade400,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Text(
-                        '$dateStr  ·  $timeStr',
+                        pickup.date,
+                        style: TextStyle(
+                          color: Colors.grey.shade300,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.access_time_outlined,
+                        size: 12,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        pickup.time,
                         style: TextStyle(
                           color: Colors.grey.shade300,
                           fontSize: 11,
@@ -152,13 +169,13 @@ class TripCard extends StatelessWidget {
                       label: loc.dropoff,
                       value: trip.dropOffAddress!,
                     ),
-                  ] else if ((trip.route?.durationHours ?? 0) > 0) ...[
+                  ] else if (durationLabel != null) ...[
                     const SizedBox(height: 8),
                     _locationRow(
                       icon: Icons.timer_outlined,
                       color: Colors.white38,
                       label: loc.duration,
-                      value: '${trip.route!.durationHours} ${loc.hrs}',
+                      value: durationLabel,
                     ),
                   ],
 
@@ -185,44 +202,29 @@ class TripCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      TripFare(amount: trip.pricing?.payable ?? 0),
+                      Text(
+                        '${trip.passengersCount}',
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.groups_outlined,
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
                     ],
                   ),
 
-                  if (actionLabel != null) ...[
+                  if (onAction != null) ...[
                     const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: isUpdating ? null : onAction,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: trip.status.color,
-                          disabledBackgroundColor: trip.status.color.withAlpha(
-                            120,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: isUpdating
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(
-                                actionLabel,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
+                    TripControls(
+                      trip: trip,
+                      onAdvance: onAction!,
+                      isUpdating: isUpdating,
+                      isCompact: true,
                     ),
                   ],
 
@@ -304,9 +306,9 @@ class TripCard extends StatelessWidget {
 
 /// An amount with the Saudi riyal symbol, formatted to two decimals.
 ///
-/// Used wherever the driver sees money — the trip list, the detail screen's
-/// payment summary and the extras it collected — so the symbol, spacing and
-/// rounding stay identical across all of them.
+/// Used wherever the driver sees money — the detail screen's payment summary
+/// and the extras it collected — so the symbol, spacing and rounding stay
+/// identical across all of them. The trip card no longer shows a fare.
 class TripFare extends StatelessWidget {
   const TripFare({
     super.key,

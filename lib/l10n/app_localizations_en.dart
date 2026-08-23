@@ -87,6 +87,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleType => 'Vehicle Type';
 
   @override
+  String get assignedVehicle => 'Assigned Vehicle';
+
+  @override
+  String get vehicleColor => 'Color';
+
+  @override
+  String get bookedVehicleClass => 'Booked Class';
+
+  @override
   String get jeddah => 'Jeddah';
 
   @override
@@ -1057,6 +1066,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionCompleteTrip => 'Complete Trip';
+
+  @override
+  String get confirmStartDriving =>
+      'The customer will be told you are on your way, and can follow your location until the ride ends.';
+
+  @override
+  String get confirmArrived =>
+      'The customer will be told you are waiting at the pickup point.';
+
+  @override
+  String get confirmStartTrip =>
+      'Confirm the passenger is on board. The ride will be marked as under way.';
+
+  @override
+  String get confirmCompleteTrip =>
+      'This ends the ride and stops sharing your location. It cannot be undone.';
 
   @override
   String get confirmStatusUpdate => 'Do you want to continue?';

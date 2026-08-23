@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:premium_force_driver/api/api_logger.dart';
 import 'package:premium_force_driver/models/user.dart';
 import 'package:premium_force_driver/models/driver.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
@@ -102,17 +103,7 @@ class ApiService {
 
     // ── Logging interceptor (debug mode only) ──────────────
     if (kDebugMode) {
-      _dio.interceptors.add(
-        LogInterceptor(
-          request: true,
-          requestHeader: true,
-          requestBody: true,
-          responseHeader: true,
-          responseBody: true,
-          error: true,
-          logPrint: (obj) => debugPrint('🌐 API │ $obj'),
-        ),
-      );
+      _dio.interceptors.add(DriverApiLogger(label: 'api'));
     }
   }
 

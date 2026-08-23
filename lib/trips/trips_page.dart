@@ -5,6 +5,7 @@ import 'package:premium_force_driver/common_widgets/booking_shimmer.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
 import 'package:premium_force_driver/providers/trips_provider.dart';
+import 'package:premium_force_driver/trips/trip_actions.dart';
 import 'package:premium_force_driver/trips/trip_card.dart';
 import 'package:premium_force_driver/trips/trip_details_page.dart';
 
@@ -26,7 +27,7 @@ class TripsPage extends StatefulWidget {
 }
 
 class _TripsPageState extends State<TripsPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const List<TripFilterV2> _filters = [
     TripFilterV2.active,
     TripFilterV2.completed,
@@ -40,6 +41,7 @@ class _TripsPageState extends State<TripsPage>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(
       length: _filters.length,
       vsync: this,
@@ -47,28 +49,49 @@ class _TripsPageState extends State<TripsPage>
     );
     _tabController.addListener(_onTabChanged);
 
+    // The page is rebuilt from scratch every time the driver returns to it from
+    // the bottom bar, so this is also the re-entry refresh.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final provider = context.read<TripsProvider>();
-      final filter = _visibleFilter;
-      // Keep a warm list on screen; the dashboard may have loaded it already.
-      provider.refreshFilter(
-        filter,
-        silent: provider.statusFor(filter) == TripsStatus.loaded,
-      );
+      if (mounted) _reload();
     });
   }
 
-  /// Fetch the tab the driver just moved to, the first time they look at it.
+  /// Re-read the tab in front of the driver.
   ///
-  /// Coming back to a tab that already has trips on it costs nothing — pulling
-  /// down refreshes it when they want that.
+  /// Always silent when there is already a list on screen: a driver glancing at
+  /// their trips between pickups should not watch it collapse into a shimmer
+  /// and rebuild. The rows change underneath instead, and the pull-to-refresh
+  /// spinner is there when they want to see that something happened.
+  void _reload() {
+    final provider = context.read<TripsProvider>();
+    final filter = _visibleFilter;
+    provider.refreshFilter(
+      filter,
+      silent: provider.statusFor(filter) == TripsStatus.loaded,
+    );
+  }
+
+  /// Fetch the tab the driver just moved to — every time, not only the first.
+  ///
+  /// A tab that was loaded ten minutes ago is stale: dispatch may have assigned
+  /// a ride, or one may have been completed on another device. Re-reading is a
+  /// single small request, and it is silent, so the cost of being wrong is far
+  /// higher than the cost of asking.
   void _onTabChanged() {
     if (_tabController.indexIsChanging) return;
-    final provider = context.read<TripsProvider>();
-    if (provider.needsLoad(_visibleFilter)) {
-      provider.refreshFilter(_visibleFilter);
-    }
+    _reload();
+  }
+
+  /// Re-read when the app comes back to the foreground.
+  ///
+  /// A push that arrives while the app is backgrounded refreshes nothing — the
+  /// handler in `main` only runs for messages delivered to a running app — so
+  /// without this the driver could resume onto a list that missed an
+  /// assignment.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && mounted) _reload();
   }
 
   @override
@@ -83,13 +106,24 @@ class _TripsPageState extends State<TripsPage>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
 
+  /// Drive the ride forward from the card, without opening it.
+  ///
+  /// [TripActions] owns the confirmation and the on-shift guards, so acting
+  /// from the list is held to exactly the same rules as acting from the detail
+  /// screen; the provider has already folded the new status into this list by
+  /// the time it returns.
+  Future<void> _advanceTrip(TripV2 trip) async {
+    await TripActions.advance(context, trip);
+  }
+
   Future<void> _openTrip(TripV2 trip) async {
-    final changed = await Navigator.push<bool>(
+    await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) =>
@@ -97,14 +131,11 @@ class _TripsPageState extends State<TripsPage>
       ),
     );
 
-    // The detail screen already folded its update into the provider; a full
-    // refresh is only worth it when something actually changed.
-    if ((changed ?? false) && mounted) {
-      await context.read<TripsProvider>().refreshFilter(
-        _visibleFilter,
-        silent: true,
-      );
-    }
+    // Coming back from the detail screen is a re-entry like any other. The
+    // screen does report whether it changed anything, but that only covers what
+    // *this* driver did to *this* trip — not what dispatch did to the rest of
+    // the list while they were reading it.
+    if (mounted) _reload();
   }
 
   @override
@@ -155,7 +186,7 @@ class _TripsPageState extends State<TripsPage>
                     fontWeight: FontWeight.bold,
                   ),
                   tabs: [
-                    Tab(text: '${loc.active} (${provider.activeCount})'),
+                    Tab(text: loc.active),
                     Tab(text: loc.completed),
                   ],
                 ),
@@ -301,7 +332,16 @@ class _TripsPageState extends State<TripsPage>
           }
 
           final trip = trips[index];
-          return TripCard(trip: trip, onTap: () => _openTrip(trip));
+          return TripCard(
+            trip: trip,
+            onTap: () => _openTrip(trip),
+            // Completed rides have nothing left to advance, so the controls
+            // are only wired up on the active tab.
+            onAction: filter == TripFilterV2.active
+                ? () => _advanceTrip(trip)
+                : null,
+            isUpdating: provider.updatingTripId == trip.id,
+          );
         },
       ),
     );

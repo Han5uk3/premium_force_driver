@@ -14,8 +14,9 @@ import 'package:premium_force_driver/storage/user_local_storage.dart';
 ///
 /// **The backend decides when this runs.** [syncWithTrip] takes a trip as the
 /// server last reported it and reconciles sharing against
-/// [TripStatusV2.sharesLocation]: sharing starts once the ride has started and
-/// stops once it is over. It is called after every accepted status change and
+/// [TripStatusV2.sharesLocation]: sharing starts the moment the driver sets off
+/// for the pickup — `driver_en_route` — and stops once the ride is over, so
+/// the customer can watch the car approach and not just carry them. It is called after every accepted status change and
 /// after every refresh of the active list, so the app cannot end up publishing
 /// a ride the backend considers finished — or stay silent through one it
 /// considers live, which is also how sharing resumes after the app is killed
@@ -34,6 +35,34 @@ import 'package:premium_force_driver/storage/user_local_storage.dart';
 /// without a write. A car standing still therefore costs one small write a
 /// minute instead of thirty, while a moving one publishes at the full sample
 /// rate. Nothing else is written: no per-tick metadata, no history.
+/// Which leg of the journey the customer's map should be drawing.
+///
+/// Published into the tracking session so the customer app can switch legs the
+/// instant the driver does, rather than waiting for a booking refresh to tell
+/// it the status moved.
+enum TrackingPhase {
+  /// Driver → pickup. Runs from `driver_en_route` until the trip starts.
+  toPickup('to_pickup'),
+
+  /// Driver → drop-off. Runs from `trip_started` to the end of the ride.
+  toDropOff('to_dropoff'),
+
+  /// Under way with nowhere to route to — hourly chauffeur hire, which has no
+  /// drop-off point because the customer directs the car themselves. The
+  /// position is still published; there is simply no second leg to draw.
+  inProgress('in_progress');
+
+  const TrackingPhase(this.wireValue);
+
+  final String wireValue;
+
+  /// The leg [trip] is on, from the status the backend last reported.
+  static TrackingPhase of(TripV2 trip) {
+    if (trip.status != TripStatusV2.tripStarted) return toPickup;
+    return trip.hasDropOffPoint ? toDropOff : inProgress;
+  }
+}
+
 class TrackingService with ChangeNotifier {
   static final TrackingService _instance = TrackingService._internal();
   factory TrackingService() => _instance;
@@ -101,9 +130,20 @@ class TrackingService with ChangeNotifier {
   String? _currentBookingId;
   String? get currentBookingId => _currentBookingId;
 
-  bool _isChauffeur = false;
-  int _bookedHours = 0;
+  /// The leg last written to the session, so a status change that does not move
+  /// the map costs no write.
+  TrackingPhase? _phase;
+
+  /// When sharing opened — the driver setting off, not the ride beginning.
   DateTime? _startTime;
+
+  /// When the ride itself began, which is what chauffeur hire is billed from.
+  ///
+  /// Sharing now opens at `driver_en_route`, so measuring booked hours from
+  /// [_startTime] would bill the customer for the driver's drive to the pickup.
+  /// Null until the trip reaches `trip_started`; a ride cancelled before then
+  /// has no billable hours at all.
+  DateTime? _rideStartedAt;
 
   bool get isTracking => _positionStreamSubscription != null;
 
@@ -124,18 +164,24 @@ class TrackingService with ChangeNotifier {
 
   /// Bring sharing in line with [trip]'s status as the backend reports it.
   ///
-  /// Starts when the ride is under way and is not already being published;
+  /// Starts when the driver has set off and is not already being published;
   /// stops when a ride that *was* being published is no longer live. A trip
   /// that is neither is left alone, so a completed booking arriving in a
   /// refresh cannot stop the ride the driver is actually on.
   ///
   /// Silent about permissions: it will not raise dialogs out of a background
   /// refresh. They are asked for with [ensurePermissions] at the point the
-  /// driver starts the ride, which is the only way to reach
+  /// driver goes en route, which is the only way to reach
   /// [TripStatusV2.sharesLocation] in the first place.
   Future<void> syncWithTrip(TripV2 trip) {
     return _serialize(() async {
       if (trip.status.sharesLocation) {
+        // Both noted before the already-sharing check: the transition that
+        // starts the ride arrives while sharing is already open, so returning
+        // early first would lose the moment the map has to change legs.
+        await _noteRideStart(trip);
+        await _notePhase(trip);
+
         if (isTrackingBooking(trip.id)) return;
 
         if (!await hasAllPermissions()) {
@@ -151,13 +197,70 @@ class TrackingService with ChangeNotifier {
           customerId: trip.customerId ?? '',
           driverId: UserLocalStorage.getUserId() ?? '',
           isChauffeur: trip.isChauffeur,
-          bookedHours: trip.route?.durationHours ?? 0,
+          phase: TrackingPhase.of(trip),
         );
+
+        // Again after starting: relaunching mid-ride opens the session at a
+        // trip that is already under way, and the call above ran before there
+        // was a session to record it against.
+        await _noteRideStart(trip);
         return;
       }
 
       if (_currentBookingId == trip.id) await _stop();
     });
+  }
+
+  /// Record when the ride itself began, once, for the session being published.
+  ///
+  /// Written as `startTime` because that is what the customer app's chauffeur
+  /// meter reads, and what it has always meant: the hire clock, which starts
+  /// when the passenger gets in and not when the driver sets off to fetch them.
+  /// The moment sharing opened is `sharingStartTime`, kept separate for exactly
+  /// that reason.
+  ///
+  /// Prefers the timeline's own timestamp over the device clock, so a driver
+  /// whose app was killed and relaunched mid-ride resumes the same meter rather
+  /// than restarting it.
+  Future<void> _noteRideStart(TripV2 trip) async {
+    if (trip.status != TripStatusV2.tripStarted) return;
+    if (_currentBookingId != trip.id || _rideStartedAt != null) return;
+
+    final startedAt = trip.rideStartedAt?.toLocal() ?? DateTime.now();
+    _rideStartedAt = startedAt;
+
+    await _writeSession(trip.id, (ref) async {
+      await ref.update({
+        'startTime': startedAt.toIso8601String(),
+        'rideStartedAt': ServerValue.timestamp,
+      });
+    });
+    debugPrint('▶️ [Tracking] Ride clock started for booking ${trip.id}');
+  }
+
+  /// Move the customer's map onto the leg [trip] is now on.
+  ///
+  /// The two legs are the journey as the customer experiences it: the car
+  /// coming to fetch them, then the car carrying them. Starting the trip is
+  /// what switches between them, and hourly chauffeur hire never switches —
+  /// there is no drop-off to head for.
+  ///
+  /// A no-op unless the leg actually changed: `driver_arrived` leaves the map
+  /// exactly where `driver_en_route` put it, and rewriting it would be a paid
+  /// write for no visible difference.
+  Future<void> _notePhase(TripV2 trip) async {
+    if (_currentBookingId != trip.id) return;
+
+    final phase = TrackingPhase.of(trip);
+    if (phase == _phase) return;
+    _phase = phase;
+
+    await _writeSession(trip.id, (ref) async {
+      await ref.update({'phase': phase.wireValue});
+    });
+    debugPrint(
+      '🗺️ [Tracking] Leg is now ${phase.wireValue} for booking ${trip.id}',
+    );
   }
 
   /// Reconcile against every trip the backend currently calls active.
@@ -410,20 +513,20 @@ class TrackingService with ChangeNotifier {
     required String customerId,
     required String driverId,
     required bool isChauffeur,
-    int bookedHours = 0,
+    required TrackingPhase phase,
   }) async {
     // Another ride may still be publishing; only one can be.
     await _stop();
 
     _currentBookingId = bookingId;
-    _isChauffeur = isChauffeur;
-    _bookedHours = isChauffeur ? bookedHours : 0;
+    _phase = phase;
     _startTime = DateTime.now();
+    _rideStartedAt = null;
     _isPaused = false;
     _lastPublished = null;
     _lastPublishedAt = null;
 
-    // Session metadata: one write, at the start of the ride.
+    // Session metadata: one write, when the driver sets off.
     await _writeSession(bookingId, (ref) async {
       await ref.set({
         'bookingId': bookingId,
@@ -431,7 +534,13 @@ class TrackingService with ChangeNotifier {
         'driverId': driverId,
         'isActive': true,
         'isChauffeur': isChauffeur,
-        'startTime': _startTime!.toIso8601String(),
+        // Which leg the customer's map should draw. Normally `to_pickup`; a
+        // relaunch mid-ride can open the session already on a later leg.
+        'phase': phase.wireValue,
+        // When the feed opened — the driver setting off. The hire clock
+        // (`startTime`) is written later, by _noteRideStart, so the customer's
+        // chauffeur meter does not run through the approach.
+        'sharingStartTime': _startTime!.toIso8601String(),
         'startedAt': ServerValue.timestamp,
       });
     });
@@ -456,58 +565,41 @@ class TrackingService with ChangeNotifier {
 
   /// Stop sharing and close the session.
   ///
-  /// Returns the chauffeur hours run over the booked duration, or 0 — the same
-  /// figure written to `tracking_session.extraHours`.
-  Future<double> _stop() async {
+  /// `isActive: false` is what tells the customer app the ride is over, so its
+  /// map can stop drawing and its tracking card can take itself away.
+  ///
+  /// No hours are computed here. Chauffeur overtime and what it costs are the
+  /// backend's to work out from the timeline it already holds; a figure derived
+  /// from the driver's device clock could only ever disagree with it.
+  Future<void> _stop() async {
     await _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
 
     final bookingId = _currentBookingId;
     if (bookingId == null) {
       notifyListeners();
-      return 0.0;
-    }
-
-    final stopTime = DateTime.now();
-    double extraHours = 0.0;
-
-    final update = <String, dynamic>{
-      'isActive': false,
-      'stopTime': stopTime.toIso8601String(),
-      'stoppedAt': ServerValue.timestamp,
-    };
-
-    if (_isChauffeur && _startTime != null) {
-      final durationSeconds = stopTime.difference(_startTime!).inSeconds;
-      update['tripDurationSeconds'] = durationSeconds;
-
-      final actualHours = durationSeconds / 3600.0;
-      if (_bookedHours > 0 && actualHours > _bookedHours) {
-        extraHours = double.parse(
-          (actualHours - _bookedHours).toStringAsFixed(2),
-        );
-        if (extraHours > 0) update['extraHours'] = extraHours;
-      }
-      debugPrint(
-        '⏱️ [Tracking] Chauffeur — booked ${_bookedHours}h, '
-        'actual ${actualHours.toStringAsFixed(2)}h, extra ${extraHours}h',
-      );
+      return;
     }
 
     // Session metadata: the second and last write of the ride.
-    await _writeSession(bookingId, (ref) => ref.update(update));
+    await _writeSession(
+      bookingId,
+      (ref) => ref.update({
+        'isActive': false,
+        'stopTime': DateTime.now().toIso8601String(),
+        'stoppedAt': ServerValue.timestamp,
+      }),
+    );
     debugPrint('🛑 [Tracking] Sharing stopped for booking $bookingId');
 
     _currentBookingId = null;
-    _isChauffeur = false;
-    _bookedHours = 0;
+    _phase = null;
     _startTime = null;
+    _rideStartedAt = null;
     _isPaused = false;
     _lastPublished = null;
     _lastPublishedAt = null;
     notifyListeners();
-
-    return extraHours;
   }
 
   // ---------------------------------------------------------------------------

@@ -78,16 +78,22 @@ class TripsProvider extends ChangeNotifier {
     TripFilterV2.active: 1,
     TripFilterV2.completed: 1,
   };
-  final Map<TripFilterV2, int> _totalPages = {
-    TripFilterV2.active: 1,
-    TripFilterV2.completed: 1,
+
+  /// Whether the last page fetched for each filter said there was another.
+  ///
+  /// Taken from the response rather than recomputed here, so the one place that
+  /// knows how to read — or infer — the endpoint's pagination is
+  /// [TripListPage.hasMore].
+  final Map<TripFilterV2, bool> _hasMore = {
+    TripFilterV2.active: false,
+    TripFilterV2.completed: false,
   };
+
   final Set<TripFilterV2> _loadingMore = {};
 
   bool isLoadingMore(TripFilterV2 filter) => _loadingMore.contains(filter);
 
-  bool hasMore(TripFilterV2 filter) =>
-      (_pages[filter] ?? 1) < (_totalPages[filter] ?? 1);
+  bool hasMore(TripFilterV2 filter) => _hasMore[filter] ?? false;
 
   List<TripV2> tripsFor(TripFilterV2 filter) => switch (filter) {
     TripFilterV2.active => _activeTrips,
@@ -146,7 +152,7 @@ class TripsProvider extends ChangeNotifier {
       final page = result.data!;
       _setTrips(filter, page.trips);
       _pages[filter] = page.page;
-      _totalPages[filter] = page.totalPages;
+      _hasMore[filter] = page.hasMore;
       _statuses[filter] = TripsStatus.loaded;
       _errors.remove(filter);
 
@@ -209,7 +215,9 @@ class TripsProvider extends ChangeNotifier {
 
       _setTrips(filter, merged);
       _pages[filter] = page.page;
-      _totalPages[filter] = page.totalPages;
+      // A page whose every trip was already held means the window has stopped
+      // moving; asking again would loop on the same rows forever.
+      _hasMore[filter] = page.hasMore && merged.length > existing.length;
     } else {
       debugPrint('🚘 Trips │ load more failed: ${result.message}');
     }
@@ -313,7 +321,7 @@ class TripsProvider extends ChangeNotifier {
     _loadingMore.clear();
     for (final filter in TripFilterV2.values) {
       _pages[filter] = 1;
-      _totalPages[filter] = 1;
+      _hasMore[filter] = false;
       _statuses[filter] = TripsStatus.initial;
     }
     notifyListeners();

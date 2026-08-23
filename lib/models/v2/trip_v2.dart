@@ -1,3 +1,4 @@
+import 'package:premium_force_driver/models/v2/trip_service_type.dart';
 import 'package:premium_force_driver/utils/json_utils.dart';
 
 /// Trip models for the v2 driver surface — `GET /driver/bookings/my-trips`,
@@ -69,12 +70,18 @@ enum TripStatusV2 {
 
   /// Whether the driver's location is published to the customer.
   ///
-  /// From the moment the ride starts until it ends — the window the backend
-  /// opens by accepting `trip_started` and closes by accepting `completed`.
-  /// `TrackingService` reconciles against this and nothing else, so widening it
-  /// to [driverEnRoute] here is all it takes to let customers watch the car
-  /// approach as well.
-  bool get sharesLocation => this == tripStarted;
+  /// Opens the moment the driver sets off — `driver_en_route` — and closes
+  /// when the backend accepts `completed` or the ride is cancelled. The
+  /// approach is the half of the journey the customer most wants to watch:
+  /// waiting at the kerb, they need to see the car coming, not only where it is
+  /// once they are already in it.
+  ///
+  /// `TrackingService` reconciles against this and nothing else, so this getter
+  /// alone decides the sharing window — and, because
+  /// [TripActions.advance] asks for location permission whenever the status it
+  /// is about to send shares location, it also decides when the driver is
+  /// prompted.
+  bool get sharesLocation => isLive;
 
   /// Whether the trip is over, one way or the other.
   bool get isFinished => this == completed || this == cancelled;
@@ -211,23 +218,56 @@ class TripRouteV2 {
     this.pickupLocation,
     this.dropOffLocation,
     this.airportName,
+    this.airportNameAr,
     this.terminalName,
-    this.cityName,
+    this.terminalNameAr,
+    this.cityFromName,
+    this.cityFromNameAr,
+    this.cityToName,
+    this.cityToNameAr,
     this.flightNumber,
+    this.pickupDate,
+    this.pickupTime,
     this.pickupDateTime,
+    this.pickupTimezone,
+    this.pickupLocalTimeFormatted,
     this.durationHours,
+    this.distanceKm,
   });
 
   final TripLocationV2? pickupLocation;
   final TripLocationV2? dropOffLocation;
+
+  /// Airport, terminal and city names as the payload spells them —
+  /// `airportName`/`airportNameAr` on a populated sub-document, not `name`.
   final String? airportName;
+  final String? airportNameAr;
   final String? terminalName;
-  final String? cityName;
+  final String? terminalNameAr;
+  final String? cityFromName;
+  final String? cityFromNameAr;
+  final String? cityToName;
+  final String? cityToNameAr;
+
   final String? flightNumber;
+
+  /// Pickup as the customer entered it: `YYYY-MM-DD` and `HH:mm`, a wall clock
+  /// in the pickup city's timezone rather than an instant.
+  final String? pickupDate;
+  final String? pickupTime;
+
+  /// Authoritative pickup instant (UTC), sent as `pickupUTC` on the booking
+  /// payloads and as `pickupDateTime` on the session ones.
   final DateTime? pickupDateTime;
+  final String? pickupTimezone;
+
+  /// Server-rendered display string, e.g. `"10 Aug 2026, 05:00 PM (AST)"`.
+  final String? pickupLocalTimeFormatted;
 
   /// Booked hours on chauffeur hire; absent or zero on transfers.
   final int? durationHours;
+
+  final double? distanceKm;
 
   factory TripRouteV2.fromJson(Map<String, dynamic> json) {
     final pickup = pickMap(json, const ['pickupLocation', 'pickup']);
@@ -237,65 +277,225 @@ class TripRouteV2 {
       'dropOff',
     ]);
 
-    // Airport, terminal and city arrive either as ids or as populated
-    // sub-documents, depending on the endpoint.
+    // Airport, terminal and cities arrive either as populated sub-documents
+    // (`airport: { airportName, airportNameAr }`) or flattened onto the route
+    // (`cityFromName`), depending on whether the endpoint populated them.
     final airport = pickMap(json, const ['airport', 'airportId']);
     final terminal = pickMap(json, const ['terminal', 'terminalId']);
-    final city = pickMap(json, const ['city', 'cityId']);
+    final cityFrom = pickMap(json, const ['cityFrom', 'city', 'cityId']);
+    final cityTo = pickMap(json, const ['cityTo']);
 
     return TripRouteV2(
       pickupLocation: pickup.isEmpty ? null : TripLocationV2.fromJson(pickup),
       dropOffLocation: dropOff.isEmpty
           ? null
           : TripLocationV2.fromJson(dropOff),
-      airportName: pickString(airport, const ['name']),
-      terminalName: pickString(terminal, const ['name']),
-      cityName: pickString(city, const ['name', 'nameEn']),
+      airportName:
+          pickString(json, const ['airportName']) ??
+          pickString(airport, const ['airportName', 'name']),
+      airportNameAr:
+          pickString(json, const ['airportNameAr']) ??
+          pickString(airport, const ['airportNameAr', 'nameAr']),
+      terminalName:
+          pickString(json, const ['terminalName']) ??
+          pickString(terminal, const ['terminalName', 'name']),
+      terminalNameAr:
+          pickString(json, const ['terminalNameAr']) ??
+          pickString(terminal, const ['terminalNameAr', 'nameAr']),
+      cityFromName:
+          pickString(json, const ['cityFromName']) ??
+          pickString(cityFrom, const ['cityName', 'name']),
+      cityFromNameAr:
+          pickString(json, const ['cityFromNameAr']) ??
+          pickString(cityFrom, const ['cityNameAr', 'nameAr']),
+      cityToName:
+          pickString(json, const ['cityToName']) ??
+          pickString(cityTo, const ['cityName', 'name']),
+      cityToNameAr:
+          pickString(json, const ['cityToNameAr']) ??
+          pickString(cityTo, const ['cityNameAr', 'nameAr']),
       flightNumber: pickString(json, const ['flightNumber']),
+      pickupDate: pickString(json, const ['pickupDate']),
+      pickupTime: pickString(json, const ['pickupTime']),
+      // `pickupUTC` is what the booking endpoints actually send; reading only
+      // `pickupDateTime` is what left every card and detail row showing a dash.
       pickupDateTime: pickDateTime(json, const [
+        'pickupUTC',
         'pickupDateTime',
         'pickupdatetime',
         'pickupAt',
+      ]),
+      pickupTimezone: pickString(json, const ['pickupTimezone']),
+      pickupLocalTimeFormatted: pickString(json, const [
+        'pickupLocalTimeFormatted',
       ]),
       durationHours: pickInt(json, const [
         'durationHours',
         'hours',
         'estimatedHours',
       ]),
+      distanceKm: pickDouble(json, const ['distanceKm', 'distance']),
     );
+  }
+
+  /// The pickup as a wall clock, or null when the route holds no date/time
+  /// strings.
+  ///
+  /// `pickupDate` and `pickupTime` name a time in the pickup city, not an
+  /// instant, so they are parsed without a zone: the result carries exactly the
+  /// digits the backend sent, which formatting then leaves alone. Preferred
+  /// over [pickupDateTime], which would be shifted into the *device's* timezone
+  /// — a driver whose phone is not on Riyadh time would otherwise be shown the
+  /// wrong hour for the pickup.
+  DateTime? get pickupWallClock {
+    final date = pickupDate?.trim();
+    final time = pickupTime?.trim();
+    if (date == null || date.isEmpty || time == null || time.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse('${date}T$time');
+  }
+
+  String? airportDisplay(bool isArabic) =>
+      _localised(airportName, airportNameAr, isArabic);
+
+  String? terminalDisplay(bool isArabic) =>
+      _localised(terminalName, terminalNameAr, isArabic);
+
+  String? cityFromDisplay(bool isArabic) =>
+      _localised(cityFromName, cityFromNameAr, isArabic);
+
+  String? cityToDisplay(bool isArabic) =>
+      _localised(cityToName, cityToNameAr, isArabic);
+
+  static String? _localised(String? en, String? ar, bool isArabic) {
+    if (isArabic && (ar?.trim().isNotEmpty ?? false)) return ar;
+    return (en?.trim().isNotEmpty ?? false) ? en : ar;
   }
 }
 
 /// The vehicle class the customer booked.
+///
+/// Distinct from [TripFleetV2], the physical car dispatch put on the ride: the
+/// two used to be merged into one object, which let the fleet record's own
+/// `name`/`model` silently overwrite the booked class — and, when the fleet
+/// record carried neither, left the plate attached to a class that has none.
 class TripVehicleV2 {
-  const TripVehicleV2({this.name, this.model, this.image, this.licensePlate});
+  const TripVehicleV2({
+    this.name,
+    this.model,
+    this.image,
+    this.brandName,
+    this.categoryName,
+    this.maxPassengers,
+    this.maxLuggage,
+  });
 
   final String? name;
   final String? model;
   final String? image;
 
-  /// Plate of the physical car assigned to the trip, when the payload nests the
-  /// fleet record.
-  final String? licensePlate;
+  /// Make and class, when the payload populates them as sub-documents.
+  final String? brandName;
+  final String? categoryName;
+
+  final int? maxPassengers;
+  final int? maxLuggage;
 
   factory TripVehicleV2.fromJson(Map<String, dynamic> json) {
+    final brand = pickMap(json, const ['brand', 'brandId']);
+    final category = pickMap(json, const ['category', 'categoryId']);
+
     return TripVehicleV2(
-      name: pickString(json, const ['name', 'vehicleName', 'brand']),
-      model: pickString(json, const ['model', 'vehicleModel']),
-      image: pickString(json, const ['image', 'imageUrl', 'photo']),
+      name: pickString(json, const ['name', 'vehicleName', 'carName']),
+      model: pickString(json, const ['model', 'vehicleModel', 'modelName']),
+      image: pickString(json, const ['image', 'imageUrl', 'carImage', 'photo']),
+      brandName:
+          pickString(json, const ['brandName']) ??
+          pickString(brand, const ['name', 'brandName']),
+      categoryName:
+          pickString(json, const ['categoryName']) ??
+          pickString(category, const ['name', 'categoryName']),
+      maxPassengers: pickInt(json, const ['maxPassengers', 'passengers']),
+      maxLuggage: pickInt(json, const ['maxLuggage', 'luggage']),
+    );
+  }
+
+  /// Label such as `"S450 2023"`, falling back to the make and class when the
+  /// payload named neither the vehicle nor its model.
+  String get label {
+    final named = [
+      name,
+      model,
+    ].where((part) => part?.trim().isNotEmpty == true).join(' ').trim();
+    if (named.isNotEmpty) return named;
+    return [
+      brandName,
+      categoryName,
+    ].where((part) => part?.trim().isNotEmpty == true).join(' ').trim();
+  }
+
+  bool get isEmpty => label.isEmpty && (image?.trim().isEmpty ?? true);
+}
+
+/// The physical car dispatch assigned to the trip.
+///
+/// This is what the driver is actually collecting the passenger in, so it is
+/// read and shown on its own rather than folded into the booked class.
+class TripFleetV2 {
+  const TripFleetV2({
+    this.id,
+    this.licensePlate,
+    this.name,
+    this.model,
+    this.colour,
+    this.image,
+  });
+
+  final String? id;
+  final String? licensePlate;
+  final String? name;
+  final String? model;
+  final String? colour;
+  final String? image;
+
+  factory TripFleetV2.fromJson(Map<String, dynamic> json) {
+    // The fleet record sometimes nests the vehicle class it belongs to, which
+    // is where its make and model live when the record itself carries neither.
+    final vehicle = pickMap(json, const ['vehicle', 'vehicleId', 'car']);
+
+    return TripFleetV2(
+      id: pickId(json, const ['_id', 'id', 'fleetId']),
       licensePlate: pickString(json, const [
         'licensePlate',
         'plateNumber',
         'plate',
+        'carLicenseNumber',
+        'licenseNumber',
       ]),
+      name:
+          pickString(json, const ['name', 'vehicleName', 'carName']) ??
+          pickString(vehicle, const ['name', 'vehicleName']),
+      model:
+          pickString(json, const ['model', 'vehicleModel', 'carModel']) ??
+          pickString(vehicle, const ['model', 'vehicleModel']),
+      colour: pickString(json, const ['color', 'colour', 'carColor']),
+      image:
+          pickString(json, const ['image', 'imageUrl', 'carImage', 'photo']) ??
+          pickString(vehicle, const ['image', 'imageUrl']),
     );
   }
 
-  /// Label such as `"S450 2023"`.
+  /// Label such as `"S450 2023"`, or empty when the record only carries a plate.
   String get label => [
     name,
     model,
   ].where((part) => part?.trim().isNotEmpty == true).join(' ').trim();
+
+  bool get isEmpty =>
+      label.isEmpty &&
+      (licensePlate?.trim().isEmpty ?? true) &&
+      (colour?.trim().isEmpty ?? true);
 }
 
 /// The passenger the driver is collecting.
@@ -384,6 +584,7 @@ class TripV2 {
     this.transferSubType,
     this.route,
     this.vehicle,
+    this.fleet,
     this.customer,
     this.pricing,
     this.extraCharges,
@@ -407,7 +608,13 @@ class TripV2 {
   final String? serviceType;
   final String? transferSubType;
   final TripRouteV2? route;
+
+  /// The class the customer booked.
   final TripVehicleV2? vehicle;
+
+  /// The car dispatch actually put on the ride, once one is assigned.
+  final TripFleetV2? fleet;
+
   final TripCustomerV2? customer;
   final TripPricingV2? pricing;
   final ExtraChargesV2? extraCharges;
@@ -447,9 +654,8 @@ class TripV2 {
       serviceType: pickString(json, const ['serviceType']),
       transferSubType: pickString(json, const ['transferSubType']),
       route: routeJson.isEmpty ? null : TripRouteV2.fromJson(routeJson),
-      vehicle: (vehicleJson.isEmpty && fleetJson.isEmpty)
-          ? null
-          : TripVehicleV2.fromJson({...vehicleJson, ...fleetJson}),
+      vehicle: vehicleJson.isEmpty ? null : TripVehicleV2.fromJson(vehicleJson),
+      fleet: fleetJson.isEmpty ? null : TripFleetV2.fromJson(fleetJson),
       customer: (passengerJson.isEmpty && customerJson.isEmpty)
           ? null
           : TripCustomerV2.fromJson({...customerJson, ...passengerJson}),
@@ -473,28 +679,83 @@ class TripV2 {
     );
   }
 
-  /// Pickup instant, for date/time display and for the "today" check that gates
-  /// starting a ride.
+  /// The product this trip is, resolved from [serviceType] and
+  /// [transferSubType]. Null when the backend sent a spelling neither knows.
+  TripServiceType? get resolvedServiceType =>
+      TripServiceType.fromResponse(serviceType, transferSubType);
+
+  /// Pickup instant, for the "today" check that gates starting a ride.
+  ///
+  /// Display goes through [pickupDisplayInstant] instead, which prefers the
+  /// wall clock the customer actually picked.
   DateTime? get pickupDateTime => route?.pickupDateTime;
+
+  /// When the ride itself began, as the backend recorded it.
+  ///
+  /// Distinct from when location sharing began: sharing now opens at
+  /// `driver_en_route`, which is before the passenger is aboard. Chauffeur hire
+  /// is billed from the moment the trip starts, so the two must not be
+  /// conflated. Read off the timeline rather than the clock, so it survives the
+  /// app being killed and relaunched mid-ride.
+  DateTime? get rideStartedAt {
+    for (final step in timeline) {
+      if (step.key == TripStatusV2.tripStarted.wireValue) return step.timestamp;
+    }
+    return null;
+  }
+
+  /// The pickup as the cards and the detail screen should render it.
+  ///
+  /// `pickupDate`/`pickupTime` name a time in the pickup city and carry no
+  /// zone, so they are shown exactly as sent; `pickupUTC` is an instant, and is
+  /// converted to device time here. Preferring the former keeps a driver whose
+  /// phone is on another timezone from being shown the wrong hour.
+  DateTime? get pickupDisplayInstant =>
+      route?.pickupWallClock ?? route?.pickupDateTime?.toLocal();
+
+  /// The server's own rendering of the pickup, used only when neither the wall
+  /// clock nor the instant came back.
+  String? get pickupLocalTimeFormatted => route?.pickupLocalTimeFormatted;
 
   /// Pickup address, falling back to the terminal or airport on an arrival where
   /// the pickup point is a gate rather than a street address.
   String? get pickupAddress =>
       route?.pickupLocation?.address ??
-      _joinNonEmpty([route?.terminalName, route?.airportName]);
+      _joinNonEmpty([route?.terminalName, route?.airportName]) ??
+      route?.cityFromName;
 
   /// Drop-off address. Null for chauffeur hire, which has no destination.
-  String? get dropOffAddress => route?.dropOffLocation?.address;
+  String? get dropOffAddress =>
+      route?.dropOffLocation?.address ??
+      (isChauffeur ? null : route?.cityToName);
+
+  /// Whether the trip has a destination to navigate to.
+  ///
+  /// Hourly chauffeur hire has none — the customer books the car by the hour
+  /// and directs it themselves — and the backend sends `0,0` rather than
+  /// omitting the field, so a null check alone would not catch it.
+  bool get hasDropOffPoint => (dropOffLat ?? 0) != 0 && (dropOffLng ?? 0) != 0;
 
   double? get pickupLat => route?.pickupLocation?.lat;
   double? get pickupLng => route?.pickupLocation?.lng;
   double? get dropOffLat => route?.dropOffLocation?.lat;
   double? get dropOffLng => route?.dropOffLocation?.lng;
 
-  /// Whether this is hourly chauffeur hire rather than a point-to-point transfer.
+  /// Whether this is hourly chauffeur hire rather than a point-to-point
+  /// transfer.
+  ///
+  /// A chauffeur booking reports its `chauffeurType` â `hourly`, or one of the
+  /// fixed packages â as its `serviceType`, so matching on the word
+  /// "chauffeur" alone missed every hourly hire. [TripServiceType.fromResponse]
+  /// knows all the spellings; the booked hours remain a fallback.
   bool get isChauffeur =>
-      (serviceType?.toLowerCase().contains('chauffeur') ?? false) ||
-      (route?.durationHours ?? 0) > 0;
+      resolvedServiceType?.isChauffeur ?? (route?.durationHours ?? 0) > 0;
+
+  /// Booked hours on chauffeur hire, or null on anything that is not hourly.
+  int? get durationHours {
+    final hours = route?.durationHours ?? 0;
+    return hours > 0 ? hours : null;
+  }
 
   int get passengersCount => customer?.passengersCount ?? 1;
 
@@ -521,24 +782,41 @@ class TripListPage {
     this.page = 1,
     this.limit = 10,
     this.total = 0,
-    this.totalPages = 1,
+    this.totalPages,
   });
 
   final List<TripV2> trips;
+
+  /// The page these trips are from — as the response echoed it, or as it was
+  /// asked for when the response said nothing.
+  ///
+  /// Defaulting a missing value to 1 is what would break paging outright: the
+  /// provider records it as the page it now holds, so every `loadMore` would
+  /// ask for page 2 again, forever.
   final int page;
+
   final int limit;
   final int total;
-  final int totalPages;
 
-  factory TripListPage.fromJson(Map<String, dynamic> json) {
+  /// Null when the response carried no pagination metadata at all.
+  final int? totalPages;
+
+  /// [requestedPage] and [requestedLimit] are what was asked for, and stand in
+  /// wherever the response does not say.
+  factory TripListPage.fromJson(
+    Map<String, dynamic> json, {
+    int requestedPage = 1,
+    int requestedLimit = 10,
+  }) {
     // Pagination arrives either nested under `meta`/`pagination` or flattened
-    // onto the payload; reading the wrong one would pin every filter to a single
-    // page, so both are tried.
+    // onto the payload; reading the wrong one would pin every filter to a
+    // single page, so both are tried.
     final meta = pickMap(json, const ['meta', 'pagination']);
     final source = meta.isNotEmpty ? meta : json;
 
-    final page = pickInt(source, const ['page', 'currentPage']) ?? 1;
-    final limit = pickInt(source, const ['limit', 'pageSize', 'perPage']) ?? 10;
+    final limit =
+        pickInt(source, const ['limit', 'pageSize', 'perPage']) ??
+        requestedLimit;
     final total =
         pickInt(source, const ['totalItems', 'total', 'totalCount']) ?? 0;
 
@@ -549,14 +827,24 @@ class TripListPage {
         'data',
         'items',
       ]).map(TripV2.fromJson).toList(),
-      page: page,
+      page: pickInt(source, const ['page', 'currentPage']) ?? requestedPage,
       limit: limit,
       total: total,
       totalPages:
           pickInt(source, const ['totalPages', 'pages']) ??
-          (total > 0 && limit > 0 ? (total + limit - 1) ~/ limit : 1),
+          (total > 0 && limit > 0 ? (total + limit - 1) ~/ limit : null),
     );
   }
 
-  bool get hasMore => page < totalPages;
+  /// Whether asking for another page is worth it.
+  ///
+  /// The metadata is believed when it is there. When it is not — and the
+  /// driver endpoint has been known to send a bare `{trips: [...]}` — a full
+  /// page is taken to mean there may be another, and a short one to mean the
+  /// end. Without that fallback the list would stop dead at ten trips.
+  bool get hasMore {
+    final pages = totalPages;
+    if (pages != null) return page < pages;
+    return limit > 0 && trips.length >= limit;
+  }
 }

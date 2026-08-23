@@ -254,6 +254,24 @@ abstract class AppLocalizations {
   /// **'Vehicle Type'**
   String get vehicleType;
 
+  /// No description provided for @assignedVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned Vehicle'**
+  String get assignedVehicle;
+
+  /// No description provided for @vehicleColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get vehicleColor;
+
+  /// No description provided for @bookedVehicleClass.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked Class'**
+  String get bookedVehicleClass;
+
   /// No description provided for @jeddah.
   ///
   /// In en, this message translates to:
@@ -2107,6 +2125,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete Trip'**
   String get actionCompleteTrip;
+
+  /// No description provided for @confirmStartDriving.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer will be told you are on your way, and can follow your location until the ride ends.'**
+  String get confirmStartDriving;
+
+  /// No description provided for @confirmArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer will be told you are waiting at the pickup point.'**
+  String get confirmArrived;
+
+  /// No description provided for @confirmStartTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the passenger is on board. The ride will be marked as under way.'**
+  String get confirmStartTrip;
+
+  /// No description provided for @confirmCompleteTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'This ends the ride and stops sharing your location. It cannot be undone.'**
+  String get confirmCompleteTrip;
 
   /// No description provided for @confirmStatusUpdate.
   ///

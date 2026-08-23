@@ -87,6 +87,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get vehicleType => 'نوع المركبة';
 
   @override
+  String get assignedVehicle => 'المركبة المعينة';
+
+  @override
+  String get vehicleColor => 'اللون';
+
+  @override
+  String get bookedVehicleClass => 'الفئة المحجوزة';
+
+  @override
   String get jeddah => 'جدة';
 
   @override
@@ -1045,6 +1054,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get actionCompleteTrip => 'إكمال الرحلة';
+
+  @override
+  String get confirmStartDriving =>
+      'سيتم إعلام العميل بأنك في الطريق، وسيتمكن من متابعة موقعك حتى نهاية الرحلة.';
+
+  @override
+  String get confirmArrived =>
+      'سيتم إعلام العميل بأنك في انتظاره في نقطة الانطلاق.';
+
+  @override
+  String get confirmStartTrip =>
+      'تأكد من أن الراكب داخل المركبة. سيتم تسجيل الرحلة كجارية.';
+
+  @override
+  String get confirmCompleteTrip =>
+      'سيؤدي هذا إلى إنهاء الرحلة وإيقاف مشاركة موقعك. لا يمكن التراجع عن ذلك.';
 
   @override
   String get confirmStatusUpdate => 'هل تريد المتابعة؟';
