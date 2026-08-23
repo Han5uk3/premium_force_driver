@@ -361,7 +361,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                           try {
                                             await launchUrl(url, mode: LaunchMode.externalApplication);
                                           } catch (e) {
-                                            debugPrint('Could not launch terms URL: $e');
+                                            // No handler for the URL — the tap does nothing.
                                           }
                                         },
                                       style: TextStyle(
@@ -389,7 +389,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                           try {
                                             await launchUrl(url, mode: LaunchMode.externalApplication);
                                           } catch (e) {
-                                            debugPrint('Could not launch privacy URL: $e');
+                                            // No handler for the URL — the tap does nothing.
                                           }
                                         },
                                       style: TextStyle(

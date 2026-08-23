@@ -304,8 +304,7 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
             _buildCard(child: _buildTimeline(trip, isArabic)),
           ],
 
-          const SizedBox(height: 16),
-          _buildPaymentSummary(loc, trip),
+         
           const SizedBox(height: 32),
         ],
       ),
@@ -445,73 +444,9 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     );
   }
 
-  Widget _buildPaymentSummary(AppLocalizations loc, TripV2 trip) {
-    final pricing = trip.pricing;
-    final extras = trip.extraCharges;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildSectionHeader(loc.paymentSummary),
-        _buildCard(
-          child: Column(
-            children: [
-              if (pricing?.totalAmount != null)
-                _buildAmountRow(loc.total, pricing!.totalAmount!),
-              if (extras != null && !extras.isEmpty) ...[
-                const SizedBox(height: 8),
-                _buildAmountRow(loc.extras, extras.amount),
-                if (extras.notes?.trim().isNotEmpty ?? false) ...[
-                  const SizedBox(height: 4),
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text(
-                      extras.notes!,
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-              const Divider(color: Colors.white10, height: 24),
-              _buildAmountRow(
-                loc.grandTotal,
-                pricing?.payable ?? 0,
-                emphasise: true,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
-  Widget _buildAmountRow(
-    String label,
-    double amount, {
-    bool emphasise = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: emphasise ? Colors.white : Colors.white54,
-            fontSize: emphasise ? 14 : 13,
-            fontWeight: emphasise ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        TripFare(
-          amount: amount,
-          color: emphasise ? const Color(0xFFE4A46B) : Colors.white70,
-          fontSize: emphasise ? 15 : 13,
-        ),
-      ],
-    );
-  }
+ 
 
   /// The progress stepper, rendered from the timeline the API returns so the
   /// wording matches what the customer sees.

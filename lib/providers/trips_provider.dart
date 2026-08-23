@@ -168,11 +168,6 @@ class TripsProvider extends ChangeNotifier {
       // even when the caller asked to refresh quietly.
       _statuses[filter] = TripsStatus.failure;
       _errors[filter] = result.message;
-    } else {
-      debugPrint(
-        '🚘 Trips │ ${filter.wireValue} refresh failed: '
-        '${result.message}',
-      );
     }
 
     notifyListeners();
@@ -218,8 +213,6 @@ class TripsProvider extends ChangeNotifier {
       // A page whose every trip was already held means the window has stopped
       // moving; asking again would loop on the same rows forever.
       _hasMore[filter] = page.hasMore && merged.length > existing.length;
-    } else {
-      debugPrint('🚘 Trips │ load more failed: ${result.message}');
     }
 
     _loadingMore.remove(filter);
@@ -233,7 +226,6 @@ class TripsProvider extends ChangeNotifier {
   Future<TripV2?> reloadTrip(String tripId) async {
     final result = await _api.getTripById(tripId);
     if (!result.hasData) {
-      debugPrint('🚘 Trips │ reload failed: ${result.message}');
       return null;
     }
 

@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/api/driver_api_v2.dart';
@@ -20,7 +19,6 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Firebase is already initialised by the time this is called, but
   // FlutterLocalNotifications may not be; initialise it here if you need to
   // show a notification from a data-only message in the background.
-  debugPrint('🔔 FCM [background] │ ${message.messageId}');
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -89,7 +87,6 @@ class NotificationService {
 
     // 5. Message-opened-from-notification-tray handler
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
-      debugPrint('🔔 FCM [opened-from-tray] │ ${msg.messageId}');
       onMessageReceived?.call(msg);
       onNotificationTap?.call(msg);
     });
@@ -97,9 +94,6 @@ class NotificationService {
     // 6. Handle messages that launched the app from terminated state
     final initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
-      debugPrint(
-        '🔔 FCM [launch-from-notification] │ ${initialMessage.messageId}',
-      );
       onMessageReceived?.call(initialMessage);
       onNotificationTap?.call(initialMessage);
     }
@@ -109,7 +103,6 @@ class NotificationService {
 
     // 8. Listen for token refreshes → update Hive automatically
     _fcm.onTokenRefresh.listen((newToken) async {
-      debugPrint('🔔 FCM │ Token refreshed');
       _fcmToken = newToken;
       await UserLocalStorage.saveFcmToken(newToken);
       await _updateTokenOnBackend(newToken);
@@ -122,14 +115,11 @@ class NotificationService {
   // ---------------------------------------------------------------------------
 
   Future<void> _requestPermission() async {
-    final settings = await _fcm.requestPermission(
+    await _fcm.requestPermission(
       alert: true,
       badge: true,
       sound: true,
       provisional: false,
-    );
-    debugPrint(
-      '🔔 FCM │ Permission status: ${settings.authorizationStatus.name}',
     );
 
     // iOS: needed to receive foreground notifications as banners
@@ -192,8 +182,6 @@ class NotificationService {
   // ---------------------------------------------------------------------------
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    debugPrint('🔔 FCM [foreground] │ ${message.notification?.title}');
-
     // The server already holds this notification; tell the app to re-read its
     // feed so the list and the unread badge pick it up.
     onMessageReceived?.call(message);
@@ -234,19 +222,6 @@ class NotificationService {
   Future<void> _fetchToken() async {
     try {
       _fcmToken = await _fcm.getToken();
-      // Print prominently so you can copy it from the console
-      // ignore: avoid_print
-      print('');
-      // ignore: avoid_print
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      // ignore: avoid_print
-      print('🔔  FCM TOKEN');
-      // ignore: avoid_print
-      print('$_fcmToken');
-      // ignore: avoid_print
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      // ignore: avoid_print
-      print('');
       // Persist immediately so the rest of the app can read it via Hive
       if (_fcmToken != null) {
         await UserLocalStorage.saveFcmToken(_fcmToken!);
@@ -256,15 +231,9 @@ class NotificationService {
       if (e.code == 'apns-token-not-set') {
         // iOS Simulator does not support APNS, so FCM cannot issue a token.
         // Push notifications will only work on a physical iOS device.
-        debugPrint(
-          '🔔 FCM │ ⚠️  Running on iOS Simulator — FCM tokens are not '
-          'available. Test push notifications on a real device.',
-        );
-      } else {
-        debugPrint('🔔 FCM │ Token fetch error: ${e.code} – ${e.message}');
       }
     } catch (e) {
-      debugPrint('🔔 FCM │ Token fetch error: $e');
+      // No token this run; push stays off until the next fetch attempt.
     }
   }
 
@@ -290,9 +259,9 @@ class NotificationService {
       await _fcm.deleteToken();
       _fcmToken = null;
       await UserLocalStorage.clearFcmToken();
-      debugPrint('🔔 FCM │ Token deleted');
     } catch (e) {
-      debugPrint('🔔 FCM │ Token delete error: $e');
+      // Best-effort on logout: a token that cannot be deleted now is replaced
+      // at the next login.
     }
   }
 
@@ -302,18 +271,12 @@ class NotificationService {
     final authToken = UserLocalStorage.getToken();
 
     if (uid != null && uid.isNotEmpty) {
-      debugPrint('🔔 FCM │ Syncing token with backend for user: $uid');
       try {
-        final response = await ApiService().updateFcmToken(
+        await ApiService().updateFcmToken(
           userid: uid,
           fcmToken: fcmToken,
           token: authToken,
         );
-        if (response['success'] == true) {
-          debugPrint('✅ FCM │ Token synced with backend');
-        } else {
-          debugPrint('⚠️ FCM │ Token sync failed: ${response['message']}');
-        }
 
         // The token only. Every path that reaches here has just sent the
         // driver's locale already — verify-otp and registration both carry it,
@@ -322,10 +285,8 @@ class NotificationService {
         // itself.
         await DriverApiV2().updateSettings(fcmToken: fcmToken);
       } catch (e) {
-        debugPrint('❌ FCM │ Token sync error: $e');
+        // Best-effort sync: the token is re-sent at the next login or refresh.
       }
-    } else {
-      debugPrint('🔔 FCM │ User not logged in, skipping backend sync');
     }
   }
 }

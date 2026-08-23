@@ -92,7 +92,7 @@ class BlockedPage extends StatelessWidget {
                   try {
                     await launchUrl(phoneLaunchUri);
                   } catch (e) {
-                    debugPrint('Could not launch phone: $e');
+                    // No dialler on this device — the tap does nothing.
                   }
                 },
               ),

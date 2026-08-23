@@ -70,7 +70,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         });
       }
     } catch (e) {
-      debugPrint('Error getting address: $e');
+      // Reverse geocoding failed — the address field keeps its previous value.
     }
   }
 
@@ -205,7 +205,6 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       final controller = await _mapController.future;
       controller.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng, 16));
     } catch (e) {
-      debugPrint('Error getting current location: $e');
       if (mounted) {
         AnimatedSnackBar.show(
           context,

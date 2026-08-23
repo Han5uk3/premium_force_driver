@@ -79,7 +79,6 @@ class NotificationsProvider extends ChangeNotifier {
         _status = NotificationFeedStatus.failure;
         _errorMessage = result.message;
       }
-      debugPrint('🔔 Feed │ refresh failed: ${result.message}');
     }
 
     notifyListeners();
@@ -107,8 +106,6 @@ class NotificationsProvider extends ChangeNotifier {
       _unreadCount = feed.unreadCount;
       _page = feed.page;
       _totalPages = feed.totalPages;
-    } else {
-      debugPrint('🔔 Feed │ load more failed: ${result.message}');
     }
 
     _isLoadingMore = false;

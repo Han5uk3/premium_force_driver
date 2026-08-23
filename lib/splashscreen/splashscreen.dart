@@ -31,32 +31,24 @@ class _SplashScreenState extends State<SplashScreen> {
 
     try {
       // Show splash for at least 3 seconds while checking auth in parallel
-      debugPrint('⏱️ Starting splash delay and auth check...');
       await Future.wait([
         authProvider.checkAuth(),
         Future.delayed(const Duration(seconds: 3)),
       ]);
     } catch (e) {
-      debugPrint('❌ Splash Screen Auth Check Error: $e');
+      // Auth check failed; the unauthenticated branch below routes to Login.
     }
 
     if (!mounted) return;
 
-    debugPrint(
-      '🚀 Auth status: ${authProvider.status}, Driver: ${authProvider.driver?.fullName}',
-    );
-
     if (authProvider.status == AuthStatus.authenticated &&
         authProvider.driver != null) {
       if (authProvider.driver?.isActive == false) {
-        debugPrint('🚫 Session valid but deactivated — navigating to BlockedPage');
         Navigator.pushReplacement(context, SmoothNavigation.route(const BlockedPage()));
       } else {
-        debugPrint('💾 Session valid — navigating to Home');
         Navigator.pushReplacement(context, SmoothNavigation.route(const Home()));
       }
     } else {
-      debugPrint('👋 No active session — navigating to Login');
       Navigator.pushReplacement(
         context,
         SmoothNavigation.route(const PremiumForceLoginPage()),

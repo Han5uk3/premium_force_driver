@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 
@@ -48,12 +47,9 @@ class TokenService {
       final refreshToken = UserLocalStorage.getRefreshToken();
 
       if (refreshToken == null || refreshToken.isEmpty) {
-        debugPrint('❌ Token Refresh │ No refresh token available');
         _isRefreshing = false;
         return false;
       }
-
-      debugPrint('🔄 Token Refresh │ Refreshing access token...');
 
       final result = await _apiService.refreshAccessToken(
         refreshToken: refreshToken,
@@ -71,21 +67,17 @@ class TokenService {
             expiryDurationSeconds: expiresIn ?? 3600,
           );
 
-          debugPrint('✅ Token Refresh │ Token refreshed successfully');
           _isRefreshing = false;
           return true;
         } else {
-          debugPrint('❌ Token Refresh │ No access token in refresh response');
           _isRefreshing = false;
           return false;
         }
       } else {
-        debugPrint('❌ Token Refresh │ Failed: ${result['message']}');
         _isRefreshing = false;
         return false;
       }
     } catch (e) {
-      debugPrint('❌ Token Refresh │ Error: $e');
       _isRefreshing = false;
       return false;
     }

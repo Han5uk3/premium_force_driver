@@ -41,7 +41,6 @@ void main() async {
     );
   } catch (e) {
     if (e.toString().contains('duplicate-app')) {
-      debugPrint('⚠️ Firebase already initialized, skipping...');
     } else {
       rethrow;
     }
@@ -67,7 +66,6 @@ void main() async {
 /// Invoked when the user taps a notification (foreground banner, tray, or
 /// when the app is launched from a terminated-state notification).
 void _handleNotificationTap(RemoteMessage message) {
-  debugPrint('🔔 Notification tapped │ Opening app');
   navigatorKey.currentState?.push(
     MaterialPageRoute(builder: (_) => const NotificationsPage()),
   );
@@ -117,13 +115,7 @@ class _MainAppState extends State<MainApp> {
           locale: languageCode,
           fcmToken: UserLocalStorage.getFcmToken(),
         )
-        .then((result) {
-          if (result.success) {
-            debugPrint('🌐 Locale │ synced with backend: $languageCode');
-          } else {
-            debugPrint('🌐 Locale │ sync failed: ${result.message}');
-          }
-        });
+        .then((result) {});
   }
 
   @override

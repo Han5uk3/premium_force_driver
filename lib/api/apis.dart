@@ -67,8 +67,6 @@ class ApiService {
         onError: (e, handler) async {
           // If we get a 401 Unauthorized, try to refresh the token
           if (e.response?.statusCode == 401) {
-            debugPrint('🌐 API │ 401 detected on ${e.requestOptions.path}');
-
             // Avoid infinite loop if refresh itself fails with 401
             if (e.requestOptions.path.contains('refresh-token')) {
               onSessionExpired?.call();
@@ -78,10 +76,6 @@ class ApiService {
             try {
               final newToken = await ensureValidToken();
               if (newToken != null) {
-                debugPrint(
-                  '🌐 API │ Token refreshed successfully, retrying original request...',
-                );
-
                 // Update header and retry
                 final options = e.requestOptions;
                 options.headers['Authorization'] = 'Bearer $newToken';
@@ -92,7 +86,6 @@ class ApiService {
                 onSessionExpired?.call();
               }
             } catch (retryError) {
-              debugPrint('🌐 API │ Global retry failed: $retryError');
               onSessionExpired?.call();
             }
           }
@@ -134,7 +127,6 @@ class ApiService {
   Future<String?> ensureValidToken({bool forceRefresh = false}) async {
     // 1. If another refresh task is already running, wait for its result.
     if (_refreshFuture != null) {
-      debugPrint('🔄 Token Service │ Waiting for existing refresh task...');
       try {
         return await _refreshFuture;
       } catch (_) {
@@ -164,13 +156,11 @@ class ApiService {
   Future<String?> _refreshInternal() async {
     final refreshToken = UserLocalStorage.getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
-      debugPrint('❌ Token Service │ Cannot refresh: no refresh token stored');
       onSessionExpired?.call();
       return null;
     }
 
     try {
-      debugPrint('🔄 Token Service │ Auto-refreshing access token...');
       final result = await refreshAccessToken(refreshToken: refreshToken);
 
       if (result['success'] == true) {
@@ -202,18 +192,13 @@ class ApiService {
             refreshToken: newRefreshToken ?? refreshToken,
             expiryDurationSeconds: expiresIn,
           );
-          debugPrint('✅ Token Service │ Access token refreshed successfully');
           return newAccessToken;
         }
       }
 
-      debugPrint(
-        '❌ Token Service │ Failed to refresh token: ${result['message']}',
-      );
       onSessionExpired?.call();
       return null;
     } catch (e) {
-      debugPrint('❌ Token Service │ Error: $e');
       onSessionExpired?.call();
       return null;
     }
@@ -275,12 +260,8 @@ class ApiService {
           ..._localePayload(locale, fcmToken),
         },
       );
-      debugPrint('Verify OTP Full Response: ${response.data}');
       return _success(response);
     } catch (e) {
-      if (e is DioException) {
-        debugPrint('Verify OTP Error Response: ${e.response?.data}');
-      }
       return _handleError(e);
     }
   }
@@ -312,18 +293,13 @@ class ApiService {
     try {
       final data = {'idToken': idToken};
 
-      debugPrint('🔐 Google Auth │ Sending data: $data');
-
       final response = await _dio.post(
         'http://54.252.191.113:5000/auth/google',
         data: data,
       );
 
-      debugPrint('🔐 Google Auth │ Response: ${response.data}');
-
       return _success(response);
     } catch (e) {
-      debugPrint('🔐 Google Auth │ Error: $e');
       return _handleError(e);
     }
   }
@@ -410,7 +386,6 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      debugPrint('getUserById error: $e');
       return null;
     }
   }
@@ -504,7 +479,6 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      debugPrint('getDriverById error: $e');
       return null;
     }
   }
@@ -875,7 +849,6 @@ class ApiService {
           message = 'Something went wrong. Please try again.';
       }
 
-      debugPrint('🌐 API │ Error [$statusCode]: $message');
       return {
         'success': false,
         'statusCode': statusCode,
@@ -884,7 +857,6 @@ class ApiService {
       };
     }
 
-    debugPrint('🌐 API │ Unexpected error: $error');
     return {
       'success': false,
       'message': 'Something went wrong. Please try again.',

@@ -34,7 +34,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     super.dispose();
   }
 
-
   /// Formats seconds as mm:ss (e.g. 01:05).
   String _formatCountdown(int seconds) {
     final m = (seconds ~/ 60).toString().padLeft(2, '0');
@@ -63,14 +62,12 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
 
     if (authProvider.status == AuthStatus.authenticated) {
       if (authProvider.driver?.isActive == false) {
-        debugPrint('🚫 Driver deactivated — navigating to BlockedPage');
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const BlockedPage()),
           (route) => false,
         );
       } else {
         // ── Existing user → go straight to Home ──
-        debugPrint('✅ Existing user — navigating to Home');
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => Home()),
           (route) => false,
@@ -78,7 +75,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       }
     } else if (authProvider.status == AuthStatus.otpVerified) {
       // ── New user → go to SignUp ──
-      debugPrint('🆕 New user — navigating to SignUp');
       Navigator.of(context).push(
         SmoothNavigation.route(
           SignUpPage(
@@ -209,7 +205,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                   ),
                 ),
                 onCompleted: (pin) {
-                  debugPrint('OTP Completed: $pin');
                 },
               ),
 

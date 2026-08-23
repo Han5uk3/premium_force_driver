@@ -185,10 +185,6 @@ class TrackingService with ChangeNotifier {
         if (isTrackingBooking(trip.id)) return;
 
         if (!await hasAllPermissions()) {
-          debugPrint(
-            '📍 [Tracking] Ride ${trip.id} is live but location permission is '
-            'missing — not sharing',
-          );
           return;
         }
 
@@ -235,7 +231,6 @@ class TrackingService with ChangeNotifier {
         'rideStartedAt': ServerValue.timestamp,
       });
     });
-    debugPrint('▶️ [Tracking] Ride clock started for booking ${trip.id}');
   }
 
   /// Move the customer's map onto the leg [trip] is now on.
@@ -258,9 +253,6 @@ class TrackingService with ChangeNotifier {
     await _writeSession(trip.id, (ref) async {
       await ref.update({'phase': phase.wireValue});
     });
-    debugPrint(
-      '🗺️ [Tracking] Leg is now ${phase.wireValue} for booking ${trip.id}',
-    );
   }
 
   /// Reconcile against every trip the backend currently calls active.
@@ -277,7 +269,6 @@ class TrackingService with ChangeNotifier {
     // and that ride still has to be closed.
     return _serialize(() async {
       if (_currentBookingId == null) return;
-      debugPrint('📍 [Tracking] No live ride left — stopping');
       await _stop();
     });
   }
@@ -292,9 +283,7 @@ class TrackingService with ChangeNotifier {
   /// transition nor surface as an unhandled error in the fire-and-forget
   /// callers.
   Future<void> _serialize(Future<void> Function() action) {
-    final guarded = _pending.then((_) => action()).catchError((Object e) {
-      debugPrint('❌ [Tracking] transition failed: $e');
-    });
+    final guarded = _pending.then((_) => action()).catchError((Object e) {});
     _pending = guarded;
     return guarded;
   }
@@ -483,7 +472,6 @@ class TrackingService with ChangeNotifier {
       'isPaused': true,
       'pausedAt': ServerValue.timestamp,
     });
-    debugPrint('🟠 [Tracking] Paused for $targetId');
     notifyListeners();
   }
 
@@ -498,7 +486,6 @@ class TrackingService with ChangeNotifier {
       'isPaused': false,
       'resumedAt': ServerValue.timestamp,
     });
-    debugPrint('🟢 [Tracking] Resumed for $targetId');
     notifyListeners();
 
     await _publishCurrentPosition(targetId);
@@ -544,7 +531,6 @@ class TrackingService with ChangeNotifier {
         'startedAt': ServerValue.timestamp,
       });
     });
-    debugPrint('🚀 [Tracking] Sharing started for booking $bookingId');
     notifyListeners();
 
     // The stream only fires on the next fix, so without this the customer
@@ -556,9 +542,7 @@ class TrackingService with ChangeNotifier {
           locationSettings: _locationSettings(),
         ).listen(
           (position) => _onPosition(bookingId, position),
-          onError: (Object error) {
-            debugPrint('❌ [Tracking] Position stream error: $error');
-          },
+          onError: (Object error) {},
         );
     notifyListeners();
   }
@@ -590,7 +574,6 @@ class TrackingService with ChangeNotifier {
         'stoppedAt': ServerValue.timestamp,
       }),
     );
-    debugPrint('🛑 [Tracking] Sharing stopped for booking $bookingId');
 
     _currentBookingId = null;
     _phase = null;
@@ -696,11 +679,9 @@ class TrackingService with ChangeNotifier {
     try {
       await write(ref).timeout(_sessionWriteTimeout);
     } on TimeoutException {
-      debugPrint(
-        '⏳ [Tracking] Session write for $bookingId is queued — carrying on',
-      );
+      // Per the doc above: never worth failing a ride start or stop over.
     } catch (e) {
-      debugPrint('❌ [Tracking] Session write for $bookingId failed: $e');
+      // Same — the pending write still lands on reconnect.
     }
   }
 
@@ -724,7 +705,7 @@ class TrackingService with ChangeNotifier {
         _write(bookingId, position);
       }
     } catch (e) {
-      debugPrint('⚠️ [Tracking] No immediate fix available: $e');
+      // No fix available right now; the position stream publishes the next one.
     }
   }
 
@@ -744,7 +725,6 @@ class TrackingService with ChangeNotifier {
           'timestamp': ServerValue.timestamp,
         })
         .catchError((Object error) {
-          debugPrint('❌ [Tracking] Location write failed: $error');
           // Let the next fix retry rather than wait out the heartbeat.
           _lastPublished = null;
           _lastPublishedAt = null;

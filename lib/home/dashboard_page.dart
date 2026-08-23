@@ -1,4 +1,3 @@
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -56,7 +55,6 @@ class _DashboardPageState extends State<DashboardPage> {
       final api = ApiService();
       final response = await api.getAvailableFleets();
       if (response['success'] == true) {
-        log('Available fleets: ${response['data']}');
         setState(() {
           _availableFleets = response['data'] ?? [];
         });

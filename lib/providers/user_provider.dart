@@ -36,15 +36,12 @@ class UserProvider extends ChangeNotifier {
       if (fetchedUser != null) {
         _user = fetchedUser;
         _status = UserStatus.loaded;
-        debugPrint('✅ User loaded: ${fetchedUser.username}');
       } else {
         _status = UserStatus.failure;
         _errorMessage = 'User not found';
-        debugPrint('⚠️ User not found by id: $uid');
       }
       notifyListeners();
     } catch (e) {
-      debugPrint('Load User error: $e');
       _status = UserStatus.failure;
       _errorMessage = e.toString();
       notifyListeners();
@@ -90,7 +87,6 @@ class UserProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      debugPrint('Update User error: $e');
       _status = UserStatus.failure;
       _errorMessage = e.toString();
       notifyListeners();

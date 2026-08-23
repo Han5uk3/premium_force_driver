@@ -24,8 +24,9 @@ class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final authProvider = context.watch<AuthProvider>();
-    debugPrint("Driver UID: ${authProvider.driver?.uid}");
+    // Nothing in this tree reads the driver, but the page is kept subscribed so
+    // it rebuilds when the session changes (e.g. a logout elsewhere).
+    context.watch<AuthProvider>();
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -70,7 +71,7 @@ class _AccountPageState extends State<AccountPage> {
                   try {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
                   } catch (e) {
-                    debugPrint('Could not launch terms URL: $e');
+                    // No handler for the URL on this device — the tap does nothing.
                   }
                 },
                 child: profileTile(
@@ -87,7 +88,7 @@ class _AccountPageState extends State<AccountPage> {
                   try {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
                   } catch (e) {
-                    debugPrint('Could not launch privacy URL: $e');
+                    // No handler for the URL on this device — the tap does nothing.
                   }
                 },
                 child: profileTile(

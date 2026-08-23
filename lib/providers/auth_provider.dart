@@ -129,14 +129,12 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     final id = driverId ?? UserLocalStorage.getUserId();
     if (id == null || id.isEmpty) {
-      debugPrint('⚠️ Cannot fetch driver: no driverId stored');
       return null;
     }
 
     // Use ensureValidToken to handle auto-refresh if needed
     final token = await _api.ensureValidToken(forceRefresh: forceTokenRefresh);
     if (token == null) {
-      debugPrint('⚠️ Cannot fetch driver: no valid token available');
       return null;
     }
 
@@ -147,9 +145,6 @@ class AuthProvider extends ChangeNotifier {
       // Persist the full profile locally
       await UserLocalStorage.saveDriver(result.toJson());
       notifyListeners();
-      debugPrint('✅ Fetched driver from backend: ${result.fullName}');
-    } else {
-      debugPrint('⚠️ Failed to fetch driver by id: $id');
     }
   
     return result;
@@ -176,10 +171,6 @@ class AuthProvider extends ChangeNotifier {
       final hasToken = UserLocalStorage.getToken() != null;
       final cachedDriverJson = UserLocalStorage.getDriver();
 
-      debugPrint(
-        '🔍 Checking Auth: id=$storedDriverId, hasToken=$hasToken, hasCachedDriver=${cachedDriverJson != null}',
-      );
-
       if (storedDriverId != null && storedDriverId.isNotEmpty) {
         // 1. Restore from cache first for immediate UI update
         if (cachedDriverJson != null) {
@@ -187,9 +178,9 @@ class AuthProvider extends ChangeNotifier {
             _driver = DriverModel.fromJson(cachedDriverJson);
             _status = AuthStatus.authenticated;
             notifyListeners();
-            debugPrint('📦 Restored driver from local cache: ${_driver!.fullName}');
           } catch (e) {
-            debugPrint('⚠️ Failed to parse cached driver: $e');
+            // Cached profile is unreadable (its shape changed between releases).
+            // The backend refresh below repopulates it.
           }
         }
 
@@ -206,15 +197,12 @@ class AuthProvider extends ChangeNotifier {
           // Sync FCM token with backend after successful auth check if user is logged in
           unawaited(NotificationService.instance.syncTokenWithBackend());
           
-          debugPrint('✅ Session refreshed from backend: ${fetchedDriver.fullName}');
         } else {
           // If fetch fails but we have cached data and a token, stay authenticated
           if (_driver != null && hasToken) {
             _status = AuthStatus.authenticated;
-            debugPrint('⚠️ Backend fetch failed, staying authenticated with cached data');
           } else {
             _status = AuthStatus.unauthenticated;
-            debugPrint('⚠️ Could not restore session — fetchDriver returned null and no usable cache');
           }
         }
       } else {
@@ -222,7 +210,6 @@ class AuthProvider extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      debugPrint('❌ Check Auth error: $e');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
     }
@@ -279,7 +266,6 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      debugPrint('Request OTP error: $e');
       _isOtpLoading = false;
       _errorMessage = 'Failed to send OTP. Please try again.';
       _status = AuthStatus.failure;
@@ -384,9 +370,6 @@ class AuthProvider extends ChangeNotifier {
           _status = AuthStatus.authenticated;
           _phoneNumber = phoneNumber;
           _resendCountdown = 0;
-          debugPrint(
-            '✅ Driver logged in: ${_driver!.fullName} (ID: ${_driver!.uid})',
-          );
           
           // Sync FCM token with backend after successful login
           unawaited(NotificationService.instance.syncTokenWithBackend());
@@ -394,7 +377,6 @@ class AuthProvider extends ChangeNotifier {
           // No driver data found (should not happen for registered drivers)
           _errorMessage = 'Failed to fetch driver data';
           _status = AuthStatus.failure;
-          debugPrint('❌ No driver data in OTP verification response');
         }
 
         notifyListeners();
@@ -405,7 +387,6 @@ class AuthProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Verify OTP error: $e');
       _isOtpLoading = false;
       _errorMessage = 'Verification failed. Please try again.';
       _status = AuthStatus.failure;
@@ -507,7 +488,6 @@ class AuthProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Submit Driver Registration error: $e');
       _status = AuthStatus.failure;
       _errorMessage = e.toString();
       notifyListeners();
@@ -565,7 +545,6 @@ class AuthProvider extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      debugPrint('Update Driver Profile error: $e');
       _errorMessage = e.toString();
       return false;
     }
@@ -598,7 +577,6 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      debugPrint('Update profile image error: $e');
       _isOtpLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
@@ -636,7 +614,6 @@ class AuthProvider extends ChangeNotifier {
       }
       return false;
     } catch (e) {
-      debugPrint('Token refresh error: $e');
       return false;
     }
   }
@@ -671,7 +648,6 @@ class AuthProvider extends ChangeNotifier {
       _status = AuthStatus.unauthenticated;
       notifyListeners();
     } catch (e) {
-      debugPrint('Logout error: $e');
       _status = AuthStatus.failure;
       _errorMessage = e.toString();
       notifyListeners();
@@ -710,7 +686,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return null;
     } catch (e) {
-      debugPrint('Fetch driver profile error: $e');
       _isOtpLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
@@ -742,7 +717,6 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      debugPrint('Toggle work status error: $e');
       _errorMessage = e.toString();
       notifyListeners();
       return false;
@@ -769,7 +743,6 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      debugPrint('Take out fleet error: $e');
       _isOtpLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
@@ -800,7 +773,6 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      debugPrint('Return fleet error: $e');
       _errorMessage = e.toString();
       notifyListeners();
       return false;

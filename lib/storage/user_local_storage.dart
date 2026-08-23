@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// Local storage service using Hive for persisting minimal user credentials.
@@ -48,7 +47,6 @@ class UserLocalStorage {
   static Future<void> init() async {
     await Hive.initFlutter();
     _box = await Hive.openBox(_boxName);
-    debugPrint('💾 UserLocalStorage initialized');
   }
 
   // ---------------------------------------------------------------------------
@@ -62,7 +60,6 @@ class UserLocalStorage {
   }) async {
     await _box.put(_userIdKey, userId);
     await _box.put(_phoneNumberKey, phoneNumber);
-    debugPrint('💾 User credentials saved: id=$userId, phone=$phoneNumber');
   }
 
   /// Retrieve the stored userId, or `null` if not logged in.
@@ -83,7 +80,6 @@ class UserLocalStorage {
     await _box.delete(_refreshTokenKey);
     await _box.delete(_tokenExpiryKey);
     await _box.delete(_driverProfileKey);
-    debugPrint('💾 User data cleared');
   }
 
   // ---------------------------------------------------------------------------
@@ -124,7 +120,6 @@ class UserLocalStorage {
     final expiryMs = DateTime.now().add(Duration(seconds: seconds)).millisecondsSinceEpoch;
     await _box.put(_tokenExpiryKey, expiryMs);
 
-    debugPrint('💾 Tokens saved (expires in ${seconds}s)');
   }
 
   /// Check if access token is expired or about to expire (within 5 minutes).
@@ -180,7 +175,6 @@ class UserLocalStorage {
   /// Persist the FCM registration token.
   static Future<void> saveFcmToken(String token) async {
     await _box.put(_fcmTokenKey, token);
-    debugPrint('💾 FCM token saved');
   }
 
   /// Retrieve the stored FCM token, or `null` if never saved.
