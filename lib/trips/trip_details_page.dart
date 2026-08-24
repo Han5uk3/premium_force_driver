@@ -7,7 +7,6 @@ import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
 import 'package:premium_force_driver/providers/trips_provider.dart';
 import 'package:premium_force_driver/trips/trip_actions.dart';
-import 'package:premium_force_driver/trips/trip_card.dart' show TripFare;
 import 'package:premium_force_driver/trips/trip_controls.dart';
 import 'package:premium_force_driver/utils/trip_display.dart';
 

@@ -165,8 +165,21 @@ abstract final class TripActions {
 
     // Only one ride can be under way: the tracking session is keyed by booking,
     // and the customer of the other ride would stop seeing their driver.
+    //
+    // Two sources, because either alone has a blind spot. The backend's active
+    // list is authoritative but can be a refresh behind — a ride started on
+    // another device, or seconds ago on this one, may not be in it yet. The
+    // tracking service knows what this app is publishing right now, including
+    // a session the driver paused: pausing stops the writes, not the ride, so
+    // it still blocks. Whichever notices first wins.
     final live = provider.liveTrip;
     if (live != null && live.id != trip.id) return loc.finishActiveTripFirst;
+
+    final tracking = TrackingService();
+    final trackedId = tracking.currentBookingId;
+    if (tracking.isTracking && trackedId != null && trackedId != trip.id) {
+      return loc.finishActiveTripFirst;
+    }
 
     return null;
   }

@@ -79,7 +79,12 @@ class TrackingService with ChangeNotifier {
   ///
   /// Below this the difference is mostly GPS jitter, and writing it would pay
   /// for a marker that does not visibly move.
-  static const double _minWriteDistanceMeters = 10;
+  ///
+  /// At 50m a car in city traffic publishes every few seconds and one on a
+  /// motorway about twice that; the customer app interpolates between the fixes
+  /// it receives, so the marker still slides rather than stepping. Raising this
+  /// further would start to show as the drawn car lagging the real one.
+  static const double _minWriteDistanceMeters = 50;
 
   /// The longest a published position may go unrefreshed while sharing.
   ///

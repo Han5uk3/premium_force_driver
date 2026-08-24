@@ -107,6 +107,29 @@ class TripsProvider extends ChangeNotifier {
   TripV2? get liveTrip =>
       _activeTrips.where((t) => t.status.isLive).firstOrNull;
 
+  /// The ride the driver is actually on — live *and* being published.
+  ///
+  /// Stricter than [liveTrip], which reads the backend's status alone. A ride
+  /// counts here only once the driver has set off (`driver_en_route` onwards)
+  /// and the location feed for that booking is open. A paused feed still
+  /// counts: pausing stops the writes, not the session, so the ride is under
+  /// way until the driver completes it.
+  ///
+  /// The status alone is not enough for the dashboard's active-ride card,
+  /// because the backend can report a live ride the app is not publishing —
+  /// the app was killed, or the location permission was revoked. That case is
+  /// not an active ride to be watched; it is a problem to be fixed, which is
+  /// what `SharingRestoreBanner` is for.
+  ///
+  /// Note for callers: this reads [TrackingService], which is a separate
+  /// notifier. Widgets that show it must listen to that as well as to this
+  /// provider, or they will not rebuild when sharing starts or stops.
+  TripV2? get activeRide {
+    final trip = liveTrip;
+    if (trip == null) return null;
+    return _tracking.isTrackingBooking(trip.id) ? trip : null;
+  }
+
   /// The next trip the driver is expected to start.
   TripV2? get nextTrip =>
       liveTrip ??

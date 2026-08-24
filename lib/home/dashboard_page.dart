@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
@@ -11,6 +10,8 @@ import 'package:premium_force_driver/trips/trip_card.dart';
 import 'package:premium_force_driver/trips/trip_details_page.dart';
 import 'package:premium_force_driver/providers/notifications_provider.dart';
 import 'package:premium_force_driver/home/notifications_page.dart';
+import 'package:premium_force_driver/common_widgets/sharing_restore_banner.dart';
+import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/home/home.dart';
 
@@ -21,7 +22,8 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends State<DashboardPage>
+    with WidgetsBindingObserver {
   bool _isLoadingFleets = false;
   List<dynamic> _availableFleets = [];
   bool _isTogglingStatus = false;
@@ -29,6 +31,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Load profile and trips on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -39,6 +42,28 @@ class _DashboardPageState extends State<DashboardPage> {
         context.read<NotificationsProvider>().refresh();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || !mounted) return;
+
+    // Re-read the active list on every return to the app, because reading it is
+    // what reconciles location sharing — `refreshFilter` hands it to
+    // `TrackingService.syncWithActiveTrips`. Without this the reconcile only
+    // ran when this page was first built, so a driver who left the app, had
+    // their location permission revoked or their foreground service killed by
+    // the OS, and came back, resumed nothing and was told nothing.
+    context.read<TripsProvider>().refreshFilter(
+      TripFilterV2.active,
+      silent: true,
+    );
   }
 
   Future<void> _handleRefresh() async {
@@ -506,9 +531,6 @@ class _DashboardPageState extends State<DashboardPage> {
     final activeCount = tripsProvider.activeCount;
     final completedCount = tripsProvider.completedCount;
 
-    // The ride under way, or the next one the driver is due to start.
-    final TripV2? activeTrip = tripsProvider.nextTrip;
-
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -878,64 +900,80 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Current active card
-                if (activeTrip != null)
-                  TripCard(
-                    trip: activeTrip,
-                    onTap: () => _openTrip(activeTrip),
-                    onAction: () => TripActions.advance(context, activeTrip),
-                    isUpdating:
-                        tripsProvider.updatingTripId == activeTrip.id,
-                  )
-                else
-                  Card(
-                    color: const Color(0xFF1E1E1E),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 30,
+                // Above the card it is about: a live ride whose position is
+                // not reaching the customer, with the one action that fixes
+                // it. Draws nothing in the ordinary case.
+                SharingRestoreBanner(liveTrip: tripsProvider.liveTrip),
+
+                // The ride under way, or the empty state.
+                //
+                // Both branches sit inside the builder because the condition —
+                // `activeRide` — reads TrackingService, which notifies
+                // separately from the provider. Deciding outside it would leave
+                // the card stale when sharing starts or stops.
+                ListenableBuilder(
+                  listenable: TrackingService(),
+                  builder: (context, _) {
+                    final ride = tripsProvider.activeRide;
+                    if (ride != null) {
+                      return TripCard(
+                        trip: ride,
+                        onTap: () => _openTrip(ride),
+                        onAction: () => TripActions.advance(context, ride),
+                        isUpdating: tripsProvider.updatingTripId == ride.id,
+                      );
+                    }
+
+                    return Card(
+                      color: const Color(0xFF1E1E1E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade800,
-                                shape: BoxShape.circle,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 30,
+                        ),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade800,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.map_outlined,
+                                  size: 30,
+                                  color: Colors.white60,
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.map_outlined,
-                                size: 30,
-                                color: Colors.white60,
+                              const SizedBox(height: 16),
+                              Text(
+                                loc.noActiveRide,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              loc.noActiveRide,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(height: 6),
+                              Text(
+                                loc.activeRideTip,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white60,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              loc.activeRideTip,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.white60,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
+                ),
                 const SizedBox(
                   height: 100,
                 ), // extra padding for bottom navigation

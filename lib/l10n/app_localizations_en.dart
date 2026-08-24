@@ -884,6 +884,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resumeTracking => 'Resume Tracking';
 
   @override
+  String get locationSharingOffTitle => 'Location sharing is off';
+
+  @override
+  String get locationSharingOffMessage =>
+      'Your ride is under way but the customer cannot see where you are.';
+
+  @override
   String get trackingPaused => 'Tracking Paused';
 
   @override

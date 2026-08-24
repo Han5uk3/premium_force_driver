@@ -278,6 +278,8 @@
   "locationPermissionAlwaysRequired": "Background location permission is required for the driver app to update your position while you are on the move. Please select 'Allow all the time' in settings.",
   "pauseTracking": "Pause Tracking",
   "resumeTracking": "Resume Tracking",
+  "locationSharingOffTitle": "Location sharing is off",
+  "locationSharingOffMessage": "Your ride is under way but the customer cannot see where you are.",
   "trackingPaused": "Tracking Paused",
   "trackingResumed": "Tracking Resumed",
   "hello": "Hello,",

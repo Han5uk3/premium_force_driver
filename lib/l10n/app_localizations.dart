@@ -1766,6 +1766,18 @@ abstract class AppLocalizations {
   /// **'Resume Tracking'**
   String get resumeTracking;
 
+  /// No description provided for @locationSharingOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location sharing is off'**
+  String get locationSharingOffTitle;
+
+  /// No description provided for @locationSharingOffMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ride is under way but the customer cannot see where you are.'**
+  String get locationSharingOffMessage;
+
   /// No description provided for @trackingPaused.
   ///
   /// In en, this message translates to:
