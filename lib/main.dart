@@ -123,7 +123,7 @@ class _MainAppState extends State<MainApp> {
     final double bottomPadding = MediaQueryData.fromView(
       View.of(context),
     ).padding.bottom;
-    final bool isThickNavBar = bottomPadding > 24.0;
+    final bool isThickNavBar = bottomPadding >= 24.0;
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -146,6 +146,23 @@ class _MainAppState extends State<MainApp> {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
+          // The app declared no theme at all, so every text field inherited
+          // Material's defaults — which is why the selection handle came up
+          // purple. Only the selection colours are set here; everything else
+          // stays at the default this app was already running on.
+          theme: ThemeData(
+            textSelectionTheme: const TextSelectionThemeData(
+              // Every screen here is dark, and the country picker's search
+              // field takes its cursor from the ambient theme — it has no
+              // setting of its own. A field that wants a different cursor
+              // still overrides this locally.
+              cursorColor: Colors.white,
+              // Silver, matching the app's own accent grey, in place of the
+              // Material purple.
+              selectionHandleColor: Color(0xFFC0C0C0),
+              selectionColor: Color(0x55C0C0C0),
+            ),
+          ),
           home: const SplashScreen(),
         ),
       ),

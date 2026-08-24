@@ -1,6 +1,10 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:pinput/pinput.dart';
+import 'package:smart_auth/smart_auth.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
@@ -23,15 +27,62 @@ class OTPVerificationPage extends StatefulWidget {
 }
 
 class _OTPVerificationPageState extends State<OTPVerificationPage> {
+  static const int _otpLength = 6;
+
+  /// Matches an [_otpLength]-digit run that isn't part of a longer number, so a
+  /// phone number or an order id in the same message is not mistaken for a code.
+  static const String _smsCodeMatcher = '(?<!\\d)\\d{$_otpLength}(?!\\d)';
+
   final TextEditingController _otpController = TextEditingController();
   final FocusNode _otpFocusNode = FocusNode();
   bool _isVerifying = false;
 
+  /// Guards against stacking SMS User Consent listeners across resends.
+  bool _isListeningForSms = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _listenForSmsCode();
+  }
+
   @override
   void dispose() {
+    if (_isListeningForSms) {
+      SmartAuth.instance.removeUserConsentApiListener();
+    }
     _otpController.dispose();
     _otpFocusNode.dispose();
     super.dispose();
+  }
+
+  /// Android SMS autofill via the SMS User Consent API.
+  ///
+  /// Registers a one-shot listener; Android shows its own consent dialog when a
+  /// matching SMS arrives, and only on approval do we get the message body.
+  /// The listener is one-shot by design, so this is called again after a resend.
+  ///
+  /// iOS needs nothing here: the Pinput field advertises
+  /// [AutofillHints.oneTimeCode] inside an [AutofillGroup], which is what drives
+  /// the QuickType "From Messages" suggestion above the keyboard.
+  Future<void> _listenForSmsCode() async {
+    if (!Platform.isAndroid || _isListeningForSms) return;
+
+    _isListeningForSms = true;
+    final res = await SmartAuth.instance.getSmsWithUserConsentApi(
+      matcher: _smsCodeMatcher,
+    );
+    _isListeningForSms = false;
+
+    // The page may have been popped while we were waiting on the user, which
+    // would leave _otpController disposed.
+    if (!mounted) return;
+
+    final code = res.hasData ? res.requireData.code : null;
+    if (code == null || code.length != _otpLength) return;
+
+    // Triggers Pinput's onCompleted, which runs the verify action.
+    _otpController.setText(code);
   }
 
   /// Formats seconds as mm:ss (e.g. 01:05).
@@ -191,21 +242,58 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
               const SizedBox(height: 40),
 
               // OTP Input Fields
-              Pinput(
-                length: 6,
-                controller: _otpController,
-                focusNode: _otpFocusNode,
-                defaultPinTheme: defaultPinTheme,
-                obscureText: true,
-                obscuringCharacter: '*',
-                separatorBuilder: (index) => const SizedBox(width: 8),
-                focusedPinTheme: defaultPinTheme.copyWith(
-                  decoration: defaultPinTheme.decoration!.copyWith(
-                    border: Border.all(color: const Color(0xFFD4D4D4)),
+              Directionality(
+                // Digits run left to right whatever the app's language is.
+                textDirection: TextDirection.ltr,
+                child: AutofillGroup(
+                  // Ensures the OS-level "code from Messages" autofill
+                  // suggestion reliably appears for this field.
+                  child: Pinput(
+                    length: _otpLength,
+                    controller: _otpController,
+                    focusNode: _otpFocusNode,
+                    defaultPinTheme: defaultPinTheme,
+                    obscureText: true,
+                    obscuringCharacter: '*',
+                    enableInteractiveSelection: true,
+                    showCursor: true,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    // Long-press offers Paste and nothing else — the field is
+                    // obscured, so Copy, Cut and Select All have nothing
+                    // useful to act on.
+                    contextMenuBuilder: (context, editableTextState) {
+                      final List<ContextMenuButtonItem> buttonItems = [
+                        ContextMenuButtonItem(
+                          onPressed: () {
+                            editableTextState.pasteText(
+                              SelectionChangedCause.toolbar,
+                            );
+                          },
+                          type: ContextMenuButtonType.paste,
+                        ),
+                      ];
+
+                      return AdaptiveTextSelectionToolbar.buttonItems(
+                        anchors: editableTextState.contextMenuAnchors,
+                        buttonItems: buttonItems,
+                      );
+                    },
+                    separatorBuilder: (index) => const SizedBox(width: 8),
+                    focusedPinTheme: defaultPinTheme.copyWith(
+                      decoration: defaultPinTheme.decoration!.copyWith(
+                        border: Border.all(color: const Color(0xFFD4D4D4)),
+                      ),
+                    ),
+                    onCompleted: (pin) {
+                      // All six digits in: run the same action as the Verify
+                      // button, however they arrived — typed, pasted, or
+                      // filled by the OS.
+                      _otpFocusNode.unfocus();
+                      _handleVerify();
+                    },
                   ),
                 ),
-                onCompleted: (pin) {
-                },
               ),
 
               const SizedBox(height: 24),
@@ -232,6 +320,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                                   countryCode: widget.countryCode,
                                   phoneNumber: widget.phoneNumber,
                                 );
+                                // The previous listener was consumed by the
+                                // first OTP, so re-arm it for this one.
+                                _listenForSmsCode();
                                 AnimatedSnackBar.show(
                                   context,
                                   "OTP has been resent to ${widget.countryCode} ${widget.phoneNumber}",
