@@ -316,7 +316,10 @@ class _TripsPageState extends State<TripsPage>
         return false;
       },
       child: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        // Bottom clearance for the floating nav bar the list now scrolls
+        // beneath — 70 tall on a 22 margin. Matches the dashboard's own tail
+        // spacer.
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         physics: const AlwaysScrollableScrollPhysics(),
         // One extra row carries the "loading more" spinner at the tail.
         itemCount: trips.length + (isLoadingMore ? 1 : 0),

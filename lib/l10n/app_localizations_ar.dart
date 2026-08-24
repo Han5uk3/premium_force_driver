@@ -1142,4 +1142,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get finishActiveTripFirst => 'أكمل رحلتك النشطة قبل بدء رحلة أخرى.';
+
+  @override
+  String get cannotGoOfflineDuringRide =>
+      'أكمل رحلتك النشطة قبل الانتقال إلى وضع غير متصل.';
+
+  @override
+  String get cannotReturnVehicleDuringRide =>
+      'أكمل رحلتك النشطة قبل إرجاع المركبة.';
+
+  @override
+  String get cannotLogoutDuringRide => 'أكمل رحلتك النشطة قبل تسجيل الخروج.';
 }

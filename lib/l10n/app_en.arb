@@ -364,5 +364,8 @@
   "tripCouldNotBeLoaded": "This trip could not be loaded.",
   "goOnlineToStartTrip": "Switch your work status to Available before starting a trip.",
   "takeOutVehicleToStartTrip": "Take out a vehicle before starting a trip.",
-  "finishActiveTripFirst": "Finish your active trip before starting another one."
+  "finishActiveTripFirst": "Finish your active trip before starting another one.",
+  "cannotGoOfflineDuringRide": "Finish your active ride before going offline.",
+  "cannotReturnVehicleDuringRide": "Finish your active ride before returning the vehicle.",
+  "cannotLogoutDuringRide": "Finish your active ride before logging out."
 }

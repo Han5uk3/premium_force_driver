@@ -11,7 +11,6 @@ import 'package:premium_force_driver/trips/trip_details_page.dart';
 import 'package:premium_force_driver/providers/notifications_provider.dart';
 import 'package:premium_force_driver/home/notifications_page.dart';
 import 'package:premium_force_driver/common_widgets/sharing_restore_banner.dart';
-import 'package:premium_force_driver/services/tracking_service.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/home/home.dart';
 
@@ -394,6 +393,19 @@ class _DashboardPageState extends State<DashboardPage>
     final currentContext = this.context;
     final loc = AppLocalizations.of(currentContext)!;
 
+    // Refused before the confirmation is raised, not after: asking the driver
+    // to confirm something that is going to be rejected either way reads as the
+    // app changing its mind. Handing the vehicle back mid-ride would leave a
+    // passenger in a car the fleet no longer has assigned to this driver.
+    if (currentContext.read<TripsProvider>().hasRideInProgress) {
+      AnimatedSnackBar.show(
+        currentContext,
+        loc.cannotReturnVehicleDuringRide,
+        'E',
+      );
+      return;
+    }
+
     final confirm = await showDialog<bool>(
       context: currentContext,
       builder: (dialogContext) {
@@ -467,18 +479,16 @@ class _DashboardPageState extends State<DashboardPage>
     BuildContext context,
     bool isWorkstarted,
   ) async {
-    if (!isWorkstarted) {
-      if (context.read<TripsProvider>().hasLiveTrip) {
-        final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-        AnimatedSnackBar.show(
-          context,
-          isArabic
-              ? 'لا يمكنك تغيير حالة العمل إلى غير متصل أثناء وجود حجز نشط'
-              : 'Cannot toggle work status to offline while having an active booking',
-          'E',
-        );
-        return;
-      }
+    // Going offline mid-ride would leave a passenger with a driver the system
+    // no longer considers on shift. `hasRideInProgress` also catches a session
+    // the trips list has not caught up with — see the provider.
+    if (!isWorkstarted && context.read<TripsProvider>().hasRideInProgress) {
+      AnimatedSnackBar.show(
+        context,
+        AppLocalizations.of(context)!.cannotGoOfflineDuringRide,
+        'E',
+      );
+      return;
     }
 
     if (_isTogglingStatus) return;
@@ -905,15 +915,11 @@ class _DashboardPageState extends State<DashboardPage>
                 // it. Draws nothing in the ordinary case.
                 SharingRestoreBanner(liveTrip: tripsProvider.liveTrip),
 
-                // The ride under way, or the empty state.
-                //
-                // Both branches sit inside the builder because the condition —
-                // `activeRide` — reads TrackingService, which notifies
-                // separately from the provider. Deciding outside it would leave
-                // the card stale when sharing starts or stops.
-                ListenableBuilder(
-                  listenable: TrackingService(),
-                  builder: (context, _) {
+                // The ride under way, or the empty state. Driven by status
+                // alone — see `TripsProvider.activeRide` for why the location
+                // feed deliberately does not gate this.
+                Builder(
+                  builder: (context) {
                     final ride = tripsProvider.activeRide;
                     if (ride != null) {
                       return TripCard(

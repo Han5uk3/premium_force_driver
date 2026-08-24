@@ -1156,4 +1156,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get finishActiveTripFirst =>
       'Finish your active trip before starting another one.';
+
+  @override
+  String get cannotGoOfflineDuringRide =>
+      'Finish your active ride before going offline.';
+
+  @override
+  String get cannotReturnVehicleDuringRide =>
+      'Finish your active ride before returning the vehicle.';
+
+  @override
+  String get cannotLogoutDuringRide =>
+      'Finish your active ride before logging out.';
 }

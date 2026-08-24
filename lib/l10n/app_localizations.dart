@@ -2287,6 +2287,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Finish your active trip before starting another one.'**
   String get finishActiveTripFirst;
+
+  /// No description provided for @cannotGoOfflineDuringRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish your active ride before going offline.'**
+  String get cannotGoOfflineDuringRide;
+
+  /// No description provided for @cannotReturnVehicleDuringRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish your active ride before returning the vehicle.'**
+  String get cannotReturnVehicleDuringRide;
+
+  /// No description provided for @cannotLogoutDuringRide.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish your active ride before logging out.'**
+  String get cannotLogoutDuringRide;
 }
 
 class _AppLocalizationsDelegate

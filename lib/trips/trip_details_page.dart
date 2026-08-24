@@ -29,12 +29,25 @@ import 'package:premium_force_driver/utils/trip_display.dart';
 /// and stops when the trip completes. [TripActions] owns all of that, so the
 /// trip card enforces exactly the same rules.
 class TripDetailsPage extends StatefulWidget {
-  const TripDetailsPage({super.key, required this.tripId, this.initialTrip});
+  const TripDetailsPage({
+    super.key,
+    required this.tripId,
+    this.initialTrip,
+    this.onTripLoaded,
+  });
 
   final String tripId;
 
   /// The list's copy of the trip, shown while the full detail loads.
   final TripV2? initialTrip;
+
+  /// Called with the trip once it is known.
+  ///
+  /// For callers that opened this page without knowing which list the trip
+  /// belongs to — the notification centre, which has only a booking id — and
+  /// need to put the right thing behind it for the back gesture. Left null by
+  /// the trips list itself, which already knows.
+  final void Function(TripV2 trip)? onTripLoaded;
 
   @override
   State<TripDetailsPage> createState() => _TripDetailsPageState();
@@ -53,6 +66,10 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
   void initState() {
     super.initState();
     _trip = widget.initialTrip;
+    // Report the copy we already have straight away, so a caller that is
+    // arranging what sits behind this page does not wait on the network.
+    final initial = widget.initialTrip;
+    if (initial != null) widget.onTripLoaded?.call(initial);
     _loadTrip();
   }
 
@@ -74,6 +91,8 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
           ? AppLocalizations.of(context)!.tripCouldNotBeLoaded
           : null;
     });
+
+    if (trip != null) widget.onTripLoaded?.call(trip);
   }
 
   // ---------------------------------------------------------------------------
@@ -303,7 +322,6 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
             _buildCard(child: _buildTimeline(trip, isArabic)),
           ],
 
-         
           const SizedBox(height: 32),
         ],
       ),
@@ -352,11 +370,7 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     if (hasVehicle &&
         vehicle.label.isNotEmpty &&
         vehicle.label != fleet?.label) {
-      add(
-        loc.bookedVehicleClass,
-        vehicle.label,
-        Icons.directions_car_outlined,
-      );
+      add(loc.bookedVehicleClass, vehicle.label, Icons.directions_car_outlined);
     }
 
     if (rows.isEmpty) return const SizedBox.shrink();
@@ -442,10 +456,6 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
       ),
     );
   }
-
-
-
- 
 
   /// The progress stepper, rendered from the timeline the API returns so the
   /// wording matches what the customer sees.
@@ -622,7 +632,10 @@ class _TripDetailsPageState extends State<TripDetailsPage> {
     if (!divided) return row;
 
     return Column(
-      children: [const Divider(color: Colors.white10, height: 24), row],
+      children: [
+        const Divider(color: Colors.white10, height: 24),
+        row,
+      ],
     );
   }
 }

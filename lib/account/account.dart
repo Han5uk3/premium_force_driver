@@ -67,7 +67,9 @@ class _AccountPageState extends State<AccountPage> {
 
               GestureDetector(
                 onTap: () async {
-                  final Uri url = Uri.parse('https://premiumforcegroup.com/terms-and-conditions');
+                  final Uri url = Uri.parse(
+                    'https://premiumforcegroup.com/terms-and-conditions',
+                  );
                   try {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
                   } catch (e) {
@@ -84,7 +86,9 @@ class _AccountPageState extends State<AccountPage> {
               ),
               GestureDetector(
                 onTap: () async {
-                  final Uri url = Uri.parse('https://premiumforcegroup.com/privacy-policy');
+                  final Uri url = Uri.parse(
+                    'https://premiumforcegroup.com/privacy-policy',
+                  );
                   try {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
                   } catch (e) {
@@ -121,7 +125,9 @@ class _AccountPageState extends State<AccountPage> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
-                            color: Localizations.localeOf(context).languageCode == 'en'
+                            color:
+                                Localizations.localeOf(context).languageCode ==
+                                    'en'
                                 ? Colors.white
                                 : Colors.black,
                             borderRadius: BorderRadius.circular(7),
@@ -130,7 +136,11 @@ class _AccountPageState extends State<AccountPage> {
                           child: Text(
                             'English',
                             style: TextStyle(
-                              color: Localizations.localeOf(context).languageCode == 'en'
+                              color:
+                                  Localizations.localeOf(
+                                        context,
+                                      ).languageCode ==
+                                      'en'
                                   ? Colors.black
                                   : Colors.white54,
                               fontSize: 12,
@@ -147,7 +157,9 @@ class _AccountPageState extends State<AccountPage> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
-                            color: Localizations.localeOf(context).languageCode == 'ar'
+                            color:
+                                Localizations.localeOf(context).languageCode ==
+                                    'ar'
                                 ? Colors.white
                                 : Colors.black,
                             borderRadius: BorderRadius.circular(7),
@@ -156,7 +168,11 @@ class _AccountPageState extends State<AccountPage> {
                           child: Text(
                             'العربية',
                             style: TextStyle(
-                              color: Localizations.localeOf(context).languageCode == 'ar'
+                              color:
+                                  Localizations.localeOf(
+                                        context,
+                                      ).languageCode ==
+                                      'ar'
                                   ? Colors.black
                                   : Colors.white54,
                               fontSize: 12,
@@ -171,11 +187,14 @@ class _AccountPageState extends State<AccountPage> {
               ),
               GestureDetector(
                 onTap: () {
-                  if (context.read<TripsProvider>().hasLiveTrip) {
-                    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+                  // Logging out clears the credentials the tracking feed
+                  // publishes under, so a ride in progress would go dark with a
+                  // passenger still in the car. `hasRideInProgress` also covers
+                  // a session the trips list has not caught up with.
+                  if (context.read<TripsProvider>().hasRideInProgress) {
                     AnimatedSnackBar.show(
                       context,
-                      isArabic ? 'لا يمكنك تسجيل الخروج أثناء وجود حجز نشط' : 'Cannot logout while having an active booking',
+                      loc.cannotLogoutDuringRide,
                       'E',
                     );
                     return;

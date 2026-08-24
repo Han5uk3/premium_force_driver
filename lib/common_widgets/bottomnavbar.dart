@@ -48,7 +48,7 @@ class BottomNavBar extends StatelessWidget {
                 ),
                 MenuIcon(
                   icon: Icons.calendar_today_outlined,
-                  label: loc.bookings,
+                  label: loc.myTrips,
                   isSelected: selectedIndex == 1,
                   onTap: () => onIndexChanged(1),
                 ),

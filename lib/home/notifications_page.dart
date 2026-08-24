@@ -1,9 +1,14 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
+import 'package:premium_force_driver/home/home.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
+import 'package:premium_force_driver/main.dart' show navigatorKey;
 import 'package:premium_force_driver/models/v2/notification_v2.dart';
 import 'package:premium_force_driver/providers/notifications_provider.dart';
 import 'package:premium_force_driver/trips/trip_details_page.dart';
@@ -55,86 +60,92 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> _openNotification(NotificationV2 notification) async {
     final provider = context.read<NotificationsProvider>();
+    // Marking read is the whole action for a notification with nowhere to go,
+    // and the first half of it for one that opens a trip. Cheap either way:
+    // the provider returns without calling the API when it is already read.
     provider.markAsRead(notification.id);
 
+    _logNotification(notification);
+
     final tripId = notification.bookingId;
-    if (tripId == null || tripId.isEmpty) {
-      _showDetail(notification);
+
+    // Two kinds of notification have nowhere to go: one that names no booking,
+    // and one saying the booking was taken off this driver — which still
+    // carries the id, but opening it would load a ride they no longer hold.
+    // Neither opens anything; the row is already showing its title and body,
+    // and it greys out as read.
+    if (tripId == null || tripId.isEmpty || notification.isTripUnassigned) {
       return;
     }
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => TripDetailsPage(tripId: tripId)),
+    // Land the driver in the stack they would have if they had opened the trip
+    // from the shell: dashboard → trips → this trip. So this route closes and
+    // the trips tab is selected underneath *before* the trip is pushed, leaving
+    // back to read trip → trips → dashboard instead of dropping them back into
+    // a notifications list they are finished with.
+    //
+    // Pushed through the root navigator rather than `context`, which is defunct
+    // the moment this route pops.
+    //
+    // Which trips tab, though, is not knowable here: a notification carries a
+    // booking id and no status. So the tab is set from the trip itself once
+    // the detail page has it — a completed trip lands behind the Completed
+    // tab, everything else behind Active. Before that it opens on Active,
+    // which is where a trip worth notifying about usually is.
+    Navigator.pop(context);
+    HomeState.showTrips();
+    await navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => TripDetailsPage(
+          tripId: tripId,
+          onTripLoaded: (trip) =>
+              HomeState.showTrips(tabIndex: trip.status.isFinished ? 1 : 0),
+        ),
+      ),
     );
   }
 
-  /// Full text of a notification that does not point at a trip.
-  void _showDetail(NotificationV2 notification) {
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final createdAt = notification.createdAt?.toLocal();
+  /// Dump the tapped notification, unredacted.
+  ///
+  /// Kept from the payload investigation that established `trip_assignment`
+  /// covers both assignment and unassignment. The `data` map is where routing
+  /// information lives and is what varies between senders, so it is printed
+  /// whole rather than summarised — line by line, because `debugPrint`
+  /// truncates long lines and would cut the payload in half.
+  ///
+  /// Debug builds only: a notification names the customer and the booking.
+  void _logNotification(NotificationV2 notification) {
+    if (!kDebugMode) return;
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.notifications, color: Colors.amber, size: 22),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                notification.displayTitle(isArabic),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (createdAt != null) ...[
-                Text(
-                  DateFormat(
-                    'hh:mm a, dd MMM yyyy',
-                    isArabic ? 'ar' : 'en',
-                  ).format(createdAt),
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-                ),
-                const SizedBox(height: 12),
-              ],
-              Text(
-                notification.displayBody(isArabic),
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              AppLocalizations.of(dialogContext)!.ok,
-              style: const TextStyle(
-                color: Colors.amber,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
+    debugPrint('🔔 notification tapped │ id=${notification.id}');
+    debugPrint(
+      '   notification │ type=${notification.type.wireValue} '
+      'bookingId=${notification.bookingId ?? '-'} '
+      'bookingNumber=${notification.bookingNumber ?? '-'} '
+      'isRead=${notification.isRead} '
+      'createdAt=${notification.createdAt?.toIso8601String() ?? '-'}',
     );
+    debugPrint('   notification │ title=${notification.title}');
+    debugPrint('   notification │ titleAr=${notification.titleAr ?? '-'}');
+    debugPrint('   notification │ body=${notification.body}');
+    debugPrint('   notification │ bodyAr=${notification.bodyAr ?? '-'}');
+    debugPrint(
+      '   notification │ shown=${notification.displayTitle(isArabic)} '
+      '/ ${notification.displayBody(isArabic)}',
+    );
+
+    String rendered;
+    try {
+      rendered = const JsonEncoder.withIndent('  ').convert(notification.data);
+    } catch (_) {
+      rendered = notification.data.toString();
+    }
+    debugPrint('   notification │ data:');
+    for (final line in rendered.split('\n')) {
+      debugPrint('   notification │ $line');
+    }
   }
 
   Future<void> _deleteNotification(

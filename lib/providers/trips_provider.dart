@@ -107,28 +107,38 @@ class TripsProvider extends ChangeNotifier {
   TripV2? get liveTrip =>
       _activeTrips.where((t) => t.status.isLive).firstOrNull;
 
-  /// The ride the driver is actually on — live *and* being published.
+  /// The ride on the dashboard's active-ride card.
   ///
-  /// Stricter than [liveTrip], which reads the backend's status alone. A ride
-  /// counts here only once the driver has set off (`driver_en_route` onwards)
-  /// and the location feed for that booking is open. A paused feed still
-  /// counts: pausing stops the writes, not the session, so the ride is under
-  /// way until the driver completes it.
+  /// Status decides this, and nothing else: a ride is active from the moment
+  /// the driver sets off (`driver_en_route`) until they complete it, which is
+  /// exactly what [liveTrip] already answers. A paused feed changes nothing —
+  /// pausing stops the writes, not the ride.
   ///
-  /// The status alone is not enough for the dashboard's active-ride card,
-  /// because the backend can report a live ride the app is not publishing —
-  /// the app was killed, or the location permission was revoked. That case is
-  /// not an active ride to be watched; it is a problem to be fixed, which is
-  /// what `SharingRestoreBanner` is for.
+  /// This was briefly also gated on the location feed actually running, and
+  /// that was wrong. Sharing resumes a moment *after* launch — it waits on the
+  /// active list, and on the permission check that list triggers — so on every
+  /// cold start there is a window where a live ride is not yet being published.
+  /// Gating on it made the dashboard say "no active ride" during that window,
+  /// while the restore banner directly above it said sharing was off for a ride
+  /// the same screen was denying existed. Worse, if the permission had been
+  /// revoked the card stayed empty until it was granted again.
   ///
-  /// Note for callers: this reads [TrackingService], which is a separate
-  /// notifier. Widgets that show it must listen to that as well as to this
-  /// provider, or they will not rebuild when sharing starts or stops.
-  TripV2? get activeRide {
-    final trip = liveTrip;
-    if (trip == null) return null;
-    return _tracking.isTrackingBooking(trip.id) ? trip : null;
-  }
+  /// Whether the feed is running is a separate question with its own answer on
+  /// screen — `SharingRestoreBanner`. The ride is shown either way.
+  TripV2? get activeRide => liveTrip;
+
+  /// Whether the driver is in the middle of a ride, by either measure.
+  ///
+  /// Deliberately an OR where [activeRide] is an AND: this guards the actions
+  /// that would break a ride in progress — going offline, handing the vehicle
+  /// back — so it has to be true whenever *either* source says a ride is under
+  /// way. The backend's list can be a refresh behind a status change made
+  /// seconds ago; the tracking service can be publishing a session the list
+  /// has not caught up with. A false negative here lets a driver strand a
+  /// passenger, so both are consulted and either is enough.
+  ///
+  /// A paused feed still counts — pausing stops the writes, not the ride.
+  bool get hasRideInProgress => liveTrip != null || _tracking.isTracking;
 
   /// The next trip the driver is expected to start.
   TripV2? get nextTrip =>

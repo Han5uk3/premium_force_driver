@@ -99,6 +99,42 @@ class NotificationV2 {
   /// The booking number carried alongside the ids, for display.
   String? get bookingNumber => pickString(data, const ['bookingNumber']);
 
+  /// Whether this says the trip was taken *away* from the driver.
+  ///
+  /// There is no field for it. The backend sends `trip_assignment` for both
+  /// halves of the story — assigned and unassigned — with the same shape of
+  /// `data`, so the wording is the only thing that separates them:
+  ///
+  /// ```json
+  /// { "title": "Trip Assignment Cancelled !",
+  ///   "body":  "Trip #PF-APT-2608-3584 has been unassigned by admin.",
+  ///   "type":  "trip_assignment" }
+  /// ```
+  ///
+  /// Matching on prose is brittle by nature — a reworded template breaks it
+  /// silently — so both languages are checked and the test is kept broad. The
+  /// durable fix is a distinct `type` (or a flag in `data`) from the backend;
+  /// when that arrives, this should read it instead.
+  ///
+  /// What it gates: an unassigned trip is no longer the driver's, so opening it
+  /// would either fail to load or show a ride they cannot act on.
+  bool get isTripUnassigned {
+    if (type != NotificationTypeV2.tripAssignment) return false;
+
+    final haystack = [
+      title,
+      body,
+      titleAr ?? '',
+      bodyAr ?? '',
+    ].join(' ').toLowerCase();
+
+    return haystack.contains('unassign') ||
+        haystack.contains('assignment cancel') ||
+        // "cancellation of assignment" / "assignment cancelled", as Arabic
+        // words it: إلغاء = cancellation, تعيين = assignment.
+        haystack.contains('إلغاء تعيين');
+  }
+
   String displayTitle(bool isArabic) => isArabic
       ? (titleAr?.trim().isNotEmpty == true ? titleAr! : title)
       : title;

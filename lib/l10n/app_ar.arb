@@ -364,5 +364,8 @@
   "tripCouldNotBeLoaded": "تعذر تحميل هذه الرحلة.",
   "goOnlineToStartTrip": "غيّر حالة العمل إلى \"متاح\" قبل بدء الرحلة.",
   "takeOutVehicleToStartTrip": "استلم مركبة قبل بدء الرحلة.",
-  "finishActiveTripFirst": "أكمل رحلتك النشطة قبل بدء رحلة أخرى."
+  "finishActiveTripFirst": "أكمل رحلتك النشطة قبل بدء رحلة أخرى.",
+  "cannotGoOfflineDuringRide": "أكمل رحلتك النشطة قبل الانتقال إلى وضع غير متصل.",
+  "cannotReturnVehicleDuringRide": "أكمل رحلتك النشطة قبل إرجاع المركبة.",
+  "cannotLogoutDuringRide": "أكمل رحلتك النشطة قبل تسجيل الخروج."
 }
