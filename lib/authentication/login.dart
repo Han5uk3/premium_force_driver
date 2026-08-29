@@ -437,10 +437,18 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                   ),
                                 );
                               } else {
-                                // Check if this is a "not registered" error
                                 final errorMsg =
                                     authProvider.errorMessage ?? '';
-                                if (errorMsg.contains(
+                                if (errorMsg ==
+                                    'please check entered phone number') {
+                                  AnimatedSnackBar.show(
+                                    context,
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.pleaseCheckEnteredPhoneNumber,
+                                    "E",
+                                  );
+                                } else if (errorMsg.contains(
                                   AppLocalizations.of(
                                     context,
                                   )!.noDriverRegisteredError,

@@ -250,16 +250,20 @@ class AuthProvider extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-        // Check if this is a "not registered" error
-        final message = (result['message'] as String? ?? '').toLowerCase();
-        if (message.contains('not found') ||
-            message.contains('not registered') ||
-            message.contains('not exist') ||
-            message.contains('driver') && message.contains('not')) {
-          _errorMessage =
-              'No driver registered with this phone number in the app';
+        if (_isInvalidPhoneNumberError(result)) {
+          _errorMessage = 'please check entered phone number';
         } else {
-          _errorMessage = result['message'] as String? ?? 'Failed to send OTP';
+          // Check if this is a "not registered" error
+          final message = (result['message'] as String? ?? '').toLowerCase();
+          if (message.contains('not found') ||
+              message.contains('not registered') ||
+              message.contains('not exist') ||
+              message.contains('driver') && message.contains('not')) {
+            _errorMessage =
+                'No driver registered with this phone number in the app';
+          } else {
+            _errorMessage = result['message'] as String? ?? 'Failed to send OTP';
+          }
         }
         _status = AuthStatus.failure;
         notifyListeners();
@@ -415,7 +419,34 @@ class AuthProvider extends ChangeNotifier {
       _status = AuthStatus.otpSent;
       _phoneNumber = phoneNumber;
       notifyListeners();
+    } else {
+      if (_isInvalidPhoneNumberError(result)) {
+        _errorMessage = 'please check entered phone number';
+      } else {
+        _errorMessage = result['message'] as String? ?? 'Failed to resend OTP';
+      }
+      _status = AuthStatus.failure;
+      notifyListeners();
     }
+  }
+
+  /// Checks whether an OTP API response indicates an invalid destination phone number.
+  bool _isInvalidPhoneNumberError(Map<String, dynamic> result) {
+    final error = (result['error']?.toString() ?? '').toLowerCase();
+    final message = (result['message']?.toString() ?? '').toLowerCase();
+    final combined = '$error $message';
+
+    return combined.contains('invalid parameter `to`') ||
+        combined.contains("invalid parameter 'to'") ||
+        combined.contains('invalid parameter "to"') ||
+        combined.contains("invalid 'to' phone number") ||
+        combined.contains('invalid `to` phone number') ||
+        combined.contains('invalid phone number') ||
+        (combined.contains('invalid') &&
+            (combined.contains('`to`') ||
+                combined.contains("'to'") ||
+                combined.contains('"to"') ||
+                combined.contains('to phone number')));
   }
 
   // ---------------------------------------------------------------------------

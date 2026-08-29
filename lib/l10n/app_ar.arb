@@ -259,6 +259,7 @@
   "signupFailed": "فشل إنشاء الحساب",
   "byClickingContinue": "بالنقر على زر المتابعة، فإنك توافق على ",
   "noDriverRegisteredError": "لا يوجد سائق مسجل بهذا الرقم",
+  "pleaseCheckEnteredPhoneNumber": "يرجى التحقق من رقم الهاتف المدخل",
   "voiceNote": "ملاحظة صوتية",
   "recordVoiceNote": "تسجيل ملاحظة صوتية",
   "saveVoiceNote": "حفظ الملاحظة الصوتية",

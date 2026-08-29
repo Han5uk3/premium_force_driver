@@ -824,6 +824,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No driver registered with this phone number';
 
   @override
+  String get pleaseCheckEnteredPhoneNumber =>
+      'Please check entered phone number';
+
+  @override
   String get voiceNote => 'Voice Note';
 
   @override

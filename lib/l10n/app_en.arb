@@ -259,6 +259,7 @@
   "signupFailed": "Signup failed",
   "byClickingContinue": "By Clicking continue button you agree to our ",
   "noDriverRegisteredError": "No driver registered with this phone number",
+  "pleaseCheckEnteredPhoneNumber": "Please check entered phone number",
   "voiceNote": "Voice Note",
   "recordVoiceNote": "Record voice note",
   "saveVoiceNote": "Save Voice Note",

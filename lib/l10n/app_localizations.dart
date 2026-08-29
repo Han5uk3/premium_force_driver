@@ -1652,6 +1652,12 @@ abstract class AppLocalizations {
   /// **'No driver registered with this phone number'**
   String get noDriverRegisteredError;
 
+  /// No description provided for @pleaseCheckEnteredPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check entered phone number'**
+  String get pleaseCheckEnteredPhoneNumber;
+
   /// No description provided for @voiceNote.
   ///
   /// In en, this message translates to:

@@ -811,6 +811,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noDriverRegisteredError => 'لا يوجد سائق مسجل بهذا الرقم';
 
   @override
+  String get pleaseCheckEnteredPhoneNumber =>
+      'يرجى التحقق من رقم الهاتف المدخل';
+
+  @override
   String get voiceNote => 'ملاحظة صوتية';
 
   @override
