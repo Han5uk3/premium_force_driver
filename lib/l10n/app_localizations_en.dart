@@ -1172,4 +1172,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cannotLogoutDuringRide =>
       'Finish your active ride before logging out.';
+
+  @override
+  String get updateRequiredTitle => 'Update required';
+
+  @override
+  String get updateRequiredMessage =>
+      'This version of the app is no longer supported. Please update to the latest version to continue.';
+
+  @override
+  String get updateAvailableTitle => 'Update available';
+
+  @override
+  String get updateAvailableMessage =>
+      'A new version of the app is available with the latest improvements.';
+
+  @override
+  String get updateNow => 'Update now';
+
+  @override
+  String get updateLater => 'Later';
 }

@@ -368,5 +368,11 @@
   "finishActiveTripFirst": "Finish your active trip before starting another one.",
   "cannotGoOfflineDuringRide": "Finish your active ride before going offline.",
   "cannotReturnVehicleDuringRide": "Finish your active ride before returning the vehicle.",
-  "cannotLogoutDuringRide": "Finish your active ride before logging out."
+  "cannotLogoutDuringRide": "Finish your active ride before logging out.",
+  "updateRequiredTitle": "Update required",
+  "updateRequiredMessage": "This version of the app is no longer supported. Please update to the latest version to continue.",
+  "updateAvailableTitle": "Update available",
+  "updateAvailableMessage": "A new version of the app is available with the latest improvements.",
+  "updateNow": "Update now",
+  "updateLater": "Later"
 }

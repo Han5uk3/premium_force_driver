@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app's darkest ground, #1A1A1A — the bottom of every screen's
+         gradient. The window shows it before Flutter's first frame and anywhere
+         Flutter does not paint, so it must match or those moments flash white. -->
+    <color name="app_background">#FF1A1A1A</color>
+</resources>

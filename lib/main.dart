@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:premium_force_driver/splashscreen/splashscreen.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ import 'package:premium_force_driver/firebase_options.dart';
 import 'package:premium_force_driver/api/driver_api_v2.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
+import 'package:premium_force_driver/services/crash_reporting.dart';
 import 'package:premium_force_driver/home/notifications_page.dart';
 
 /// Global navigator key – allows navigating from outside a widget tree
@@ -33,6 +35,12 @@ final NotificationsProvider notificationsProvider = NotificationsProvider();
 /// change on one is reflected on the others without a round trip.
 final TripsProvider tripsProvider = TripsProvider();
 
+/// The darkest ground the screens are painted on — the bottom of their
+/// gradients. Used wherever Flutter would otherwise leave a gap for the white
+/// default to show through. Kept in step with `app_background` in the Android
+/// resources and the iOS launch screen.
+const Color _appBackground = Color(0xFF1A1A1A);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -45,7 +53,13 @@ void main() async {
       rethrow;
     }
   }
+  await CrashReporting.init();
+
   await UserLocalStorage.init();
+
+  // A driver who is already signed in never passes through
+  // `saveUserCredentials` again, so tag their reports from the stored id.
+  CrashReporting.setUser(UserLocalStorage.getUserId());
 
   // Initialise push notifications
   await NotificationService.instance.init();
@@ -120,10 +134,6 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    final double bottomPadding = MediaQueryData.fromView(
-      View.of(context),
-    ).padding.bottom;
-    final bool isThickNavBar = bottomPadding >= 24.0;
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -131,39 +141,61 @@ class _MainAppState extends State<MainApp> {
         ChangeNotifierProvider.value(value: tripsProvider),
         ChangeNotifierProvider.value(value: notificationsProvider),
       ],
-      child: SafeArea(
-        top: false,
-        bottom: Platform.isAndroid ? isThickNavBar : false,
-        child: MaterialApp(
-          title: "Premium Force Driver",
-          debugShowCheckedModeBanner: false,
-          navigatorKey: navigatorKey,
-          locale: _locale,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          // The app declared no theme at all, so every text field inherited
-          // Material's defaults — which is why the selection handle came up
-          // purple. Only the selection colours are set here; everything else
-          // stays at the default this app was already running on.
-          theme: ThemeData(
-            textSelectionTheme: const TextSelectionThemeData(
-              // Every screen here is dark, and the country picker's search
-              // field takes its cursor from the ambient theme — it has no
-              // setting of its own. A field that wants a different cursor
-              // still overrides this locally.
-              cursorColor: Colors.white,
-              // Silver, matching the app's own accent grey, in place of the
-              // Material purple.
-              selectionHandleColor: Color(0xFFC0C0C0),
-              selectionColor: Color(0x55C0C0C0),
+      // The ground behind the [SafeArea]'s bottom inset.
+      //
+      // That strip is outside [MaterialApp], so nothing in Flutter paints it and
+      // the native window background shows through — white on a phone in light
+      // mode, which put a white band under every screen.
+      child: ColoredBox(
+        color: _appBackground,
+        child: SafeArea(
+          top: false,
+          bottom: Platform.isAndroid ? true : false,
+          child: MaterialApp(
+            title: "Premium Force Driver",
+            debugShowCheckedModeBanner: false,
+            navigatorKey: navigatorKey,
+            locale: _locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            // The app declared no theme at all, so every text field inherited
+            // Material's defaults — which is why the selection handle came up
+            // purple. Only the selection colours are set here; everything else
+            // stays at the default this app was already running on.
+            theme: ThemeData(
+              // Page changes fade the incoming screen in over a background that
+              // defaults to the theme's surface — near-white, since this theme is
+              // otherwise Material's light default. Every screen here is dark, so
+              // that background read as a white screen between login and Home
+              // (and on every other push). Only the background is changed; the
+              // transitions themselves are the platform defaults.
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: PredictiveBackPageTransitionsBuilder(
+                    fallbackColor: _appBackground,
+                  ),
+                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                },
+              ),
+              textSelectionTheme: const TextSelectionThemeData(
+                // Every screen here is dark, and the country picker's search
+                // field takes its cursor from the ambient theme — it has no
+                // setting of its own. A field that wants a different cursor
+                // still overrides this locally.
+                cursorColor: Colors.white,
+                // Silver, matching the app's own accent grey, in place of the
+                // Material purple.
+                selectionHandleColor: Color(0xFFC0C0C0),
+                selectionColor: Color(0x55C0C0C0),
+              ),
             ),
+            home: const SplashScreen(),
           ),
-          home: const SplashScreen(),
         ),
       ),
     );
