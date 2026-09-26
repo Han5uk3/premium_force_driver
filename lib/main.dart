@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:premium_force_driver/splashscreen/splashscreen.dart';
 import 'package:provider/provider.dart';
@@ -168,17 +167,22 @@ class _MainAppState extends State<MainApp> {
             // purple. Only the selection colours are set here; everything else
             // stays at the default this app was already running on.
             theme: ThemeData(
+              // The platform default transitions, stated explicitly.
+              //
               // Page changes fade the incoming screen in over a background that
               // defaults to the theme's surface — near-white, since this theme is
               // otherwise Material's light default. Every screen here is dark, so
-              // that background read as a white screen between login and Home
-              // (and on every other push). Only the background is changed; the
-              // transitions themselves are the platform defaults.
+              // that background reads as a white flash between login and Home
+              // (and on every other push). There is no way to recolour it from
+              // here: PredictiveBackPageTransitionsBuilder takes no arguments and
+              // hardcodes `const FadeForwardsPageTransitionsBuilder()` as its
+              // non-gesture fallback, so the only lever is ColorScheme.surface —
+              // which would also repaint Scaffold, Card and Dialog while
+              // onSurface stayed near-black. Left as-is until this theme moves to
+              // a full dark ColorScheme.
               pageTransitionsTheme: const PageTransitionsTheme(
                 builders: {
-                  TargetPlatform.android: PredictiveBackPageTransitionsBuilder(
-                    fallbackColor: _appBackground,
-                  ),
+                  TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
                   TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
                 },
               ),
