@@ -25,7 +25,13 @@ class CrashReporting {
     // Errors inside the framework: build, layout and paint failures.
     FlutterError.onError = (details) {
       FlutterError.presentError(details);
-      _crashlytics.recordFlutterFatalError(details);
+      // An image that fails to download (bad network, missing file) does not
+      // crash the app — log it as non-fatal so real crashes stay visible.
+      if (details.library == 'image resource service') {
+        _crashlytics.recordFlutterError(details);
+      } else {
+        _crashlytics.recordFlutterFatalError(details);
+      }
     };
 
     // Everything else that escapes to the root zone — mostly un-awaited

@@ -150,6 +150,11 @@ class Premuimfleetcard extends StatelessWidget {
                           imageUrl:
                               "https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/master/logos/thumb/${brand.toLowerCase()}.png",
                           fit: BoxFit.contain,
+                          // The dataset has no logo for some brands.
+                          errorWidget: (_, _, _) => const Icon(
+                            Icons.directions_car_outlined,
+                            color: Colors.white70,
+                          ),
                         ),
                       ),
                     ],

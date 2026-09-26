@@ -569,6 +569,11 @@ class _DashboardPageState extends State<DashboardPage>
                 backgroundImage: profileImageUrl != null
                     ? NetworkImage(profileImageUrl)
                     : null,
+                // A failed download leaves the plain grey circle. Flutter only
+                // allows this handler when there is a background image.
+                onBackgroundImageError: profileImageUrl != null
+                    ? (_, _) {}
+                    : null,
                 child: profileImageUrl == null
                     ? const Icon(Icons.person, color: Colors.white)
                     : null,
@@ -739,6 +744,10 @@ class _DashboardPageState extends State<DashboardPage>
                                     ? Image.network(
                                         activeVehicle.car!.carImageUrl!,
                                         fit: BoxFit.cover,
+                                        errorBuilder: (_, _, _) => const Icon(
+                                          Icons.directions_car_outlined,
+                                          color: Colors.white70,
+                                        ),
                                       )
                                     : const Icon(
                                         Icons.directions_car_outlined,
