@@ -3,6 +3,7 @@ import 'package:premium_force_driver/account/account.dart';
 import 'package:premium_force_driver/trips/trips_page.dart';
 import 'package:premium_force_driver/common_widgets/bottomnavbar.dart';
 import 'package:premium_force_driver/home/dashboard_page.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,6 +14,13 @@ class Home extends StatefulWidget {
 
 class HomeState extends State<Home> {
   int _selectedIndex = 0;
+
+  /// What each tab is reported to Analytics as, by index.
+  static const List<String> _tabScreens = [
+    Screens.dashboard,
+    Screens.trips,
+    Screens.account,
+  ];
 
   /// Which trips tab to open — 0 active, 1 completed. Set by the dashboard's
   /// summary cards so tapping a count lands on the matching list.
@@ -95,9 +103,15 @@ class HomeState extends State<Home> {
         // last row ends up permanently beneath it.
         extendBody: true,
         body: bodyWidget,
-        bottomNavigationBar: BottomNavBar(
-          selectedIndex: _selectedIndex,
-          onIndexChanged: _onNavBarItemTapped,
+        // Home is pushed without a route name, so the tab is what Analytics
+        // reports as the screen. The bar is the natural place to hang that off:
+        // it is what shows which tab is selected.
+        bottomNavigationBar: ScreenReporter(
+          screen: _tabScreens[_selectedIndex],
+          child: BottomNavBar(
+            selectedIndex: _selectedIndex,
+            onIndexChanged: _onNavBarItemTapped,
+          ),
         ),
         backgroundColor: const Color(0xFF1F1F1F),
       ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/api/driver_api_v2.dart';
 import 'package:premium_force_driver/models/v2/trip_v2.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 import 'package:premium_force_driver/services/tracking_service.dart';
 
 /// Loading state of a trip list.
@@ -305,6 +306,11 @@ class TripsProvider extends ChangeNotifier {
       notifyListeners();
       return null;
     }
+
+    Analytics.logTripAdvanced(
+      next,
+      serviceType: trip.transferSubType ?? trip.serviceType,
+    );
 
     // The status endpoint answers with a trimmed booking — status, extras and
     // the timeline — so the full record is re-read before it replaces what the

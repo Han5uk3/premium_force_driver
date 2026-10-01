@@ -10,6 +10,7 @@ import 'package:premium_force_driver/main.dart';
 
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -52,6 +53,9 @@ class _AccountPageState extends State<AccountPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
+                      settings: const RouteSettings(
+                        name: Screens.manageProfile,
+                      ),
                       builder: (context) => const ManageProfilePage(),
                     ),
                   );
@@ -419,6 +423,7 @@ class _AccountPageState extends State<AccountPage> {
                               context,
                               SmoothNavigation.route(
                                 const PremiumForceLoginPage(),
+                                name: Screens.login,
                               ),
                               (route) => false,
                             );

@@ -13,6 +13,7 @@ import 'package:premium_force_driver/home/notifications_page.dart';
 import 'package:premium_force_driver/common_widgets/sharing_restore_banner.dart';
 import 'package:premium_force_driver/common_widgets/snackbar.dart';
 import 'package:premium_force_driver/home/home.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -617,6 +618,9 @@ class _DashboardPageState extends State<DashboardPage>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
+                            settings: const RouteSettings(
+                              name: Screens.notifications,
+                            ),
                             builder: (_) => const NotificationsPage(),
                           ),
                         );
@@ -1060,6 +1064,7 @@ class _DashboardPageState extends State<DashboardPage>
     final changed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
+        settings: const RouteSettings(name: Screens.tripDetails),
         builder: (context) =>
             TripDetailsPage(tripId: trip.id, initialTrip: trip),
       ),

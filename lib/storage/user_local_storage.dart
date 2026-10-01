@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 import 'package:premium_force_driver/services/crash_reporting.dart';
 
 /// Local storage service using Hive for persisting minimal user credentials.
@@ -62,6 +63,7 @@ class UserLocalStorage {
     await _box.put(_userIdKey, userId);
     await _box.put(_phoneNumberKey, phoneNumber);
     CrashReporting.setUser(userId);
+    Analytics.setUser(userId);
   }
 
   /// Retrieve the stored userId, or `null` if not logged in.
@@ -78,6 +80,7 @@ class UserLocalStorage {
   static Future<void> clearUser() async {
     await _box.delete(_userIdKey);
     CrashReporting.setUser(null);
+    Analytics.setUser(null);
     await _box.delete(_phoneNumberKey);
     await _box.delete(_tokenKey);
     await _box.delete(_refreshTokenKey);

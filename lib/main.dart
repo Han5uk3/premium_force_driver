@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:premium_force_driver/splashscreen/splashscreen.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,7 @@ import 'package:premium_force_driver/api/driver_api_v2.dart';
 import 'package:premium_force_driver/storage/user_local_storage.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
 import 'package:premium_force_driver/services/crash_reporting.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 import 'package:premium_force_driver/home/notifications_page.dart';
 
 /// Global navigator key – allows navigating from outside a widget tree
@@ -53,12 +55,15 @@ void main() async {
     }
   }
   await CrashReporting.init();
+  await Analytics.init();
 
   await UserLocalStorage.init();
 
   // A driver who is already signed in never passes through
   // `saveUserCredentials` again, so tag their reports from the stored id.
   CrashReporting.setUser(UserLocalStorage.getUserId());
+  Analytics.setUser(UserLocalStorage.getUserId());
+  Analytics.setLanguage(UserLocalStorage.getLanguage());
 
   // Initialise push notifications
   await NotificationService.instance.init();
@@ -80,7 +85,10 @@ void main() async {
 /// when the app is launched from a terminated-state notification).
 void _handleNotificationTap(RemoteMessage message) {
   navigatorKey.currentState?.push(
-    MaterialPageRoute(builder: (_) => const NotificationsPage()),
+    MaterialPageRoute(
+      settings: const RouteSettings(name: Screens.notifications),
+      builder: (_) => const NotificationsPage(),
+    ),
   );
 }
 
@@ -111,6 +119,7 @@ class _MainAppState extends State<MainApp> {
       _locale = locale;
     });
     UserLocalStorage.saveLanguage(locale.languageCode);
+    Analytics.setLanguage(locale.languageCode);
     _syncLocaleWithBackend(locale.languageCode);
   }
 
@@ -154,6 +163,7 @@ class _MainAppState extends State<MainApp> {
             title: "Premium Force Driver",
             debugShowCheckedModeBanner: false,
             navigatorKey: navigatorKey,
+            navigatorObservers: [Analytics.screens],
             locale: _locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,
@@ -180,7 +190,7 @@ class _MainAppState extends State<MainApp> {
               // which would also repaint Scaffold, Card and Dialog while
               // onSurface stayed near-black. Left as-is until this theme moves to
               // a full dark ColorScheme.
-              pageTransitionsTheme: const PageTransitionsTheme(
+              pageTransitionsTheme: PageTransitionsTheme(
                 builders: {
                   TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
                   TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),

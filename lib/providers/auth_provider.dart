@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/models/driver.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 import 'package:premium_force_driver/services/notification_service.dart';
 import 'package:premium_force_driver/main.dart'
     show notificationsProvider, tripsProvider;
@@ -374,7 +375,8 @@ class AuthProvider extends ChangeNotifier {
           _status = AuthStatus.authenticated;
           _phoneNumber = phoneNumber;
           _resendCountdown = 0;
-          
+          Analytics.logLogin();
+
           // Sync FCM token with backend after successful login
           unawaited(NotificationService.instance.syncTokenWithBackend());
         } else {
@@ -508,7 +510,8 @@ class AuthProvider extends ChangeNotifier {
         }
 
         _status = AuthStatus.authenticated;
-        
+        Analytics.logSignUp();
+
         // Sync FCM token with backend after successful registration
         unawaited(NotificationService.instance.syncTokenWithBackend());
         
@@ -739,6 +742,8 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (result['success'] == true) {
+        Analytics.logShift(started: isWorkstarted);
+
         // Re-fetch profile to sync all status fields
         await fetchDriverProfile();
         return true;

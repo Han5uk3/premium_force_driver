@@ -74,5 +74,7 @@
 	<string>Premium Force Chauffeur requires access to your photo library to upload your profile picture.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Premium Force Chauffeur requires access to your photo library to save your profile picture.</string>
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
 </dict>
 </plist>

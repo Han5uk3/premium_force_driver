@@ -12,6 +12,7 @@ import 'package:premium_force_driver/authentication/signup.dart';
 import 'package:premium_force_driver/authentication/blocked_page.dart';
 import 'package:premium_force_driver/home/home.dart';
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String countryCode;
@@ -114,7 +115,10 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     if (authProvider.status == AuthStatus.authenticated) {
       if (authProvider.driver?.isActive == false) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const BlockedPage()),
+          MaterialPageRoute(
+            settings: const RouteSettings(name: Screens.blocked),
+            builder: (context) => const BlockedPage(),
+          ),
           (route) => false,
         );
       } else {
@@ -132,6 +136,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
             countryCode: widget.countryCode,
             phoneNumber: widget.phoneNumber,
           ),
+          name: Screens.signUp,
         ),
       );
     } else if (authProvider.status == AuthStatus.failure &&

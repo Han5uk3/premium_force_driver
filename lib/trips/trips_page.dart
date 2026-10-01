@@ -8,6 +8,7 @@ import 'package:premium_force_driver/providers/trips_provider.dart';
 import 'package:premium_force_driver/trips/trip_actions.dart';
 import 'package:premium_force_driver/trips/trip_card.dart';
 import 'package:premium_force_driver/trips/trip_details_page.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 
 /// The driver's trips, backed by `GET /driver/bookings/my-trips`.
 ///
@@ -126,6 +127,7 @@ class _TripsPageState extends State<TripsPage>
     await Navigator.push<bool>(
       context,
       MaterialPageRoute(
+        settings: const RouteSettings(name: Screens.tripDetails),
         builder: (context) =>
             TripDetailsPage(tripId: trip.id, initialTrip: trip),
       ),

@@ -11,6 +11,7 @@ import 'package:premium_force_driver/common_widgets/textfield.dart';
 import 'package:premium_force_driver/l10n/app_localizations.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -434,6 +435,7 @@ class _PremiumForceLoginPageState extends State<PremiumForceLoginPage> {
                                       phoneNumber: _mobileController.text
                                           .trim(),
                                     ),
+                                    name: Screens.otp,
                                   ),
                                 );
                               } else {

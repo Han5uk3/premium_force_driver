@@ -6,6 +6,7 @@ import 'package:premium_force_driver/authentication/blocked_page.dart';
 import 'package:premium_force_driver/home/home.dart';
 import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:premium_force_driver/services/app_update_service.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 import 'package:premium_force_driver/utils/smooth_navigation.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -57,7 +58,10 @@ class _SplashScreenState extends State<SplashScreen> {
         // or Login, whatever state the account is in.
         Navigator.pushReplacement(
           context,
-          SmoothNavigation.route(const UpdateRequiredPage()),
+          SmoothNavigation.route(
+            const UpdateRequiredPage(),
+            name: Screens.updateRequired,
+          ),
         );
         return;
       case AppUpdateStatus.optional:
@@ -70,14 +74,20 @@ class _SplashScreenState extends State<SplashScreen> {
     if (authProvider.status == AuthStatus.authenticated &&
         authProvider.driver != null) {
       if (authProvider.driver?.isActive == false) {
-        Navigator.pushReplacement(context, SmoothNavigation.route(const BlockedPage()));
+        Navigator.pushReplacement(
+          context,
+          SmoothNavigation.route(const BlockedPage(), name: Screens.blocked),
+        );
       } else {
         Navigator.pushReplacement(context, SmoothNavigation.route(const Home()));
       }
     } else {
       Navigator.pushReplacement(
         context,
-        SmoothNavigation.route(const PremiumForceLoginPage()),
+        SmoothNavigation.route(
+          const PremiumForceLoginPage(),
+          name: Screens.login,
+        ),
       );
     }
   }

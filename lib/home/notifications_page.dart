@@ -12,6 +12,7 @@ import 'package:premium_force_driver/main.dart' show navigatorKey;
 import 'package:premium_force_driver/models/v2/notification_v2.dart';
 import 'package:premium_force_driver/providers/notifications_provider.dart';
 import 'package:premium_force_driver/trips/trip_details_page.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 
 /// The driver's notification centre, backed by `GET /notifications/driver`.
 ///
@@ -96,6 +97,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     HomeState.showTrips();
     await navigatorKey.currentState?.push(
       MaterialPageRoute(
+        settings: const RouteSettings(name: Screens.tripDetails),
         builder: (context) => TripDetailsPage(
           tripId: tripId,
           onTripLoaded: (trip) =>

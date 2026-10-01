@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:premium_force_driver/api/apis.dart';
 import 'package:premium_force_driver/authentication/location_picker.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 import 'package:premium_force_driver/common_widgets/button.dart';
 import 'package:premium_force_driver/common_widgets/premiumloader.dart';
 import 'package:premium_force_driver/common_widgets/textfield.dart';
@@ -224,9 +225,12 @@ class _SignUpPageState extends State<SignUpPage>
   }
 
   Future<void> _openLocationPicker() async {
-    final result = await Navigator.of(
-      context,
-    ).push(SmoothNavigation.route(const LocationPickerPage()));
+    final result = await Navigator.of(context).push(
+      SmoothNavigation.route(
+        const LocationPickerPage(),
+        name: Screens.locationPicker,
+      ),
+    );
 
     if (result != null && result is Map<String, dynamic>) {
       setState(() {

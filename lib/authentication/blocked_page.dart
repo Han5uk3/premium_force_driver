@@ -5,6 +5,7 @@ import 'package:premium_force_driver/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:premium_force_driver/authentication/login.dart';
+import 'package:premium_force_driver/services/analytics.dart';
 
 class BlockedPage extends StatelessWidget {
   const BlockedPage({super.key});
@@ -104,7 +105,10 @@ class BlockedPage extends StatelessWidget {
                     Navigator.of(
                       context,
                     ).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => PremiumForceLoginPage()),
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: Screens.login),
+                        builder: (context) => PremiumForceLoginPage(),
+                      ),
                       (route) => false,
                     );
                   }
